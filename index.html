@@ -207,23 +207,26 @@
 
     <!-- Section 1: Actions & Habits (Positive vs Negative) -->
     <section aria-labelledby="habits-heading">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 id="habits-heading" class="text-lg font-bold text-white flex items-center gap-2">
-            <span>Actions & Habits</span>
-            <span id="habitsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Tap to Log</span>
-          </h2>
-          <p id="habitsSubtitle" class="text-xs text-slate-400 mt-0.5">Earn points for positive routines or log penalties for slip-ups.</p>
-        </div>
+      <!-- Sticky Actions & Habits Header -->
+      <div class="sticky top-20 z-20 bg-slate-950/95 backdrop-blur-xl py-3 px-1 mb-4 border-b border-slate-800/80">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 id="habits-heading" class="text-lg font-bold text-white flex items-center gap-2">
+              <span>Actions & Habits</span>
+              <span id="habitsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Tap to Log</span>
+            </h2>
+            <p id="habitsSubtitle" class="text-xs text-slate-400 mt-0.5">Earn points for positive routines or log penalties for slip-ups.</p>
+          </div>
 
-        <!-- Mobile Tab Switcher (Visible on small screens) -->
-        <div class="flex sm:hidden bg-slate-900 p-1 rounded-xl border border-slate-800 w-full">
-          <button id="tabPosBtn" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition">
-            + Positive Habits
-          </button>
-          <button id="tabNegBtn" onclick="switchMobileHabitTab('negative')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
-            - Penalties
-          </button>
+          <!-- Mobile Tab Switcher (Visible on small screens) -->
+          <div class="flex sm:hidden bg-slate-900 p-1 rounded-xl border border-slate-800 w-full">
+            <button id="tabPosBtn" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition">
+              + Positive Habits
+            </button>
+            <button id="tabNegBtn" onclick="switchMobileHabitTab('negative')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
+              - Penalties
+            </button>
+          </div>
         </div>
       </div>
 
@@ -347,30 +350,33 @@
     </section>
 
     <!-- Section 2: Reward Store -->
-    <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-            </svg>
+    <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20 overflow-hidden">
+      <!-- Sticky Reward Store Header -->
+      <div class="sticky top-20 z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-5 border-b border-slate-800/80 rounded-t-2xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+              </svg>
+            </div>
+            <div>
+              <h2 id="rewards-heading" class="text-lg font-bold text-white flex items-center gap-2">
+                <span>Reward Store</span>
+                <span id="rewardsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Redeem</span>
+              </h2>
+              <p id="rewardsSubtitle" class="text-xs text-slate-400">Cash in your hard-earned points for guilt-free fun.</p>
+            </div>
           </div>
-          <div>
-            <h2 id="rewards-heading" class="text-lg font-bold text-white flex items-center gap-2">
-              <span>Reward Store</span>
-              <span id="rewardsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Redeem</span>
-            </h2>
-            <p id="rewardsSubtitle" class="text-xs text-slate-400">Cash in your hard-earned points for guilt-free fun.</p>
-          </div>
-        </div>
 
-        <button
-          id="addRewardBtnEl"
-          onclick="toggleForm('rewardForm')"
-          class="hidden self-start sm:self-auto text-xs font-semibold px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer"
-        >
-          + Add Custom Reward
-        </button>
+          <button
+            id="addRewardBtnEl"
+            onclick="toggleForm('rewardForm')"
+            class="hidden self-start sm:self-auto text-xs font-semibold px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer"
+          >
+            + Add Custom Reward
+          </button>
+        </div>
       </div>
 
       <!-- Add Custom Reward Form -->
@@ -408,23 +414,26 @@
     </section>
 
     <!-- Section 3: Today's Activities -->
-    <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 id="log-heading" class="text-lg font-bold text-white">Today's Activities</h2>
-          <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards for today. Click an entry to select it.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button
-            id="undoLastBtn"
-            onclick="undoLastAction()"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs font-semibold text-slate-200 border border-slate-700 transition cursor-pointer"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-            </svg>
-            <span>Undo Last</span>
-          </button>
+    <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20 overflow-hidden">
+      <!-- Sticky Today's Activities Header -->
+      <div class="sticky top-20 z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 id="log-heading" class="text-lg font-bold text-white">Today's Activities</h2>
+            <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards for today. Click an entry to select it.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              id="undoLastBtn"
+              onclick="undoLastAction()"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs font-semibold text-slate-200 border border-slate-700 transition cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              <span>Undo Last</span>
+            </button>
+          </div>
         </div>
       </div>
 
