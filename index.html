@@ -281,7 +281,7 @@
         </div>
 
         <!-- Negative Habits / Penalties Column -->
-        <div id="negativeColumn" class="hidden sm:flex bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex-col justify-between shadow-xl shadow-black/20">
+        <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/20">
           <div>
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2.5">
@@ -643,7 +643,6 @@
 
       const isPositive = habit.type === 'positive';
       
-      // If part of a group, checking group completion status
       if (isPositive && habit.groupId) {
         const groupMems = appState.habits.filter(x => x.groupId === habit.groupId);
         const anyGroupCompleted = groupMems.some(gm => {
@@ -789,7 +788,6 @@
       const gid = target.groupId;
       appState.habits = appState.habits.filter(h => h.id !== habitId);
 
-      // Clean up linked group if fewer than 2 members remain
       if (gid) {
         const remaining = appState.habits.filter(h => h.groupId === gid);
         if (remaining.length < 2) {
@@ -1695,6 +1693,46 @@
       closeResetConfigModal();
       showToast('Reset schedule & scheduled points updated!', 'success');
       checkResetRollover();
+    }
+
+    // =========================================================================
+    // 6. MOBILE TAB SWITCHER FIX
+    // =========================================================================
+    function switchMobileHabitTab(tab) {
+      const posCol = document.getElementById('positiveColumn');
+      const negCol = document.getElementById('negativeColumn');
+      const tabPosBtn = document.getElementById('tabPosBtn');
+      const tabNegBtn = document.getElementById('tabNegBtn');
+
+      if (!posCol || !negCol) return;
+
+      if (tab === 'positive') {
+        posCol.style.display = 'flex';
+        negCol.style.display = 'none';
+        tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
+        tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+      } else {
+        negCol.style.display = 'flex';
+        posCol.style.display = 'none';
+        tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
+        tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+      }
+    }
+
+    // Reset inline styles on window resize so desktop 2-column view works smoothly
+    window.addEventListener('resize', () => {
+      const posCol = document.getElementById('positiveColumn');
+      const negCol = document.getElementById('negativeColumn');
+      if (window.innerWidth >= 768) {
+        if (posCol) posCol.style.display = '';
+        if (negCol) negCol.style.display = '';
+      }
+    });
+
+    // Initialize mobile view default tab on load
+    if (window.innerWidth < 768) {
+      const negCol = document.getElementById('negativeColumn');
+      if (negCol) negCol.style.display = 'none';
     }
 
     // =========================================================================
