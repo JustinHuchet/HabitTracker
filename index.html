@@ -207,49 +207,29 @@
 
     <!-- Section 1: Actions & Habits (Positive vs Negative) -->
     <section aria-labelledby="habits-heading">
-      <!-- Sticky Actions & Habits Header -->
-      <div class="sticky top-[168px] sm:top-20 z-25 bg-slate-950/95 backdrop-blur-xl py-3 px-1 mb-4 border-b border-slate-800/80">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 id="habits-heading" class="text-lg font-bold text-white flex items-center gap-2">
-              <span>Actions & Habits</span>
-              <span id="habitsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Tap to Log</span>
-            </h2>
-            <p id="habitsSubtitle" class="text-xs text-slate-400 mt-0.5">Earn points for positive routines or log penalties for slip-ups.</p>
-          </div>
-
-          <!-- Mobile Tab Switcher (Visible on small screens) -->
-          <div class="flex sm:hidden bg-slate-900 p-1 rounded-xl border border-slate-800 w-full">
-            <button id="tabPosBtn" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition">
-              + Positive Habits
-            </button>
-            <button id="tabNegBtn" onclick="switchMobileHabitTab('negative')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
-              - Penalties
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         <!-- Positive Habits Column -->
         <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/20">
           <div>
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base">+</span>
-                <div>
-                  <h3 class="text-sm font-bold text-emerald-300">Positive Habits</h3>
-                  <p class="text-[11px] text-slate-400">Build momentum & stack points</p>
+            <!-- Sticky Positive Habits Header -->
+            <div class="sticky top-[135px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base">+</span>
+                  <div>
+                    <h3 class="text-sm font-bold text-emerald-300">Positive Habits</h3>
+                    <p class="text-[11px] text-slate-400">Build momentum & stack points</p>
+                  </div>
                 </div>
+                <button
+                  id="addPosBtn"
+                  onclick="toggleForm('positiveForm')"
+                  class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition cursor-pointer"
+                >
+                  + Add Habit
+                </button>
               </div>
-              <button
-                id="addPosBtn"
-                onclick="toggleForm('positiveForm')"
-                class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition cursor-pointer"
-              >
-                + Add Habit
-              </button>
             </div>
 
             <!-- Add Custom Positive Habit Form -->
@@ -292,21 +272,24 @@
         <!-- Negative Habits / Penalties Column -->
         <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/20">
           <div>
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-base">−</span>
-                <div>
-                  <h3 class="text-sm font-bold text-rose-300">Penalties & Slip-Ups</h3>
-                  <p class="text-[11px] text-slate-400">Hold yourself accountable</p>
+            <!-- Sticky Penalties Header -->
+            <div class="sticky top-[135px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-base">−</span>
+                  <div>
+                    <h3 class="text-sm font-bold text-rose-300">Penalties & Slip-Ups</h3>
+                    <p class="text-[11px] text-slate-400">Hold yourself accountable</p>
+                  </div>
                 </div>
+                <button
+                  id="addNegBtn"
+                  onclick="toggleForm('negativeForm')"
+                  class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition cursor-pointer"
+                >
+                  + Add Penalty
+                </button>
               </div>
-              <button
-                id="addNegBtn"
-                onclick="toggleForm('negativeForm')"
-                class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition cursor-pointer"
-              >
-                + Add Penalty
-              </button>
             </div>
 
             <!-- Add Custom Penalty Form -->
@@ -352,7 +335,7 @@
     <!-- Section 2: Reward Store -->
     <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20">
       <!-- Sticky Reward Store Header -->
-      <div class="sticky top-[168px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-5 border-b border-slate-800/80 rounded-t-2xl">
+      <div class="sticky top-[135px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-5 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
@@ -416,7 +399,7 @@
     <!-- Section 3: Today's Activities -->
     <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20">
       <!-- Sticky Today's Activities Header -->
-      <div class="sticky top-[168px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+      <div class="sticky top-[135px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-4 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 id="log-heading" class="text-lg font-bold text-white">Today's Activities</h2>
@@ -849,8 +832,6 @@
 
       const btn = document.getElementById('toggleEditHabitsBtn');
       const label = document.getElementById('toggleEditHabitsLabel');
-      const badge = document.getElementById('habitsModeBadge');
-      const subtitle = document.getElementById('habitsSubtitle');
       const addPosBtn = document.getElementById('addPosBtn');
       const addNegBtn = document.getElementById('addNegBtn');
       const posForm = document.getElementById('positiveForm');
@@ -864,11 +845,6 @@
       if (isEditingHabits) {
         if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer';
         if (label) label.textContent = 'Done';
-        if (badge) {
-          badge.textContent = 'Edit, Link & Reorder';
-          badge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
-        }
-        if (subtitle) subtitle.textContent = 'Click any habit or penalty to edit, or click Link to pair habits together.';
         if (addPosBtn) addPosBtn.classList.remove('hidden');
         if (addNegBtn) addNegBtn.classList.remove('hidden');
 
@@ -881,11 +857,6 @@
       } else {
         if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer';
         if (label) label.textContent = 'Editor';
-        if (badge) {
-          badge.textContent = 'Tap to Log';
-          badge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300';
-        }
-        if (subtitle) subtitle.textContent = 'Earn points for positive routines or log penalties for slip-ups.';
         if (addPosBtn) addPosBtn.classList.add('hidden');
         if (addNegBtn) addNegBtn.classList.add('hidden');
         if (posForm) posForm.classList.add('hidden');
@@ -1793,45 +1764,7 @@
     }
 
     // =========================================================================
-    // 6. MOBILE TAB SWITCHER FIX
-    // =========================================================================
-    function switchMobileHabitTab(tab) {
-      const posCol = document.getElementById('positiveColumn');
-      const negCol = document.getElementById('negativeColumn');
-      const tabPosBtn = document.getElementById('tabPosBtn');
-      const tabNegBtn = document.getElementById('tabNegBtn');
-
-      if (!posCol || !negCol) return;
-
-      if (tab === 'positive') {
-        posCol.style.display = 'flex';
-        negCol.style.display = 'none';
-        tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
-        tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-      } else {
-        negCol.style.display = 'flex';
-        posCol.style.display = 'none';
-        tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
-        tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-      }
-    }
-
-    window.addEventListener('resize', () => {
-      const posCol = document.getElementById('positiveColumn');
-      const negCol = document.getElementById('negativeColumn');
-      if (window.innerWidth >= 768) {
-        if (posCol) posCol.style.display = '';
-        if (negCol) negCol.style.display = '';
-      }
-    });
-
-    if (window.innerWidth < 768) {
-      const negCol = document.getElementById('negativeColumn');
-      if (negCol) negCol.style.display = 'none';
-    }
-
-    // =========================================================================
-    // 7. ROBUST DETERMINISTIC CYCLE & COUNT LOGIC (UTC)
+    // 6. ROBUST DETERMINISTIC CYCLE & COUNT LOGIC (UTC)
     // =========================================================================
     function getCurrentCycleStartTime(dateObj = new Date()) {
       const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
