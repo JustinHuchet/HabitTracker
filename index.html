@@ -407,12 +407,12 @@
       <div id="rewardStoreGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
     </section>
 
-    <!-- Section 3: Activity Log -->
+    <!-- Section 3: Today's Activities -->
     <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <h2 id="log-heading" class="text-lg font-bold text-white">Activity Ledger</h2>
-          <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards. Click an entry to select it.</p>
+          <h2 id="log-heading" class="text-lg font-bold text-white">Today's Activities</h2>
+          <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards for today. Click an entry to select it.</p>
         </div>
         <div class="flex items-center gap-2">
           <button
@@ -424,12 +424,6 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
             <span>Undo Last</span>
-          </button>
-          <button
-            onclick="clearLogsOnly()"
-            class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-xs text-slate-400 hover:text-slate-200 border border-slate-800 transition cursor-pointer"
-          >
-            Clear History
           </button>
         </div>
       </div>
@@ -751,15 +745,6 @@
       saveState();
       renderAll();
       showToast(`Reverted "${removed.title}"`, 'info');
-    }
-
-    function clearLogsOnly() {
-      if (appState.logs.length === 0) return;
-      appState.logs = [];
-      selectedLogId = null;
-      saveState();
-      renderAll();
-      showToast('Activity history cleared (balance kept).', 'info');
     }
 
     function toggleLogSelect(logId) {
@@ -1304,7 +1289,6 @@
 
         const showSubtext = h.subtext && (isEditingHabits || maxLimit === 1);
         const showProgress = isPositive && !h.groupId && maxLimit > 1;
-        const hasSecondaryLine = showSubtext || showProgress;
 
         if (isEditingHabits && editingHabitId === h.id) {
           return `
@@ -1428,12 +1412,17 @@
                   </button>
                 </div>
 
-                <div class="min-w-0 flex-1 ${h.subtext ? 'flex flex-col justify-center' : 'flex items-center'}">
-                  <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
-                    ${isPositive && !h.groupId && maxLimit > 1 ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${maxLimit}x/day</span>` : ''}
-                  </div>
-                  ${h.subtext ? `<span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>` : ''}
+                <div class="min-w-0 flex-1">
+                  ${showSubtext ? `
+                    <div class="flex flex-col justify-center">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
+                      </div>
+                      <span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>
+                    </div>
+                  ` : `
+                    <span class="text-sm font-medium text-slate-200 truncate block">${escapeHtml(h.title)}</span>
+                  `}
                 </div>
               </div>
 
@@ -1468,7 +1457,7 @@
           `;
         }
 
-        // Standard (Non-Editor) View — fixed h-[64px], using flex items-center for single-line and flex flex-col justify-center for multi-line
+        // Standard (Non-Editor) View — fixed h-[64px], perfectly centered single-line vs multi-line
         return `
           <div
             onclick="triggerHabit('${h.id}')"
@@ -1478,19 +1467,23 @@
               <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
                 ${isPositive ? '+' : '−'}
               </div>
-              <div class="min-w-0 flex-1 ${hasSecondaryLine ? 'flex flex-col justify-center' : 'flex items-center'}">
-                <div class="flex items-center gap-1.5 flex-wrap">
+              <div class="min-w-0 flex-1">
+                ${showSubtext || showProgress ? `
+                  <div class="flex flex-col justify-center">
+                    <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
+                    ${showSubtext ? `
+                      <span class="text-[11px] text-slate-400 block truncate mt-0.5">
+                        ${escapeHtml(h.subtext)}
+                      </span>
+                    ` : showProgress ? `
+                      <span class="text-[11px] text-slate-400 block mt-0.5">
+                        Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
+                      </span>
+                    ` : ''}
+                  </div>
+                ` : `
                   <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
-                </div>
-                ${showSubtext ? `
-                  <span class="text-[11px] text-slate-400 block truncate mt-0.5">
-                    ${escapeHtml(h.subtext)}
-                  </span>
-                ` : showProgress ? `
-                  <span class="text-[11px] text-slate-400 block mt-0.5">
-                    Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
-                  </span>
-                ` : ''}
+                `}
               </div>
             </div>
 
@@ -1692,7 +1685,7 @@
     function renderLogs() {
       const container = document.getElementById('activityLogList');
       if (appState.logs.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No activity recorded yet. Complete a habit above to earn points!</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No activity recorded for today yet. Complete a habit above to earn points!</p>`;
         return;
       }
 
@@ -1894,6 +1887,9 @@
       if (now.getTime() >= cycleStart.getTime()) {
         appState.resetConfig.lastResetDate = todayDateKey;
 
+        // Wipe the ledger for the new day
+        appState.logs = [];
+
         const sPoints = appState.resetConfig.scheduledPoints;
         if (sPoints !== 0) {
           const sTitle = (appState.resetConfig.scheduledTitle || '').trim() || 'Scheduled Daily Adjustment';
@@ -1909,7 +1905,7 @@
 
         saveState();
         renderAll();
-        showToast('🌅 Daily habits have refreshed for the new reset cycle!', 'info');
+        showToast('🌅 Daily habits & ledger have refreshed for the new reset cycle!', 'info');
       }
     }
 
