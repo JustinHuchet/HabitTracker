@@ -1267,7 +1267,6 @@
         const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
         const remainingCount = Math.max(0, maxLimit - completedCount);
 
-        // Subtext rule: if maxLimit > 1, hide subtext outside of editor mode
         const showSubtext = h.subtext && (isEditingHabits || maxLimit === 1);
 
         if (isEditingHabits && editingHabitId === h.id) {
@@ -1355,7 +1354,7 @@
           return `
             <div
               onclick="${isPositive ? `handleHabitClickInEditMode('${h.id}')` : `startInlineEditHabit(event, '${h.id}')`}"
-              class="group flex items-center justify-between gap-2 px-4 py-3.5 ${
+              class="group flex items-center justify-between gap-2 px-4 min-h-[52px] py-2.5 ${
                 inGroup ? '' : 'rounded-xl bg-slate-950/90 border border-indigo-500/40'
               } ${
                 isBeingPaired
@@ -1432,25 +1431,25 @@
           `;
         }
 
-        // Standard (Non-Editor) View
+        // Standard (Non-Editor) View — fixed height min-h-[52px] with items-center
         return `
           <div
             onclick="triggerHabit('${h.id}')"
-            class="group flex items-center justify-between px-4 py-3.5 ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
+            class="group flex items-center justify-between px-4 min-h-[52px] py-2.5 ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
           >
             <div class="flex items-center gap-3 min-w-0 pr-2">
               <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
                 ${isPositive ? '+' : '−'}
               </div>
-              <div class="min-w-0">
-                <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
+              <div class="min-w-0 flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate">${escapeHtml(h.title)}</span>
                 ${showSubtext ? `
-                  <span class="text-[11px] text-slate-400 block mt-0.5 truncate">
+                  <span class="text-[11px] text-slate-400 truncate">
                     ${escapeHtml(h.subtext)}
                   </span>
                 ` : ''}
                 ${isPositive && !h.groupId && maxLimit > 1 ? `
-                  <span class="text-[11px] text-slate-400 block mt-0.5">
+                  <span class="text-[11px] text-slate-400">
                     Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
                   </span>
                 ` : ''}
