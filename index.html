@@ -557,8 +557,7 @@
         time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
-        lastResetDate: '',
-        currentCycleStart: ''
+        lastResetDate: ''
       },
       habits: [
         { id: 'h1', title: 'Water Bottle', points: 5, type: 'positive', dailyLimit: 5, order: 0 },
@@ -1685,7 +1684,6 @@
       const titleVal = document.getElementById('scheduledTitleInput').value.trim();
       const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
 
-      // Update config settings only — DO NOT trigger reset or point adjustment instantly upon saving
       appState.resetConfig.time = timeVal;
       appState.resetConfig.scheduledTitle = titleVal;
       appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
@@ -1735,17 +1733,30 @@
     }
 
     // =========================================================================
-    // 7. ROBUST ONCE-PER-DAY RESET & STABLE CYCLE MANAGEMENT (UTC)
+    // 7. ROBUST DETERMINISTIC CYCLE & COUNT LOGIC (UTC)
     // =========================================================================
+    function getCurrentCycleStartTime(dateObj = new Date()) {
+      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
+      const [rHour, rMin] = timeStr.split(':').map(Number);
+
+      const year = dateObj.getUTCFullYear();
+      const month = dateObj.getUTCMonth();
+      const day = dateObj.getUTCDate();
+
+      const todayReset = new Date(Date.UTC(year, month, day, rHour, rMin || 0, 0));
+
+      if (dateObj.getTime() >= todayReset.getTime()) {
+        return todayReset;
+      } else {
+        return new Date(todayReset.getTime() - 24 * 60 * 60 * 1000);
+      }
+    }
+
     function isLogCurrentCycle(timestampISO) {
       if (!timestampISO) return false;
       const logTime = new Date(timestampISO).getTime();
-
-      if (appState.resetConfig.currentCycleStart) {
-        const cycleStartTime = new Date(appState.resetConfig.currentCycleStart).getTime();
-        return logTime >= cycleStartTime;
-      }
-      return false;
+      const cycleStart = getCurrentCycleStartTime(new Date()).getTime();
+      return logTime >= cycleStart;
     }
 
     function getCompletedPositiveCountToday(habitId) {
@@ -1772,29 +1783,16 @@
       const day = String(now.getUTCDate()).padStart(2, '0');
       const todayDateKey = `${year}-${month}-${day}`;
 
-      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
-      const [rHour, rMin] = timeStr.split(':').map(Number);
+      const cycleStart = getCurrentCycleStartTime(now);
 
-      const resetDateTime = new Date(Date.UTC(year, now.getUTCMonth(), now.getUTCDate(), rHour, rMin || 0, 0));
-
-      // If initial state lacks currentCycleStart, initialize it safely
-      if (!appState.resetConfig.currentCycleStart) {
-        const initialStart = now.getTime() >= resetDateTime.getTime() 
-          ? resetDateTime 
-          : new Date(resetDateTime.getTime() - 24 * 60 * 60 * 1000);
-        appState.resetConfig.currentCycleStart = initialStart.toISOString();
-        saveState();
-      }
-
-      // If already reset today, do not trigger again
+      // If already reset for this cycle, do nothing
       if (appState.resetConfig.lastResetDate === todayDateKey) {
         return;
       }
 
-      // If the clock has reached or passed today's reset time
-      if (now.getTime() >= resetDateTime.getTime()) {
+      // If current time has reached or passed the cycle start time today
+      if (now.getTime() >= cycleStart.getTime()) {
         appState.resetConfig.lastResetDate = todayDateKey;
-        appState.resetConfig.currentCycleStart = resetDateTime.toISOString();
 
         const sPoints = appState.resetConfig.scheduledPoints;
         if (sPoints !== 0) {
