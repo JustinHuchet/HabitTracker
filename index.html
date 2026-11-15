@@ -595,14 +595,58 @@
       const logEntry = {
         id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         habitId: habit.id,
-        title: sourceLabel ? `${habit.title} (${sourceLabel})` : habit.title, delta: delta, category: isPositive ? 'positive' : 'negative', timestamp: new Date().toISOString() };  appState.logs.unshift(logEntry); saveState(); renderAll(); animateBalanceChange(delta);  if (isPositive) { showToast(`+${delta} pts — ${habit.title}`, 'success'); } else { showToast(`${delta} pts — ${habit.title}`, 'danger'); } }  function redeemReward(rewardId) { const reward = appState.rewards.find(r => r.id === rewardId); if (!reward) return;  if (appState.balance < reward.cost) { const needed = reward.cost - appState.balance; showToast(`Need ${needed} more pts for "${reward.title}"`, 'info');
+        title: sourceLabel ? `${habit.title} (${sourceLabel})` : habit.title,
+        delta: delta,
+        category: isPositive ? 'positive' : 'negative',
+        timestamp: new Date().toISOString()
+      };
+
+      appState.logs.unshift(logEntry);
+      saveState();
+      renderAll();
+      animateBalanceChange(delta);
+
+      if (isPositive) {
+        showToast(`+${delta} pts — ${habit.title}`, 'success');
+      } else {
+        showToast(`${delta} pts — ${habit.title}`, 'danger');
+      }
+    }
+
+    function redeemReward(rewardId) {
+      const reward = appState.rewards.find(r => r.id === rewardId);
+      if (!reward) return;
+
+      if (appState.balance < reward.cost) {
+        const needed = reward.cost - appState.balance;
+        showToast(`Need ${needed} more pts for "${reward.title}"`, 'info');
         return;
       }
 
       appState.balance -= reward.cost;
       const logEntry = {
         id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-        title: `Redeemed: ${reward.title}`, delta: -reward.cost, category: 'redeem', timestamp: new Date().toISOString() };  appState.logs.unshift(logEntry); saveState(); renderAll(); animateBalanceChange(-reward.cost); showToast(`Enjoy! Redeemed "${reward.title}" (-${reward.cost} pts)`, 'reward'); }  function undoLastAction() { if (appState.logs.length === 0) return; const last = appState.logs.shift(); appState.balance -= last.delta; saveState(); renderAll(); animateBalanceChange(-last.delta); showToast(`Undid "${last.title}"`, 'info');
+        title: `Redeemed: ${reward.title}`,
+        delta: -reward.cost,
+        category: 'redeem',
+        timestamp: new Date().toISOString()
+      };
+
+      appState.logs.unshift(logEntry);
+      saveState();
+      renderAll();
+      animateBalanceChange(-reward.cost);
+      showToast(`Enjoy! Redeemed "${reward.title}" (-${reward.cost} pts)`, 'reward');
+    }
+
+    function undoLastAction() {
+      if (appState.logs.length === 0) return;
+      const last = appState.logs.shift();
+      appState.balance -= last.delta;
+      saveState();
+      renderAll();
+      animateBalanceChange(-last.delta);
+      showToast(`Undid "${last.title}"`, 'info');
     }
 
     function removeSingleLog(logId) {
@@ -612,7 +656,52 @@
       appState.balance -= removed.delta;
       saveState();
       renderAll();
-      showToast(`Reverted "${removed.title}"`, 'info'); }  function clearLogsOnly() { if (appState.logs.length === 0) return; appState.logs = []; saveState(); renderAll(); showToast('Activity history cleared (balance kept).', 'info'); }  function toggleForm(formId) { const el = document.getElementById(formId); if (!el) return; el.classList.toggle('hidden'); const input = el.querySelector('input'); if (input && !el.classList.contains('hidden')) { input.focus(); } }  function handleAddHabit(event, type) { event.preventDefault(); const titleInput = document.getElementById(type === 'positive' ? 'posTitleInput' : 'negTitleInput'); const pointsInput = document.getElementById(type === 'positive' ? 'posPointsInput' : 'negPointsInput');  const title = titleInput.value.trim(); const points = parseInt(pointsInput.value, 10); if (!title \vert{}\vert{} isNaN(points) \vert{}\vert{} points <= 0) return;  appState.habits.push({ id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5), title, points, type, dailyLimit: 1, order: appState.habits.length });  titleInput.value = ''; pointsInput.value = ''; toggleForm(type === 'positive' ? 'positiveForm' : 'negativeForm');  saveState(); renderHabits(); showToast(`Added "${title}" (${type === 'positive' ? '+' : '-'}${points} pts)`, 'success');
+      showToast(`Reverted "${removed.title}"`, 'info');
+    }
+
+    function clearLogsOnly() {
+      if (appState.logs.length === 0) return;
+      appState.logs = [];
+      saveState();
+      renderAll();
+      showToast('Activity history cleared (balance kept).', 'info');
+    }
+
+    function toggleForm(formId) {
+      const el = document.getElementById(formId);
+      if (!el) return;
+      el.classList.toggle('hidden');
+      const input = el.querySelector('input');
+      if (input && !el.classList.contains('hidden')) {
+        input.focus();
+      }
+    }
+
+    function handleAddHabit(event, type) {
+      event.preventDefault();
+      const titleInput = document.getElementById(type === 'positive' ? 'posTitleInput' : 'negTitleInput');
+      const pointsInput = document.getElementById(type === 'positive' ? 'posPointsInput' : 'negPointsInput');
+
+      const title = titleInput.value.trim();
+      const points = parseInt(pointsInput.value, 10);
+      if (!title || isNaN(points) || points <= 0) return;
+
+      appState.habits.push({
+        id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+        title,
+        points,
+        type,
+        dailyLimit: 1,
+        order: appState.habits.length
+      });
+
+      titleInput.value = '';
+      pointsInput.value = '';
+      toggleForm(type === 'positive' ? 'positiveForm' : 'negativeForm');
+
+      saveState();
+      renderHabits();
+      showToast(`Added "${title}" (${type === 'positive' ? '+' : '-'}${points} pts)`, 'success');
     }
 
     function deleteHabit(event, habitId) {
@@ -637,7 +726,78 @@
 
       saveState();
       renderHabits();
-      showToast(`Deleted "${target.title}"`, 'info'); }  function toggleEditHabitsMode() { isEditingHabits = !isEditingHabits; editingHabitId = null; pairingHabitId = null; editingRewardId = null;  const btn = document.getElementById('toggleEditHabitsBtn'); const label = document.getElementById('toggleEditHabitsLabel'); const badge = document.getElementById('habitsModeBadge'); const subtitle = document.getElementById('habitsSubtitle'); const addPosBtn = document.getElementById('addPosBtn'); const addNegBtn = document.getElementById('addNegBtn'); const posForm = document.getElementById('positiveForm'); const negForm = document.getElementById('negativeForm');  const rewardsBadge = document.getElementById('rewardsModeBadge'); const rewardsSubtitle = document.getElementById('rewardsSubtitle'); const addRewardBtnEl = document.getElementById('addRewardBtnEl'); const rewardForm = document.getElementById('rewardForm');  if (isEditingHabits) { if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer'; if (label) label.textContent = 'Done'; if (badge) { badge.textContent = 'Edit, Link & Reorder'; badge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'; } if (subtitle) subtitle.textContent = 'Click any habit or penalty to edit, or click Link to pair habits together.'; if (addPosBtn) addPosBtn.classList.remove('hidden'); if (addNegBtn) addNegBtn.classList.remove('hidden');  if (rewardsBadge) { rewardsBadge.textContent = 'Edit Mode'; rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'; } if (rewardsSubtitle) rewardsSubtitle.textContent = 'Click any reward to edit its details.'; if (addRewardBtnEl) addRewardBtnEl.classList.remove('hidden'); } else { if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer'; if (label) label.textContent = 'Editor'; if (badge) { badge.textContent = 'Tap to Log'; badge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300'; } if (subtitle) subtitle.textContent = 'Earn points for positive routines or log penalties for slip-ups.'; if (addPosBtn) addPosBtn.classList.add('hidden'); if (addNegBtn) addNegBtn.classList.add('hidden'); if (posForm) posForm.classList.add('hidden'); if (negForm) negForm.classList.add('hidden');  if (rewardsBadge) { rewardsBadge.textContent = 'Redeem'; rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300'; } if (rewardsSubtitle) rewardsSubtitle.textContent = 'Cash in your hard-earned points for guilt-free fun.'; if (addRewardBtnEl) addRewardBtnEl.classList.add('hidden'); if (rewardForm) rewardForm.classList.add('hidden'); }  renderHabits(); renderRewards(); }  function startInlineEditHabit(event, habitId) { if (event) event.stopPropagation(); editingHabitId = habitId; pairingHabitId = null; renderHabits(); const input = document.getElementById(`editHabitTitle_${habitId}`);
+      showToast(`Deleted "${target.title}"`, 'info');
+    }
+
+    function toggleEditHabitsMode() {
+      isEditingHabits = !isEditingHabits;
+      editingHabitId = null;
+      pairingHabitId = null;
+      editingRewardId = null;
+
+      const btn = document.getElementById('toggleEditHabitsBtn');
+      const label = document.getElementById('toggleEditHabitsLabel');
+      const badge = document.getElementById('habitsModeBadge');
+      const subtitle = document.getElementById('habitsSubtitle');
+      const addPosBtn = document.getElementById('addPosBtn');
+      const addNegBtn = document.getElementById('addNegBtn');
+      const posForm = document.getElementById('positiveForm');
+      const negForm = document.getElementById('negativeForm');
+
+      const rewardsBadge = document.getElementById('rewardsModeBadge');
+      const rewardsSubtitle = document.getElementById('rewardsSubtitle');
+      const addRewardBtnEl = document.getElementById('addRewardBtnEl');
+      const rewardForm = document.getElementById('rewardForm');
+
+      if (isEditingHabits) {
+        if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer';
+        if (label) label.textContent = 'Done';
+        if (badge) {
+          badge.textContent = 'Edit, Link & Reorder';
+          badge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+        }
+        if (subtitle) subtitle.textContent = 'Click any habit or penalty to edit, or click Link to pair habits together.';
+        if (addPosBtn) addPosBtn.classList.remove('hidden');
+        if (addNegBtn) addNegBtn.classList.remove('hidden');
+
+        if (rewardsBadge) {
+          rewardsBadge.textContent = 'Edit Mode';
+          rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+        }
+        if (rewardsSubtitle) rewardsSubtitle.textContent = 'Click any reward to edit its details.';
+        if (addRewardBtnEl) addRewardBtnEl.classList.remove('hidden');
+      } else {
+        if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer';
+        if (label) label.textContent = 'Editor';
+        if (badge) {
+          badge.textContent = 'Tap to Log';
+          badge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300';
+        }
+        if (subtitle) subtitle.textContent = 'Earn points for positive routines or log penalties for slip-ups.';
+        if (addPosBtn) addPosBtn.classList.add('hidden');
+        if (addNegBtn) addNegBtn.classList.add('hidden');
+        if (posForm) posForm.classList.add('hidden');
+        if (negForm) negForm.classList.add('hidden');
+
+        if (rewardsBadge) {
+          rewardsBadge.textContent = 'Redeem';
+          rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300';
+        }
+        if (rewardsSubtitle) rewardsSubtitle.textContent = 'Cash in your hard-earned points for guilt-free fun.';
+        if (addRewardBtnEl) addRewardBtnEl.classList.add('hidden');
+        if (rewardForm) rewardForm.classList.add('hidden');
+      }
+
+      renderHabits();
+      renderRewards();
+    }
+
+    function startInlineEditHabit(event, habitId) {
+      if (event) event.stopPropagation();
+      editingHabitId = habitId;
+      pairingHabitId = null;
+      renderHabits();
+      const input = document.getElementById(`editHabitTitle_${habitId}`);
       if (input) {
         input.focus();
         input.select();
@@ -656,8 +816,26 @@
       const habit = appState.habits.find(h => h.id === habitId);
       if (!habit) return;
 
-      const titleInput = document.getElementById(`editHabitTitle_${habitId}`); const pointsInput = document.getElementById(`editHabitPoints_${habitId}`);
-      const limitInput = document.getElementById(`editHabitLimit_${habitId}`);  const newTitle = titleInput ? titleInput.value.trim() : ''; const newPoints = pointsInput ? parseInt(pointsInput.value, 10) : habit.points; const newLimit = (habit.type === 'positive' && limitInput && !habit.groupId) ? parseInt(limitInput.value, 10) : 1;  if (!newTitle \vert{}\vert{} isNaN(newPoints) \vert{}\vert{} newPoints <= 0) return;  habit.title = newTitle; habit.points = newPoints; if (habit.type === 'positive' && !habit.groupId) { habit.dailyLimit = isNaN(newLimit) \vert{}\vert{} newLimit < 1 ? 1 : newLimit; } editingHabitId = null;  saveState(); renderHabits(); showToast(`Updated "${newTitle}"`, 'success');
+      const titleInput = document.getElementById(`editHabitTitle_${habitId}`);
+      const pointsInput = document.getElementById(`editHabitPoints_${habitId}`);
+      const limitInput = document.getElementById(`editHabitLimit_${habitId}`);
+      
+      const newTitle = titleInput ? titleInput.value.trim() : '';
+      const newPoints = pointsInput ? parseInt(pointsInput.value, 10) : habit.points;
+      const newLimit = (habit.type === 'positive' && limitInput && !habit.groupId) ? parseInt(limitInput.value, 10) : 1;
+
+      if (!newTitle || isNaN(newPoints) || newPoints <= 0) return;
+
+      habit.title = newTitle;
+      habit.points = newPoints;
+      if (habit.type === 'positive' && !habit.groupId) {
+        habit.dailyLimit = isNaN(newLimit) || newLimit < 1 ? 1 : newLimit;
+      }
+      editingHabitId = null;
+
+      saveState();
+      renderHabits();
+      showToast(`Updated "${newTitle}"`, 'success');
     }
 
     function moveHabitOrder(event, habitId, direction) {
@@ -734,7 +912,96 @@
       renderHabits();
       if (pairingHabitId) {
         const h = appState.habits.find(x => x.id === habitId);
-        showToast(`Select another habit to link with "${h ? h.title : ''}"`, 'info'); } }  function handleHabitClickInEditMode(habitId) { if (!isEditingHabits) return; const target = appState.habits.find(h => h.id === habitId && h.type === 'positive'); if (!target) return;  if (pairingHabitId) { if (pairingHabitId === habitId) { pairingHabitId = null; renderHabits(); } else { pairHabitsTogether(null, pairingHabitId, habitId); } } else { startInlineEditHabit(null, habitId); } }  function pairHabitsTogether(event, firstHabitId, secondHabitId) { if (event) event.stopPropagation(); if (!firstHabitId \vert{}\vert{} !secondHabitId \vert{}\vert{} firstHabitId === secondHabitId) return;  const first = appState.habits.find(h => h.id === firstHabitId && h.type === 'positive'); const second = appState.habits.find(h => h.id === secondHabitId && h.type === 'positive'); if (!first \vert{}\vert{} !second) return;  let targetGroupId = second.groupId \vert{}\vert{} first.groupId; if (!targetGroupId) { targetGroupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }  first.groupId = targetGroupId; first.dailyLimit = 1; second.groupId = targetGroupId; second.dailyLimit = 1; pairingHabitId = null;  const positives = appState.habits.filter(h => h.type === 'positive'); const negatives = appState.habits.filter(h => h.type === 'negative');  const reorderedPos = []; const processed = new Set(); positives.forEach(h => { if (h.groupId) { if (!processed.has(h.groupId)) { processed.add(h.groupId); const groupMems = positives.filter(x => x.groupId === h.groupId); groupMems.forEach(gm => reorderedPos.push(gm)); } } else { reorderedPos.push(h); } });  appState.habits = [...reorderedPos, ...negatives]; saveState(); renderAll(); showToast(`Linked "${first.title}" & "${second.title}"!`, 'success'); }  function unlinkHabitGroup(event, habitId, unlinkAll = false) { if (event) event.stopPropagation(); const target = appState.habits.find(h => h.id === habitId); if (!target \vert{}\vert{} !target.groupId) return;  const gid = target.groupId;  if (unlinkAll) { appState.habits.forEach(h => { if (h.groupId === gid) { delete h.groupId; } }); } else { delete target.groupId; const remaining = appState.habits.filter(h => h.groupId === gid); if (remaining.length < 2) { remaining.forEach(h => { delete h.groupId; }); } }  pairingHabitId = null; saveState(); renderAll(); showToast(unlinkAll ? 'Unlinked entire habit group.' : `Removed "${target.title}" from linked group.`, 'info');
+        showToast(`Select another habit to link with "${h ? h.title : ''}"`, 'info');
+      }
+    }
+
+    function handleHabitClickInEditMode(habitId) {
+      if (!isEditingHabits) return;
+      const target = appState.habits.find(h => h.id === habitId && h.type === 'positive');
+      if (!target) return;
+
+      if (pairingHabitId) {
+        if (pairingHabitId === habitId) {
+          pairingHabitId = null;
+          renderHabits();
+        } else {
+          pairHabitsTogether(null, pairingHabitId, habitId);
+        }
+      } else {
+        startInlineEditHabit(null, habitId);
+      }
+    }
+
+    function pairHabitsTogether(event, firstHabitId, secondHabitId) {
+      if (event) event.stopPropagation();
+      if (!firstHabitId || !secondHabitId || firstHabitId === secondHabitId) return;
+
+      const first = appState.habits.find(h => h.id === firstHabitId && h.type === 'positive');
+      const second = appState.habits.find(h => h.id === secondHabitId && h.type === 'positive');
+      if (!first || !second) return;
+
+      let targetGroupId = second.groupId || first.groupId;
+      if (!targetGroupId) {
+        targetGroupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      }
+
+      first.groupId = targetGroupId;
+      first.dailyLimit = 1;
+      second.groupId = targetGroupId;
+      second.dailyLimit = 1;
+      pairingHabitId = null;
+
+      const positives = appState.habits.filter(h => h.type === 'positive');
+      const negatives = appState.habits.filter(h => h.type === 'negative');
+
+      const reorderedPos = [];
+      const processed = new Set();
+      positives.forEach(h => {
+        if (h.groupId) {
+          if (!processed.has(h.groupId)) {
+            processed.add(h.groupId);
+            const groupMems = positives.filter(x => x.groupId === h.groupId);
+            groupMems.forEach(gm => reorderedPos.push(gm));
+          }
+        } else {
+          reorderedPos.push(h);
+        }
+      });
+
+      appState.habits = [...reorderedPos, ...negatives];
+      saveState();
+      renderAll();
+      showToast(`Linked "${first.title}" & "${second.title}"!`, 'success');
+    }
+
+    function unlinkHabitGroup(event, habitId, unlinkAll = false) {
+      if (event) event.stopPropagation();
+      const target = appState.habits.find(h => h.id === habitId);
+      if (!target || !target.groupId) return;
+
+      const gid = target.groupId;
+
+      if (unlinkAll) {
+        appState.habits.forEach(h => {
+          if (h.groupId === gid) {
+            delete h.groupId;
+          }
+        });
+      } else {
+        delete target.groupId;
+        const remaining = appState.habits.filter(h => h.groupId === gid);
+        if (remaining.length < 2) {
+          remaining.forEach(h => {
+            delete h.groupId;
+          });
+        }
+      }
+
+      pairingHabitId = null;
+      saveState();
+      renderAll();
+      showToast(unlinkAll ? 'Unlinked entire habit group.' : `Removed "${target.title}" from linked group.`, 'info');
     }
 
     function handleAddReward(event) {
@@ -777,8 +1044,28 @@
       if (!isEditingHabits) return;
       editingRewardId = rewardId;
       renderRewards();
-      const input = document.getElementById(`editRewardTitle_${rewardId}`); if (input) { input.focus(); input.select(); } }  function cancelInlineEditReward(event) { if (event) event.stopPropagation(); editingRewardId = null; renderRewards(); }  function saveInlineEditReward(event, rewardId) { event.preventDefault(); event.stopPropagation(); const reward = appState.rewards.find(r => r.id === rewardId); if (!reward) return;  const titleInput = document.getElementById(`editRewardTitle_${rewardId}`);
-      const costInput = document.getElementById(`editRewardCost_${rewardId}`); const iconInput = document.getElementById(`editRewardIcon_${rewardId}`);
+      const input = document.getElementById(`editRewardTitle_${rewardId}`);
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    function cancelInlineEditReward(event) {
+      if (event) event.stopPropagation();
+      editingRewardId = null;
+      renderRewards();
+    }
+
+    function saveInlineEditReward(event, rewardId) {
+      event.preventDefault();
+      event.stopPropagation();
+      const reward = appState.rewards.find(r => r.id === rewardId);
+      if (!reward) return;
+
+      const titleInput = document.getElementById(`editRewardTitle_${rewardId}`);
+      const costInput = document.getElementById(`editRewardCost_${rewardId}`);
+      const iconInput = document.getElementById(`editRewardIcon_${rewardId}`);
 
       const newTitle = titleInput ? titleInput.value.trim() : '';
       const newCost = costInput ? parseInt(costInput.value, 10) : reward.cost;
@@ -806,8 +1093,26 @@
     function renderHeaderStats() {
       const balanceEl = document.getElementById('liveBalance');
       balanceEl.textContent = appState.balance;
-      balanceEl.className = `text-2xl sm:text-3xl font-extrabold tracking-tight ${ appState.balance < 0 ? 'text-rose-400' : 'text-white' }`;  const activeDateKey = getEffectiveResetDateKey(new Date()); let earnedToday = 0; let lostToday = 0; let spentToday = 0;  appState.logs.forEach(log => { if (getEffectiveResetDateKey(new Date(log.timestamp)) === activeDateKey) { if (log.category === 'positive') earnedToday += log.delta; else if (log.category === 'negative') lostToday += Math.abs(log.delta); else if (log.category === 'redeem') spentToday += Math.abs(log.delta); } });  document.getElementById('todayEarned').textContent = `+${earnedToday}`;
-      document.getElementById('todayLost').textContent = `-${lostToday}`; document.getElementById('todaySpent').textContent = `${spentToday}`;
+      balanceEl.className = `text-2xl sm:text-3xl font-extrabold tracking-tight ${
+        appState.balance < 0 ? 'text-rose-400' : 'text-white'
+      }`;
+
+      const activeDateKey = getEffectiveResetDateKey(new Date());
+      let earnedToday = 0;
+      let lostToday = 0;
+      let spentToday = 0;
+
+      appState.logs.forEach(log => {
+        if (getEffectiveResetDateKey(new Date(log.timestamp)) === activeDateKey) {
+          if (log.category === 'positive') earnedToday += log.delta;
+          else if (log.category === 'negative') lostToday += Math.abs(log.delta);
+          else if (log.category === 'redeem') spentToday += Math.abs(log.delta);
+        }
+      });
+
+      document.getElementById('todayEarned').textContent = `+${earnedToday}`;
+      document.getElementById('todayLost').textContent = `-${lostToday}`;
+      document.getElementById('todaySpent').textContent = `${spentToday}`;
       document.getElementById('undoLastBtn').disabled = appState.logs.length === 0;
     }
 
@@ -958,7 +1263,8 @@
 
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>${isPositive && !h.groupId && maxLimit > 1 ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${maxLimit}x/day</span>` : ''}
+                    <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
+                    ${isPositive && !h.groupId && maxLimit > 1 ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${maxLimit}x/day</span>` : ''}
                   </div>
                 </div>
               </div>
@@ -1005,7 +1311,8 @@
               </div>
               <div class="min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate">${escapeHtml(h.title)}</span>${isPositive && !h.groupId && maxLimit > 1 ? `
+                  <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate">${escapeHtml(h.title)}</span>
+                  ${isPositive && !h.groupId && maxLimit > 1 ? `
                     <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                       ${remainingCount} remaining today
                     </span>
@@ -1407,4 +1714,122 @@
       };
 
       toast.className = `toast-enter pointer-events-auto px-4 py-3 rounded-2xl border shadow-2xl text-xs font-medium flex items-center justify-between gap-2 ${
-        styles[type] ||
+        styles[type] || styles.info
+      }`;
+      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        toast.style.transition = 'all 0.2s ease';
+        setTimeout(() => toast.remove(), 220);
+      }, 2800);
+    }
+
+    function formatTimestamp(iso) {
+      try {
+        const date = new Date(iso);
+        const now = new Date();
+        const isToday = getEffectiveResetDateKey(date) === getEffectiveResetDateKey(now);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return isToday ? `Today at ${timeStr}` : `${date.toLocaleDateString()} · ${timeStr}`;
+      } catch {
+        return '';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getEffectiveResetDateKey(dateObj) {
+      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '00:00';
+      const [rHour, rMin] = timeStr.split(':').map(Number);
+
+      const d = new Date(dateObj.getTime());
+      const currentMinutes = d.getHours() * 60 + d.getMinutes();
+      const resetMinutes = rHour * 60 + (rMin || 0);
+
+      if (currentMinutes < resetMinutes) {
+        d.setDate(d.getDate() - 1);
+      }
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getCompletedPositiveCountToday(habitId) {
+      const activeDateKey = getEffectiveResetDateKey(new Date());
+      let count = 0;
+
+      appState.logs.forEach(log => {
+        if (log.category === 'positive' && getEffectiveResetDateKey(new Date(log.timestamp)) === activeDateKey) {
+          if (log.habitId === habitId) {
+            count++;
+          } else {
+            const matchedHabit = appState.habits.find(
+              h => h.id === habitId && h.type === 'positive' && (log.title === h.title || log.title.startsWith(`${h.title} (`))
+            );
+            if (matchedHabit) count++;
+          }
+        }
+      });
+      return count;
+    }
+
+    let lastCheckedDateKey = getEffectiveResetDateKey(new Date());
+
+    function checkResetRollover() {
+      const currentKey = getEffectiveResetDateKey(new Date());
+      if (currentKey !== lastCheckedDateKey) {
+        lastCheckedDateKey = currentKey;
+
+        if (
+          appState.resetConfig &&
+          appState.resetConfig.scheduledPoints !== 0 &&
+          appState.resetConfig.lastResetDateKey !== currentKey
+        ) {
+          appState.resetConfig.lastResetDateKey = currentKey;
+          const sPoints = appState.resetConfig.scheduledPoints;
+          const sTitle = appState.resetConfig.scheduledTitle.trim() || 'Scheduled Daily Adjustment';
+
+          appState.balance += sPoints;
+          appState.logs.unshift({
+            id: 'log_sched_' + Date.now(),
+            title: sTitle,
+            delta: sPoints,
+            category: sPoints > 0 ? 'positive' : 'negative',
+            timestamp: new Date().toISOString()
+          });
+          showToast(`Scheduled Adjustment: ${sPoints > 0 ? '+' : ''}${sPoints} pts (${sTitle})`, sPoints > 0 ? 'success' : 'danger');
+        }
+
+        saveState();
+        renderAll();
+        showToast('🌅 Daily habits have refreshed for the new reset cycle!', 'info');
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        checkResetRollover();
+      }
+    });
+    setInterval(checkResetRollover, 20000);
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === STORAGE_KEY && event.newValue) {
+        appState = loadState();
+        renderAll();
+      }
+    });
+
+    renderAll();
+    checkResetRollover();
+  </script>
+</body>
+</html>
