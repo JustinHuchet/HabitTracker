@@ -1803,6 +1803,14 @@
       const day = String(now.getUTCDate()).padStart(2, '0');
       const todayDateKey = `${year}-${month}-${day}`;
 
+      // If lastResetDate is brand new/empty (first time opening the app), 
+      // initialize it to today without applying retroactive penalties.
+      if (!appState.resetConfig.lastResetDate) {
+        appState.resetConfig.lastResetDate = todayDateKey;
+        saveState();
+        return;
+      }
+
       const cycleStart = getCurrentCycleStartTime(now);
 
       if (appState.resetConfig.lastResetDate === todayDateKey) {
