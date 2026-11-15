@@ -400,7 +400,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <h2 id="log-heading" class="text-lg font-bold text-white">Activity Ledger</h2>
-          <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards.</p>
+          <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards. Click an entry to select it.</p>
         </div>
         <div class="flex items-center gap-2">
           <button
@@ -593,6 +593,7 @@
     let editingHabitId = null;
     let pairingHabitId = null;
     let editingRewardId = null;
+    let selectedLogId = null;
 
     function loadState() {
       try {
@@ -675,6 +676,7 @@
       };
 
       appState.logs.unshift(logEntry);
+      selectedLogId = null;
       saveState();
       renderAll();
       animateBalanceChange(delta);
@@ -706,6 +708,7 @@
       };
 
       appState.logs.unshift(logEntry);
+      selectedLogId = null;
       saveState();
       renderAll();
       animateBalanceChange(-reward.cost);
@@ -716,6 +719,7 @@
       if (appState.logs.length === 0) return;
       const last = appState.logs.shift();
       appState.balance -= last.delta;
+      selectedLogId = null;
       saveState();
       renderAll();
       animateBalanceChange(-last.delta);
@@ -727,6 +731,7 @@
       if (index === -1) return;
       const [removed] = appState.logs.splice(index, 1);
       appState.balance -= removed.delta;
+      if (selectedLogId === logId) selectedLogId = null;
       saveState();
       renderAll();
       showToast(`Reverted "${removed.title}"`, 'info');
@@ -735,9 +740,15 @@
     function clearLogsOnly() {
       if (appState.logs.length === 0) return;
       appState.logs = [];
+      selectedLogId = null;
       saveState();
       renderAll();
       showToast('Activity history cleared (balance kept).', 'info');
+    }
+
+    function toggleLogSelect(logId) {
+      selectedLogId = selectedLogId === logId ? null : logId;
+      renderLogs();
     }
 
     // =========================================================================
@@ -1625,9 +1636,15 @@
           : 'bg-rose-400';
 
         const timeLabel = formatTimestamp(log.timestamp);
+        const isSelected = selectedLogId === log.id;
 
         return `
-          <div class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition">
+          <div
+            onclick="toggleLogSelect('${log.id}')"
+            class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/60 border ${
+              isSelected ? 'border-indigo-500 ring-1 ring-indigo-500/30 bg-slate-900/80' : 'border-slate-800/80 hover:border-slate-700'
+            } transition cursor-pointer select-none"
+          >
             <div class="flex items-center gap-3 min-w-0">
               <span class="w-2 h-2 rounded-full shrink-0 ${dotClass}"></span>
               <div class="min-w-0">
@@ -1636,19 +1653,22 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0 ml-2">
+            <div class="flex items-center gap-2.5 shrink-0 ml-2">
               <span class="px-2 py-0.5 rounded-md text-xs font-bold ${badgeClass}">
                 ${isPos ? '+' : ''}${log.delta} pts
               </span>
-              <button
-                onclick="removeSingleLog('${log.id}')"
-                title="Revert this entry"
-                class="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded text-slate-500 hover:text-rose-400 transition cursor-pointer"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              ${isSelected ? `
+                <button
+                  type="button"
+                  onclick="event.stopPropagation(); removeSingleLog('${log.id}')"
+                  title="Delete this entry"
+                  class="p-1 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 hover:text-rose-300 transition cursor-pointer"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              ` : ''}
             </div>
           </div>
         `;
@@ -1785,12 +1805,10 @@
 
       const cycleStart = getCurrentCycleStartTime(now);
 
-      // If already reset for this cycle, do nothing
       if (appState.resetConfig.lastResetDate === todayDateKey) {
         return;
       }
 
-      // If current time has reached or passed the cycle start time today
       if (now.getTime() >= cycleStart.getTime()) {
         appState.resetConfig.lastResetDate = todayDateKey;
 
