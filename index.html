@@ -1405,14 +1405,12 @@
                 ${isPositive ? '+' : '−'}
               </div>
               <div class="min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate">${escapeHtml(h.title)}</span>
-                  ${isPositive && !h.groupId && maxLimit > 1 ? `
-                    <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                      ${remainingCount} remaining today
-                    </span>
-                  ` : ''}
-                </div>
+                <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
+                ${isPositive && !h.groupId && maxLimit > 1 ? `
+                  <span class="text-[11px] text-slate-400 block mt-0.5">
+                    Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
+                  </span>
+                ` : ''}
               </div>
             </div>
 
@@ -1803,8 +1801,6 @@
       const day = String(now.getUTCDate()).padStart(2, '0');
       const todayDateKey = `${year}-${month}-${day}`;
 
-      // If lastResetDate is brand new/empty (first time opening the app), 
-      // initialize it to today without applying retroactive penalties.
       if (!appState.resetConfig.lastResetDate) {
         appState.resetConfig.lastResetDate = todayDateKey;
         saveState();
