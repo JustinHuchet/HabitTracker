@@ -1254,14 +1254,14 @@
 
       const negatives = appState.habits.filter(h => h.type === 'negative');
 
-      const renderHabitCard = (h, idx, listLength, isPositive) => {
+      const renderHabitCard = (h, idx, listLength, isPositive, inGroup = false) => {
         const accentBadge = isPositive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300';
         const iconBg = isPositive
           ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400'
           : 'bg-rose-500/10 group-hover:bg-rose-500/20 text-rose-400';
-        const hoverBorder = isPositive
-          ? 'hover:bg-emerald-950/30 hover:border-emerald-500/40'
-          : 'hover:bg-rose-950/30 hover:border-rose-500/40';
+        
+        // Single bubble styling if in a group vs individual card
+        const cardBg = inGroup ? 'bg-transparent' : 'bg-slate-950/70 border border-indigo-500/40 hover:bg-emerald-950/30 hover:border-emerald-500/40 rounded-xl';
         
         const maxLimit = (isPositive && typeof h.dailyLimit === 'number' && h.dailyLimit > 0) ? h.dailyLimit : 1;
         const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
@@ -1272,95 +1272,100 @@
 
         if (isEditingHabits && editingHabitId === h.id) {
           return `
-            <form
-              onsubmit="saveInlineEditHabit(event, '${h.id}')"
-              onclick="event.stopPropagation()"
-              class="p-3.5 rounded-xl bg-slate-950 border border-indigo-500/60 space-y-2.5 shadow-lg shadow-indigo-500/10"
-            >
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <input
-                  type="text"
-                  id="editHabitTitle_${h.id}"
-                  value="${escapeHtml(h.title)}"
-                  required
-                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-                <input
-                  type="number"
-                  id="editHabitPoints_${h.id}"
-                  value="${h.points}"
-                  min="1"
-                  max="1000"
-                  required
-                  class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  id="editHabitSubtext_${h.id}"
-                  value="${escapeHtml(h.subtext || '')}"
-                  placeholder="Optional subtext (appears below title)"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              ${isPositive && !h.groupId ? `
-                <div class="flex items-center gap-2">
-                  <label class="text-[11px] text-slate-400">Max times per day:</label>
+            <div class="p-2">
+              <form
+                onsubmit="saveInlineEditHabit(event, '${h.id}')"
+                onclick="event.stopPropagation()"
+                class="p-3.5 rounded-xl bg-slate-950 border border-indigo-500/60 space-y-2.5 shadow-lg shadow-indigo-500/10"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    id="editHabitTitle_${h.id}"
+                    value="${escapeHtml(h.title)}"
+                    required
+                    class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
                   <input
                     type="number"
-                    id="editHabitLimit_${h.id}"
-                    value="${maxLimit}"
+                    id="editHabitPoints_${h.id}"
+                    value="${h.points}"
                     min="1"
-                    max="20"
-                    class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    max="1000"
+                    required
+                    class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
-              ` : ''}
-              <div class="flex items-center justify-between pt-1">
-                <button
-                  type="button"
-                  onclick="deleteHabit(event, '${h.id}')"
-                  class="text-xs text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
-                >
-                  Delete
-                </button>
-                <div class="flex items-center gap-2">
+                <div>
+                  <input
+                    type="text"
+                    id="editHabitSubtext_${h.id}"
+                    value="${escapeHtml(h.subtext || '')}"
+                    placeholder="Optional subtext (appears below title)"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                ${isPositive && !h.groupId ? `
+                  <div class="flex items-center gap-2">
+                    <label class="text-[11px] text-slate-400">Max times per day:</label>
+                    <input
+                      type="number"
+                      id="editHabitLimit_${h.id}"
+                      value="${maxLimit}"
+                      min="1"
+                      max="20"
+                      class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                ` : ''}
+                <div class="flex items-center justify-between pt-1">
                   <button
                     type="button"
-                    onclick="cancelInlineEditHabit(event)"
-                    class="px-2.5 py-1 rounded-lg text-xs text-slate-400 hover:text-white cursor-pointer"
+                    onclick="deleteHabit(event, '${h.id}')"
+                    class="text-xs text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
                   >
-                    Cancel
+                    Delete
                   </button>
-                  <button
-                    type="submit"
-                    class="px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
-                  >
-                    Save
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onclick="cancelInlineEditHabit(event)"
+                      class="px-2.5 py-1 rounded-lg text-xs text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      class="px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+                    >
+                      Save
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           `;
         }
 
         if (isEditingHabits) {
           const isBeingPaired = isPositive && pairingHabitId === h.id;
           const isPairingCandidate = isPositive && pairingHabitId && pairingHabitId !== h.id;
+          const showLinkButton = pairingHabitId === null || isBeingPaired;
 
           return `
             <div
               onclick="${isPositive ? `handleHabitClickInEditMode('${h.id}')` : `startInlineEditHabit(event, '${h.id}')`}"
-              class="group flex items-center justify-between gap-2 px-3.5 py-3 rounded-xl bg-slate-950/90 border ${
+              class="group flex items-center justify-between gap-2 px-4 py-3.5 ${
+                inGroup ? '' : 'rounded-xl bg-slate-950/90 border border-indigo-500/40'
+              } ${
                 isBeingPaired
                   ? 'border-indigo-400 bg-indigo-950/40 ring-2 ring-indigo-500/30'
                   : isPairingCandidate
                   ? 'border-dashed border-indigo-400/70 hover:bg-indigo-950/30 cursor-pointer'
-                  : 'border-indigo-500/40 hover:border-indigo-400 cursor-pointer'
+                  : 'hover:border-indigo-400 cursor-pointer'
               } transition-all"
             >
-              <div class="flex items-center gap-2.5 min-w-0 flex-1">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
                 <!-- Reorder Arrows -->
                 <div class="flex flex-col gap-0.5 shrink-0" onclick="event.stopPropagation()">
                   <button
@@ -1397,7 +1402,7 @@
               </div>
 
               <div class="flex items-center gap-1.5 shrink-0">
-                ${isPositive ? (
+                ${isPositive && showLinkButton ? (
                   h.groupId ? `
                     <button
                       type="button"
@@ -1431,7 +1436,7 @@
         return `
           <div
             onclick="triggerHabit('${h.id}')"
-            class="group flex items-center justify-between px-4 py-3.5 rounded-xl bg-slate-950/70 border border-indigo-500/40 ${hoverBorder} transition-all active:scale-[0.985] cursor-pointer select-none"
+            class="group flex items-center justify-between px-4 py-3.5 ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
           >
             <div class="flex items-center gap-3 min-w-0 pr-2">
               <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
@@ -1459,7 +1464,7 @@
         `;
       };
 
-      // Render Positive Habits (grouping linked items visually)
+      // Render Positive Habits (grouping linked items visually inside a single bubble)
       if (positives.length === 0) {
         posContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">All positive habits completed for today! 🎉</p>`;
       } else {
@@ -1471,15 +1476,15 @@
             if (!renderedGroups.has(h.groupId)) {
               renderedGroups.add(h.groupId);
               const groupItems = positives.filter(x => x.groupId === h.groupId);
-              const cardsHtml = groupItems.map(gm => {
+              const cardsHtml = groupItems.map((gm, gIdx) => {
                 const gmIdx = positives.findIndex(x => x.id === gm.id);
-                return renderHabitCard(gm, gmIdx, positives.length, true);
+                return renderHabitCard(gm, gmIdx, positives.length, true, true);
               }).join('');
 
               renderedPos.push(`
-                <div class="p-2.5 rounded-2xl bg-indigo-950/20 border border-indigo-500/40 space-y-2">
+                <div class="rounded-2xl bg-slate-950/70 border border-indigo-500/40 divide-y divide-indigo-500/25 overflow-hidden">
                   ${isEditingHabits ? `
-                    <div class="flex items-center justify-between px-1">
+                    <div class="flex items-center justify-between px-4 py-2 bg-indigo-950/40 border-b border-indigo-500/25">
                       <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1">
                         <span>🔗 Linked Group (Pick One)</span>
                       </span>
@@ -1492,14 +1497,12 @@
                       </button>
                     </div>
                   ` : ''}
-                  <div class="space-y-2">
-                    ${cardsHtml}
-                  </div>
+                  ${cardsHtml}
                 </div>
               `);
             }
           } else {
-            renderedPos.push(renderHabitCard(h, idx, positives.length, true));
+            renderedPos.push(renderHabitCard(h, idx, positives.length, true, false));
           }
         });
 
@@ -1511,7 +1514,7 @@
         negContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No penalties configured.</p>`;
       } else {
         negContainer.innerHTML = negatives
-          .map((h, idx) => renderHabitCard(h, idx, negatives.length, false))
+          .map((h, idx) => renderHabitCard(h, idx, negatives.length, false, false))
           .join('');
       }
     }
