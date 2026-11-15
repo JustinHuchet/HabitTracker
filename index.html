@@ -454,8 +454,14 @@
             value="00:00"
             class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-indigo-500"
           />
-          <span class="text-xs text-slate-400">Habits refresh automatically when this time arrives each day.</span>
+          <div class="flex items-center gap-1.5 text-xs text-indigo-400 font-medium bg-indigo-500/10 border border-indigo-500/20 px-3 py-2.5 rounded-xl">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="detectedTimezoneLabel">Local Time</span>
+          </div>
         </div>
+        <p class="text-xs text-slate-400">Habits refresh automatically when this time arrives each day.</p>
       </div>
 
       <!-- 2. Scheduled Point Adjustment -->
@@ -549,10 +555,10 @@
     const DEFAULT_STATE = {
       balance: 0,
       resetConfig: {
-        time: '00:00', // HH:MM
+        time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
-        lastResetDateKey: ''
+        lastAppliedDateKey: ''
       },
       habits: [
         { id: 'h1', title: 'Water Bottle', points: 5, type: 'positive', dailyLimit: 5, order: 0 },
@@ -1658,9 +1664,15 @@
     // =========================================================================
     function openResetConfigModal() {
       const modal = document.getElementById('resetConfigModal');
-      document.getElementById('resetTimeInput').value = appState.resetConfig.time || '00:00';
+      document.getElementById('resetTimeInput').value = appState.resetConfig.time || '07:00';
       document.getElementById('scheduledTitleInput').value = appState.resetConfig.scheduledTitle !== undefined ? appState.resetConfig.scheduledTitle : 'Midnight Daily Baseline Penalty';
       document.getElementById('scheduledPointsInput').value = appState.resetConfig.scheduledPoints !== undefined ? appState.resetConfig.scheduledPoints : -50;
+      
+      const tzLabelEl = document.getElementById('detectedTimezoneLabel');
+      if (tzLabelEl) {
+        tzLabelEl.textContent = 'UTC Time';
+      }
+
       modal.classList.remove('hidden');
       modal.classList.add('flex');
     }
@@ -1687,172 +1699,20 @@
     }
 
     // =========================================================================
-    // 6. MOBILE TABS, BACKUP MODAL & UI UTILITIES
-    // =========================================================================
-    function switchMobileHabitTab(tab) {
-      const posCol = document.getElementById('positiveColumn');
-      const negCol = document.getElementById('negativeColumn');
-      const tabPosBtn = document.getElementById('tabPosBtn');
-      const tabNegBtn = document.getElementById('tabNegBtn');
-
-      if (tab === 'positive') {
-        posCol.classList.remove('hidden');
-        negCol.classList.add('hidden');
-        tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
-        tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-      } else {
-        negCol.classList.remove('hidden');
-        negCol.classList.add('flex');
-        posCol.classList.add('hidden');
-        tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
-        tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-      }
-    }
-
-    function openBackupModal() {
-      const modal = document.getElementById('backupModal');
-      const exportArea = document.getElementById('exportTextarea');
-      exportArea.value = JSON.stringify(appState);
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function closeBackupModal() {
-      const modal = document.getElementById('backupModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    function copyBackupData() {
-      const exportArea = document.getElementById('exportTextarea');
-      exportArea.select();
-      document.execCommand('copy');
-      showToast('Backup JSON copied to clipboard!', 'success');
-    }
-
-    function importBackupData() {
-      const raw = document.getElementById('importTextarea').value.trim();
-      if (!raw) return;
-      try {
-        const parsed = JSON.parse(raw);
-        if (typeof parsed.balance !== 'number' || !Array.isArray(parsed.habits)) {
-          throw new Error('Invalid format');
-        }
-        appState = {
-          balance: parsed.balance,
-          resetConfig: parsed.resetConfig || DEFAULT_STATE.resetConfig,
-          habits: parsed.habits,
-          rewards: Array.isArray(parsed.rewards) ? parsed.rewards : [],
-          logs: Array.isArray(parsed.logs) ? parsed.logs : []
-        };
-        saveState();
-        renderAll();
-        document.getElementById('importTextarea').value = '';
-        closeBackupModal();
-        showToast('Backup restored successfully!', 'success');
-      } catch (e) {
-        showToast('Invalid JSON backup format.', 'danger');
-      }
-    }
-
-    let resetPending = false;
-    function handleFactoryReset() {
-      const btn = document.getElementById('resetConfirmBtn');
-      if (!resetPending) {
-        resetPending = true;
-        btn.textContent = 'Click again to confirm reset';
-        setTimeout(() => {
-          resetPending = false;
-          if (btn) btn.textContent = 'Reset Everything';
-        }, 3500);
-        return;
-      }
-      resetPending = false;
-      btn.textContent = 'Reset Everything';
-      appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-      saveState();
-      renderAll();
-      closeBackupModal();
-      showToast('Reset to default habits & starter points.', 'info');
-    }
-
-    function animateBalanceChange(delta) {
-      const balanceEl = document.getElementById('liveBalance');
-      balanceEl.classList.remove('animate-balance-pop');
-      void balanceEl.offsetWidth;
-      balanceEl.classList.add('animate-balance-pop');
-
-      const container = document.getElementById('floatingDeltaContainer');
-      const floater = document.createElement('span');
-      floater.textContent = `${delta > 0 ? '+' : ''}${delta}`;
-      floater.className = `animate-float-score text-sm font-extrabold ${
-        delta > 0 ? 'text-emerald-400' : 'text-rose-400'
-      }`;
-      container.appendChild(floater);
-      setTimeout(() => floater.remove(), 900);
-    }
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-
-      const styles = {
-        success: 'bg-slate-900 border-emerald-500/40 text-emerald-200',
-        danger: 'bg-slate-900 border-rose-500/40 text-rose-200',
-        reward: 'bg-slate-900 border-amber-500/40 text-amber-200',
-        info: 'bg-slate-900 border-indigo-500/40 text-slate-200'
-      };
-
-      toast.className = `toast-enter pointer-events-auto px-4 py-3 rounded-2xl border shadow-2xl text-xs font-medium flex items-center justify-between gap-2 ${
-        styles[type] || styles.info
-      }`;
-      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(8px)';
-        toast.style.transition = 'all 0.2s ease';
-        setTimeout(() => toast.remove(), 220);
-      }, 2800);
-    }
-
-    function formatTimestamp(iso) {
-      try {
-        const date = new Date(iso);
-        const now = new Date();
-        const isToday = getEffectiveResetDateKey(date) === getEffectiveResetDateKey(now);
-        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        return isToday ? `Today at ${timeStr}` : `${date.toLocaleDateString()} · ${timeStr}`;
-      } catch {
-        return '';
-      }
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    // =========================================================================
-    // 7. CUSTOM RESET TIME, ROLLOVERS & SCHEDULED POINT ADJUSTMENTS
+    // 7. CUSTOM RESET TIME, ROLLOVERS & SCHEDULED POINT ADJUSTMENTS (UTC)
     // =========================================================================
     function getEffectiveResetDateKey(dateObj) {
-      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '00:00';
+      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
       const [rHour, rMin] = timeStr.split(':').map(Number);
 
       const d = new Date(dateObj.getTime());
-      const currentMinutes = d.getHours() * 60 + d.getMinutes();
+      const currentMinutes = d.getUTCHours() * 60 + d.getUTCMinutes();
       const resetMinutes = rHour * 60 + (rMin || 0);
 
       if (currentMinutes < resetMinutes) {
-        d.setDate(d.getDate() - 1);
+        d.setUTCDate(d.getUTCDate() - 1);
       }
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
     }
 
     function getCompletedPositiveCountToday(habitId) {
@@ -1877,16 +1737,33 @@
     let lastCheckedDateKey = getEffectiveResetDateKey(new Date());
 
     function checkResetRollover() {
-      const currentKey = getEffectiveResetDateKey(new Date());
+      const now = new Date();
+      const currentKey = getEffectiveResetDateKey(now);
+      
+      if (!appState.resetConfig.lastAppliedDateKey) {
+        appState.resetConfig.lastAppliedDateKey = currentKey;
+        saveState();
+      }
+
       if (currentKey !== lastCheckedDateKey) {
         lastCheckedDateKey = currentKey;
+        saveState();
+        renderAll();
+        showToast('🌅 Daily habits have refreshed for the new reset cycle (UTC)!', 'info');
+      }
 
-        if (
-          appState.resetConfig &&
-          appState.resetConfig.scheduledPoints !== 0 &&
-          appState.resetConfig.lastResetDateKey !== currentKey
-        ) {
-          appState.resetConfig.lastResetDateKey = currentKey;
+      if (
+        appState.resetConfig &&
+        appState.resetConfig.scheduledPoints !== 0 &&
+        appState.resetConfig.lastAppliedDateKey !== currentKey
+      ) {
+        const timeStr = appState.resetConfig.time || '07:00';
+        const [rHour, rMin] = timeStr.split(':').map(Number);
+        const resetMinutes = rHour * 60 + (rMin || 0);
+        const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+        if (currentMinutes >= resetMinutes) {
+          appState.resetConfig.lastAppliedDateKey = currentKey;
           const sPoints = appState.resetConfig.scheduledPoints;
           const sTitle = appState.resetConfig.scheduledTitle.trim() || 'Scheduled Daily Adjustment';
 
@@ -1898,12 +1775,11 @@
             category: sPoints > 0 ? 'positive' : 'negative',
             timestamp: new Date().toISOString()
           });
+
+          saveState();
+          renderAll();
           showToast(`Scheduled Adjustment: ${sPoints > 0 ? '+' : ''}${sPoints} pts (${sTitle})`, sPoints > 0 ? 'success' : 'danger');
         }
-
-        saveState();
-        renderAll();
-        showToast('🌅 Daily habits have refreshed for the new reset cycle!', 'info');
       }
     }
 
@@ -1921,6 +1797,120 @@
         renderAll();
       }
     });
+
+    // Utility: Escape HTML strings to prevent XSS
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Backup Modal Functions
+    function openBackupModal() {
+      const modal = document.getElementById('backupModal');
+      const textarea = document.getElementById('exportTextarea');
+      if (textarea) {
+        textarea.value = JSON.stringify(appState, null, 2);
+      }
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeBackupModal() {
+      const modal = document.getElementById('backupModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function copyBackupData() {
+      const textarea = document.getElementById('exportTextarea');
+      if (!textarea) return;
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Backup JSON copied to clipboard!', 'success');
+      } catch (err) {
+        showToast('Failed to copy to clipboard', 'danger');
+      }
+    }
+
+    function importBackupData() {
+      const textarea = document.getElementById('importTextarea');
+      if (!textarea) return;
+      const raw = textarea.value.trim();
+      if (!raw) {
+        showToast('Please paste valid backup JSON first.', 'info');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.habits)) {
+          appState = parsed;
+          saveState();
+          renderAll();
+          closeBackupModal();
+          showToast('Successfully restored backup data!', 'success');
+        } else {
+          showToast('Invalid backup JSON structure.', 'danger');
+        }
+      } catch (err) {
+        showToast('Failed to parse JSON backup.', 'danger');
+      }
+    }
+
+    function handleFactoryReset() {
+      if (confirm('Are you sure you want to reset all habits and progress to defaults?')) {
+        appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        saveState();
+        renderAll();
+        closeBackupModal();
+        showToast('Reset to default habits & settings.', 'info');
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      let bgClass = 'bg-slate-900 border-slate-700 text-slate-100';
+      if (type === 'success') bgClass = 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200';
+      else if (type === 'danger') bgClass = 'bg-rose-950/90 border-rose-500/40 text-rose-200';
+      else if (type === 'reward') bgClass = 'bg-amber-950/90 border-amber-500/40 text-amber-200';
+
+      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-xl text-xs font-medium toast-enter backdrop-blur-md ${bgClass}`;
+      toast.textContent = message;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.25s ease';
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    function animateBalanceChange(delta) {
+      const container = document.getElementById('floatingDeltaContainer');
+      if (!container) return;
+
+      const badge = document.createElement('div');
+      badge.className = `text-xs font-extrabold px-2 py-0.5 rounded-lg shadow-lg animate-float-score ${
+        delta > 0 ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
+      }`;
+      badge.textContent = delta > 0 ? `+${delta}` : delta;
+
+      container.appendChild(badge);
+      setTimeout(() => badge.remove(), 850);
+    }
 
     // Initialize UI on load & check daily reset rollover
     renderAll();
