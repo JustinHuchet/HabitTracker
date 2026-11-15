@@ -966,64 +966,89 @@
       const targetHabit = appState.habits.find(h => h.id === habitId);
       if (!targetHabit) return;
 
-      const sameTypeHabits = appState.habits.filter(h => h.type === targetHabit.type);
-      
-      if (targetHabit.type === 'positive' && targetHabit.groupId) {
-        const groupItems = sameTypeHabits.filter(h => h.groupId === targetHabit.groupId);
-        const firstIdx = sameTypeHabits.findIndex(h => h.id === groupItems[0].id);
-        const lastIdx = sameTypeHabits.findIndex(h => h.id === groupItems[groupItems.length - 1].id);
+      if (targetHabit.type === 'negative') {
+        const negatives = appState.habits.filter(h => h.type === 'negative');
+        const pos = negatives.findIndex(h => h.id === habitId);
+        const newPos = pos + direction;
+        if (newPos < 0 || newPos >= negatives.length) return;
 
-        if ((habitId === groupItems[0].id && direction === -1 && firstIdx > 0) ||
-            (habitId === groupItems[groupItems.length - 1].id && direction === 1 && lastIdx < sameTypeHabits.length - 1)) {
-          
-          const nonGroupHabits = sameTypeHabits.filter(h => h.groupId !== targetHabit.groupId);
-          const insertBlockAt = direction === -1 ? firstIdx - 1 : firstIdx + 1;
-          
-          nonGroupHabits.splice(insertBlockAt, 0, ...groupItems);
-          
-          const negatives = appState.habits.filter(h => h.type === 'negative');
-          appState.habits = [...nonGroupHabits, ...negatives];
-          saveState();
-          renderHabits();
-          return;
-        }
+        const temp = negatives[pos];
+        negatives[pos] = negatives[newPos];
+        negatives[newPos] = temp;
 
-        const groupPos = groupItems.findIndex(h => h.id === habitId);
-        const targetGroupPos = groupPos + direction;
-        if (targetGroupPos >= 0 && targetGroupPos < groupItems.length) {
-          const itemA = groupItems[groupPos];
-          const itemB = groupItems[targetGroupPos];
-          const globalIdxA = appState.habits.findIndex(h => h.id === itemA.id);
-          const globalIdxB = appState.habits.findIndex(h => h.id === itemB.id);
-          
-          const temp = appState.habits[globalIdxA];
-          appState.habits[globalIdxA] = appState.habits[globalIdxB];
-          appState.habits[globalIdxB] = temp;
-
-          saveState();
-          renderHabits();
-          return;
-        }
+        const positives = appState.habits.filter(h => h.type === 'positive');
+        appState.habits = [...positives, ...negatives];
+        saveState();
+        renderHabits();
+        return;
       }
 
-      const sameTypeIndices = [];
-      appState.habits.forEach((h, idx) => {
-        if (h.type === targetHabit.type) {
-          sameTypeIndices.push(idx);
+      // Block-based reordering for positive habits to support new habits & linked groups robustly
+      const positives = appState.habits.filter(h => h.type === 'positive');
+      const blocks = [];
+      const processedGroups = new Set();
+
+      positives.forEach(h => {
+        if (h.groupId) {
+          if (!processedGroups.has(h.groupId)) {
+            processedGroups.add(h.groupId);
+            const groupMems = positives.filter(x => x.groupId === h.groupId);
+            blocks.push({ type: 'group', groupId: h.groupId, habits: groupMems });
+          }
+        } else {
+          blocks.push({ type: 'single', habit: h });
         }
       });
 
-      const currentGlobalIdx = appState.habits.findIndex(h => h.id === habitId);
-      const posInGroup = sameTypeIndices.indexOf(currentGlobalIdx);
-      const swapPosInGroup = posInGroup + direction;
+      let blockIdx = -1;
+      let habitIdxInGroup = -1;
+      blocks.forEach((b, bIdx) => {
+        if (b.type === 'single') {
+          if (b.habit.id === habitId) blockIdx = bIdx;
+        } else {
+          const gIdx = b.habits.findIndex(x => x.id === habitId);
+          if (gIdx !== -1) {
+            blockIdx = bIdx;
+            habitIdxInGroup = gIdx;
+          }
+        }
+      });
 
-      if (swapPosInGroup < 0 || swapPosInGroup >= sameTypeIndices.length) return;
+      if (blockIdx === -1) return;
 
-      const swapGlobalIdx = sameTypeIndices[swapPosInGroup];
-      const temp = appState.habits[currentGlobalIdx];
-      appState.habits[currentGlobalIdx] = appState.habits[swapGlobalIdx];
-      appState.habits[swapGlobalIdx] = temp;
+      const targetBlock = blocks[blockIdx];
 
+      if (targetBlock.type === 'group' && habitIdxInGroup !== -1) {
+        const newGroupPos = habitIdxInGroup + direction;
+        if (newGroupPos >= 0 && newGroupPos < targetBlock.habits.length) {
+          const temp = targetBlock.habits[habitIdxInGroup];
+          targetBlock.habits[habitIdxInGroup] = targetBlock.habits[newGroupPos];
+          targetBlock.habits[newGroupPos] = temp;
+        } else {
+          const newBlockIdx = blockIdx + direction;
+          if (newBlockIdx >= 0 && newBlockIdx < blocks.length) {
+            const temp = blocks[blockIdx];
+            blocks[blockIdx] = blocks[newBlockIdx];
+            blocks[newBlockIdx] = temp;
+          }
+        }
+      } else {
+        const newBlockIdx = blockIdx + direction;
+        if (newBlockIdx >= 0 && newBlockIdx < blocks.length) {
+          const temp = blocks[blockIdx];
+          blocks[blockIdx] = blocks[newBlockIdx];
+          blocks[newBlockIdx] = temp;
+        }
+      }
+
+      const newPositives = [];
+      blocks.forEach(b => {
+        if (b.type === 'single') newPositives.push(b.habit);
+        else b.habits.forEach(h => newPositives.push(h));
+      });
+
+      const negatives = appState.habits.filter(h => h.type === 'negative');
+      appState.habits = [...newPositives, ...negatives];
       saveState();
       renderHabits();
     }
@@ -1271,7 +1296,6 @@
           ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400'
           : 'bg-rose-500/10 group-hover:bg-rose-500/20 text-rose-400';
         
-        // Single bubble styling if in a group vs individual card
         const cardBg = inGroup ? 'bg-transparent' : 'bg-slate-950/70 border border-indigo-500/40 hover:bg-emerald-950/30 hover:border-emerald-500/40 rounded-xl';
         
         const maxLimit = (isPositive && typeof h.dailyLimit === 'number' && h.dailyLimit > 0) ? h.dailyLimit : 1;
@@ -1279,6 +1303,8 @@
         const remainingCount = Math.max(0, maxLimit - completedCount);
 
         const showSubtext = h.subtext && (isEditingHabits || maxLimit === 1);
+        const showProgress = isPositive && !h.groupId && maxLimit > 1;
+        const hasSecondaryLine = showSubtext || showProgress;
 
         if (isEditingHabits && editingHabitId === h.id) {
           return `
@@ -1407,7 +1433,7 @@
                     <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
                     ${isPositive && !h.groupId && maxLimit > 1 ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${maxLimit}x/day</span>` : ''}
                   </div>
-                  ${h.subtext ? `<span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>` : `<span class="text-[11px] text-transparent block mt-0.5 select-none" aria-hidden="true">&nbsp;</span>`}
+                  ${h.subtext ? `<span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>` : ''}
                 </div>
               </div>
 
@@ -1442,7 +1468,7 @@
           `;
         }
 
-        // Standard (Non-Editor) View — fixed height min-h-[52px] with explicit two-line vertical stack
+        // Standard (Non-Editor) View — vertically centered if no subtext/progress, two-line stack if subtext/progress present
         return `
           <div
             onclick="triggerHabit('${h.id}')"
@@ -1458,13 +1484,11 @@
                   <span class="text-[11px] text-slate-400 block truncate mt-0.5">
                     ${escapeHtml(h.subtext)}
                   </span>
-                ` : isPositive && !h.groupId && maxLimit > 1 ? `
+                ` : showProgress ? `
                   <span class="text-[11px] text-slate-400 block mt-0.5">
                     Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
                   </span>
-                ` : `
-                  <span class="text-[11px] text-transparent block mt-0.5 select-none" aria-hidden="true">&nbsp;</span>
-                `}
+                ` : ''}
               </div>
             </div>
 
@@ -1475,7 +1499,7 @@
         `;
       };
 
-      // Render Positive Habits (grouping linked items visually inside a single bubble)
+      // Render Positive Habits
       if (positives.length === 0) {
         posContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">All positive habits completed for today! 🎉</p>`;
       } else {
