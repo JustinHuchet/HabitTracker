@@ -557,7 +557,8 @@
         time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
-        lastAppliedDateKey: ''
+        lastResetDate: '',
+        currentCycleStart: ''
       },
       habits: [
         { id: 'h1', title: 'Water Bottle', points: 5, type: 'positive', dailyLimit: 5, order: 0 },
@@ -1176,13 +1177,12 @@
         appState.balance < 0 ? 'text-rose-400' : 'text-white'
       }`;
 
-      const activeDateKey = getEffectiveResetDateKey(new Date());
       let earnedToday = 0;
       let lostToday = 0;
       let spentToday = 0;
 
       appState.logs.forEach(log => {
-        if (getEffectiveResetDateKey(new Date(log.timestamp)) === activeDateKey) {
+        if (isLogCurrentCycle(log.timestamp)) {
           if (log.category === 'positive') earnedToday += log.delta;
           else if (log.category === 'negative') lostToday += Math.abs(log.delta);
           else if (log.category === 'redeem') spentToday += Math.abs(log.delta);
@@ -1685,6 +1685,7 @@
       const titleVal = document.getElementById('scheduledTitleInput').value.trim();
       const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
 
+      // Update config settings only — DO NOT trigger reset or point adjustment instantly upon saving
       appState.resetConfig.time = timeVal;
       appState.resetConfig.scheduledTitle = titleVal;
       appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
@@ -1692,7 +1693,7 @@
       saveState();
       closeResetConfigModal();
       showToast('Reset schedule & scheduled points updated!', 'success');
-      checkResetRollover();
+      renderAll();
     }
 
     // =========================================================================
@@ -1719,7 +1720,6 @@
       }
     }
 
-    // Reset inline styles on window resize so desktop 2-column view works smoothly
     window.addEventListener('resize', () => {
       const posCol = document.getElementById('positiveColumn');
       const negCol = document.getElementById('negativeColumn');
@@ -1729,35 +1729,29 @@
       }
     });
 
-    // Initialize mobile view default tab on load
     if (window.innerWidth < 768) {
       const negCol = document.getElementById('negativeColumn');
       if (negCol) negCol.style.display = 'none';
     }
 
     // =========================================================================
-    // 7. CUSTOM RESET TIME, ROLLOVERS & SCHEDULED POINT ADJUSTMENTS (UTC)
+    // 7. ROBUST ONCE-PER-DAY RESET & STABLE CYCLE MANAGEMENT (UTC)
     // =========================================================================
-    function getEffectiveResetDateKey(dateObj) {
-      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
-      const [rHour, rMin] = timeStr.split(':').map(Number);
+    function isLogCurrentCycle(timestampISO) {
+      if (!timestampISO) return false;
+      const logTime = new Date(timestampISO).getTime();
 
-      const d = new Date(dateObj.getTime());
-      const currentMinutes = d.getUTCHours() * 60 + d.getUTCMinutes();
-      const resetMinutes = rHour * 60 + (rMin || 0);
-
-      if (currentMinutes < resetMinutes) {
-        d.setUTCDate(d.getUTCDate() - 1);
+      if (appState.resetConfig.currentCycleStart) {
+        const cycleStartTime = new Date(appState.resetConfig.currentCycleStart).getTime();
+        return logTime >= cycleStartTime;
       }
-      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      return false;
     }
 
     function getCompletedPositiveCountToday(habitId) {
-      const activeDateKey = getEffectiveResetDateKey(new Date());
       let count = 0;
-
       appState.logs.forEach(log => {
-        if (log.category === 'positive' && getEffectiveResetDateKey(new Date(log.timestamp)) === activeDateKey) {
+        if (log.category === 'positive' && isLogCurrentCycle(log.timestamp)) {
           if (log.habitId === habitId) {
             count++;
           } else {
@@ -1771,52 +1765,53 @@
       return count;
     }
 
-    let lastCheckedDateKey = getEffectiveResetDateKey(new Date());
-
     function checkResetRollover() {
       const now = new Date();
-      const currentKey = getEffectiveResetDateKey(now);
-      
-      if (!appState.resetConfig.lastAppliedDateKey) {
-        appState.resetConfig.lastAppliedDateKey = currentKey;
+      const year = now.getUTCFullYear();
+      const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(now.getUTCDate()).padStart(2, '0');
+      const todayDateKey = `${year}-${month}-${day}`;
+
+      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
+      const [rHour, rMin] = timeStr.split(':').map(Number);
+
+      const resetDateTime = new Date(Date.UTC(year, now.getUTCMonth(), now.getUTCDate(), rHour, rMin || 0, 0));
+
+      // If initial state lacks currentCycleStart, initialize it safely
+      if (!appState.resetConfig.currentCycleStart) {
+        const initialStart = now.getTime() >= resetDateTime.getTime() 
+          ? resetDateTime 
+          : new Date(resetDateTime.getTime() - 24 * 60 * 60 * 1000);
+        appState.resetConfig.currentCycleStart = initialStart.toISOString();
         saveState();
       }
 
-      if (currentKey !== lastCheckedDateKey) {
-        lastCheckedDateKey = currentKey;
-        saveState();
-        renderAll();
-        showToast('🌅 Daily habits have refreshed for the new reset cycle (UTC)!', 'info');
+      // If already reset today, do not trigger again
+      if (appState.resetConfig.lastResetDate === todayDateKey) {
+        return;
       }
 
-      if (
-        appState.resetConfig &&
-        appState.resetConfig.scheduledPoints !== 0 &&
-        appState.resetConfig.lastAppliedDateKey !== currentKey
-      ) {
-        const timeStr = appState.resetConfig.time || '07:00';
-        const [rHour, rMin] = timeStr.split(':').map(Number);
-        const resetMinutes = rHour * 60 + (rMin || 0);
-        const currentMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+      // If the clock has reached or passed today's reset time
+      if (now.getTime() >= resetDateTime.getTime()) {
+        appState.resetConfig.lastResetDate = todayDateKey;
+        appState.resetConfig.currentCycleStart = resetDateTime.toISOString();
 
-        if (currentMinutes >= resetMinutes) {
-          appState.resetConfig.lastAppliedDateKey = currentKey;
-          const sPoints = appState.resetConfig.scheduledPoints;
-          const sTitle = appState.resetConfig.scheduledTitle.trim() || 'Scheduled Daily Adjustment';
-
+        const sPoints = appState.resetConfig.scheduledPoints;
+        if (sPoints !== 0) {
+          const sTitle = (appState.resetConfig.scheduledTitle || '').trim() || 'Scheduled Daily Adjustment';
           appState.balance += sPoints;
           appState.logs.unshift({
             id: 'log_sched_' + Date.now(),
             title: sTitle,
             delta: sPoints,
             category: sPoints > 0 ? 'positive' : 'negative',
-            timestamp: new Date().toISOString()
+            timestamp: now.toISOString()
           });
-
-          saveState();
-          renderAll();
-          showToast(`Scheduled Adjustment: ${sPoints > 0 ? '+' : ''}${sPoints} pts (${sTitle})`, sPoints > 0 ? 'success' : 'danger');
         }
+
+        saveState();
+        renderAll();
+        showToast('🌅 Daily habits have refreshed for the new reset cycle!', 'info');
       }
     }
 
@@ -1827,7 +1822,6 @@
     });
     setInterval(checkResetRollover, 20000);
 
-    // Sync state across multiple open tabs if localStorage changes
     window.addEventListener('storage', (event) => {
       if (event.key === STORAGE_KEY && event.newValue) {
         appState = loadState();
@@ -1835,7 +1829,6 @@
       }
     });
 
-    // Utility: Format ISO timestamp into a readable local time/date string
     function formatTimestamp(isoString) {
       if (!isoString) return '';
       try {
@@ -1846,7 +1839,6 @@
       }
     }
 
-    // Utility: Escape HTML strings to prevent XSS
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
@@ -1857,7 +1849,6 @@
         .replace(/'/g, '&#039;');
     }
 
-    // Backup Modal Functions
     function openBackupModal() {
       const modal = document.getElementById('backupModal');
       const textarea = document.getElementById('exportTextarea');
