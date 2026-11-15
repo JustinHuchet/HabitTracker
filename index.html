@@ -929,6 +929,9 @@
 
     function moveHabitOrder(event, habitId, direction) {
       event.stopPropagation();
+      // Prevent browser focus trap on destroyed DOM nodes during rapid clicks
+      if (document.activeElement) document.activeElement.blur();
+
       const targetHabit = appState.habits.find(h => h.id === habitId);
       if (!targetHabit) return;
 
