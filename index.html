@@ -1,0 +1,1928 @@
+<!-- ... extracellular -->
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PointQuest — Habit & Reward Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            slate: {
+              850: '#151e32',
+              925: '#0b101d',
+              950: '#070a13',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #070a13;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b101d;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    /* Floating score pop animation */
+    @keyframes floatUpFade {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(0.95);
+      }
+      50% {
+        opacity: 1;
+        transform: translateY(-22px) scale(1.08);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-38px) scale(1);
+      }
+    }
+    .animate-float-score {
+      animation: floatUpFade 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Pulse ring on balance update */
+    @keyframes balancePop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.07); }
+      100% { transform: scale(1); }
+    }
+    .animate-balance-pop {
+      animation: balancePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Toast slide-in */
+    @keyframes slideInToast {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .toast-enter {
+      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white pb-20">
+
+  <!-- Top Navigation & Live Balance Sticky Header -->
+  <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        
+        <!-- Brand & Live Balance -->
+        <div class="flex items-center justify-between md:justify-start gap-5">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-lg font-bold tracking-tight text-white leading-none">PointQuest</h1>
+              <p class="text-xs text-slate-400 mt-1">Earn Discipline. Buy Freedom.</p>
+            </div>
+          </div>
+
+          <!-- Live Point Counter Pill -->
+          <div class="relative flex items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2 shadow-inner">
+            <div>
+              <span class="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Available Balance</span>
+              <div class="flex items-baseline gap-1.5">
+                <span id="liveBalance" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">0</span>
+                <span class="text-xs font-semibold text-indigo-400">PTS</span>
+              </div>
+            </div>
+            <div id="floatingDeltaContainer" class="pointer-events-none absolute -top-2 right-2"></div>
+          </div>
+        </div>
+
+        <!-- Daily Stats & Action Controls -->
+        <div class="flex flex-col md:items-end gap-2 sm:gap-2.5">
+          <!-- Top Row: Today's Stats & Gear (Backup) Button -->
+          <div class="flex items-center gap-2">
+            <!-- Today's Stats -->
+            <div class="flex items-center gap-3 bg-slate-900/60 border border-slate-800/80 rounded-xl px-3.5 py-2 text-xs">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="text-slate-400">Today:</span>
+                <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
+              </div>
+              <span class="text-slate-700">|</span>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span class="text-slate-400">Penalties:</span>
+                <span id="todayLost" class="font-bold text-rose-400">-0</span>
+              </div>
+              <span class="text-slate-700 hidden sm:inline">|</span>
+              <div class="hidden sm:flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span class="text-slate-400">Spent:</span>
+                <span id="todaySpent" class="font-bold text-amber-400">0</span>
+              </div>
+            </div>
+
+            <!-- Backup / Settings Gear Button -->
+            <button
+              onclick="openBackupModal()"
+              title="Backup, Restore, or Reset Data"
+              class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer shrink-0"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Bottom Row: Scheduler & Editor Buttons -->
+          <div class="flex items-center justify-end gap-2 w-full">
+            <!-- Scheduler Button -->
+            <button
+              onclick="openResetConfigModal()"
+              title="Configure Habit Refresh Time & Scheduled Points"
+              class="flex-1 sm:flex-initial p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold px-3"
+            >
+              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Scheduler</span>
+            </button>
+
+            <!-- Editor Button -->
+            <button
+              id="toggleEditHabitsBtn"
+              onclick="toggleEditHabitsMode()"
+              class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span id="toggleEditHabitsLabel">Editor</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Grid -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-6 space-y-8">
+
+    <!-- Section 1: Actions & Habits (Positive vs Negative) -->
+    <section aria-labelledby="habits-heading">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 id="habits-heading" class="text-lg font-bold text-white flex items-center gap-2">
+            <span>Actions & Habits</span>
+            <span id="habitsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Tap to Log</span>
+          </h2>
+          <p id="habitsSubtitle" class="text-xs text-slate-400 mt-0.5">Earn points for positive routines or log penalties for slip-ups.</p>
+        </div>
+
+        <!-- Mobile Tab Switcher (Visible on small screens) -->
+        <div class="flex sm:hidden bg-slate-900 p-1 rounded-xl border border-slate-800 w-full">
+          <button id="tabPosBtn" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition">
+            + Positive Habits
+          </button>
+          <button id="tabNegBtn" onclick="switchMobileHabitTab('negative')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
+            - Penalties
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Positive Habits Column -->
+        <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/20">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base">+</span>
+                <div>
+                  <h3 class="text-sm font-bold text-emerald-300">Positive Habits</h3>
+                  <p class="text-[11px] text-slate-400">Build momentum & stack points</p>
+                </div>
+              </div>
+              <button
+                id="addPosBtn"
+                onclick="toggleForm('positiveForm')"
+                class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition cursor-pointer"
+              >
+                + Add Habit
+              </button>
+            </div>
+
+            <!-- Add Custom Positive Habit Form -->
+            <form id="positiveForm" onsubmit="handleAddHabit(event, 'positive')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <input
+                  type="text"
+                  id="posTitleInput"
+                  placeholder="e.g., Read 20 pages"
+                  required
+                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+                <input
+                  type="number"
+                  id="posPointsInput"
+                  placeholder="Points (e.g. 15)"
+                  min="1"
+                  max="1000"
+                  required
+                  class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" onclick="toggleForm('positiveForm')" class="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white">Cancel</button>
+                <button type="submit" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer">Save Habit</button>
+              </div>
+            </form>
+
+            <!-- Positive Habit List -->
+            <div id="positiveHabitList" class="space-y-2.5"></div>
+          </div>
+        </div>
+
+        <!-- Negative Habits / Penalties Column -->
+        <div id="negativeColumn" class="hidden sm:flex bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex-col justify-between shadow-xl shadow-black/20">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-base">−</span>
+                <div>
+                  <h3 class="text-sm font-bold text-rose-300">Penalties & Slip-Ups</h3>
+                  <p class="text-[11px] text-slate-400">Hold yourself accountable</p>
+                </div>
+              </div>
+              <button
+                id="addNegBtn"
+                onclick="toggleForm('negativeForm')"
+                class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition cursor-pointer"
+              >
+                + Add Penalty
+              </button>
+            </div>
+
+            <!-- Add Custom Penalty Form -->
+            <form id="negativeForm" onsubmit="handleAddHabit(event, 'negative')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-rose-500/30 space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <input
+                  type="text"
+                  id="negTitleInput"
+                  placeholder="e.g., Stayed up past midnight"
+                  required
+                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                />
+                <input
+                  type="number"
+                  id="negPointsInput"
+                  placeholder="Deduct (e.g. 15)"
+                  min="1"
+                  max="1000"
+                  required
+                  class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                />
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" onclick="toggleForm('negativeForm')" class="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white">Cancel</button>
+                <button type="submit" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white cursor-pointer">Save Penalty</button>
+              </div>
+            </form>
+
+            <!-- Negative Habit List -->
+            <div id="negativeHabitList" class="space-y-2.5"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 2: Reward Store -->
+    <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+            </svg>
+          </div>
+          <div>
+            <h2 id="rewards-heading" class="text-lg font-bold text-white flex items-center gap-2">
+              <span>Reward Store</span>
+              <span id="rewardsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Redeem</span>
+            </h2>
+            <p id="rewardsSubtitle" class="text-xs text-slate-400">Cash in your hard-earned points for guilt-free fun.</p>
+          </div>
+        </div>
+
+        <button
+          id="addRewardBtnEl"
+          onclick="toggleForm('rewardForm')"
+          class="hidden self-start sm:self-auto text-xs font-semibold px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer"
+        >
+          + Add Custom Reward
+        </button>
+      </div>
+
+      <!-- Add Custom Reward Form -->
+      <form id="rewardForm" onsubmit="handleAddReward(event)" class="hidden mb-5 p-4 rounded-xl bg-slate-950/80 border border-amber-500/30">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <input
+            type="text"
+            id="rewardTitleInput"
+            placeholder="Reward name (e.g., 1 Hr Gaming)"
+            required
+            class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+          />
+          <input
+            type="number"
+            id="rewardCostInput"
+            placeholder="Point cost (e.g., 25)"
+            min="1"
+            max="5000"
+            required
+            class="bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+          />
+          <div class="flex gap-2">
+            <button type="submit" class="flex-1 px-4 py-2 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition cursor-pointer">
+              Create Reward
+            </button>
+            <button type="button" onclick="toggleForm('rewardForm')" class="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Rewards Grid -->
+      <div id="rewardStoreGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+    </section>
+
+    <!-- Section 3: Activity Log -->
+    <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/20">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 id="log-heading" class="text-lg font-bold text-white">Activity Ledger</h2>
+          <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            id="undoLastBtn"
+            onclick="undoLastAction()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs font-semibold text-slate-200 border border-slate-700 transition cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            <span>Undo Last</span>
+          </button>
+          <button
+            onclick="clearLogsOnly()"
+            class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-xs text-slate-400 hover:text-slate-200 border border-slate-800 transition cursor-pointer"
+          >
+            Clear History
+          </button>
+        </div>
+      </div>
+
+      <div id="activityLogList" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+    </section>
+
+  </main>
+
+  <!-- Reset Schedule & Scheduled Points Modal -->
+  <div id="resetConfigModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Habit Reset & Scheduled Points</h3>
+        <button onclick="closeResetConfigModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Choose the exact time of day when your daily habits reset/reappear. You can also attach a scheduled daily point adjustment (positive bonus or negative penalty) that automatically applies when the reset triggers.
+      </p>
+
+      <!-- 1. Reset Time Picker -->
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-slate-300">Habit Reset Time (Daily)</label>
+        <div class="flex items-center gap-3">
+          <input
+            type="time"
+            id="resetTimeInput"
+            value="00:00"
+            class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-indigo-500"
+          />
+          <span class="text-xs text-slate-400">Habits refresh automatically when this time arrives each day.</span>
+        </div>
+      </div>
+
+      <!-- 2. Scheduled Point Adjustment -->
+      <div class="space-y-3 pt-3 border-t border-slate-800">
+        <div>
+          <label class="text-xs font-semibold text-slate-300">Scheduled Daily Point Adjustment (Optional)</label>
+          <p class="text-[11px] text-slate-400 mt-0.5">Automatically add positive points (bonus) or remove points (penalty) at reset time.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input
+            type="text"
+            id="scheduledTitleInput"
+            placeholder="Reason (e.g., Daily Baseline Upkeep)"
+            class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+          />
+          <div class="flex items-center gap-2">
+            <input
+              type="number"
+              id="scheduledPointsInput"
+              placeholder="+/- Points (e.g. 10 or -15)"
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+        <button onclick="closeResetConfigModal()" class="px-4 py-2.5 rounded-xl text-xs text-slate-400 hover:text-white">Cancel</button>
+        <button onclick="saveResetConfig()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition cursor-pointer">
+          Save Schedule Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup / Export / Import / Reset Modal -->
+  <div id="backupModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Data Backup & Reset</h3>
+        <button onclick="closeBackupModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Your points, custom habits, rewards, and activity logs are automatically saved in your browser's local storage and persist across refreshes. Export a backup code anytime to save or restore your progress.
+      </p>
+
+      <!-- Export -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-slate-300">Export Backup JSON</label>
+          <button onclick="copyBackupData()" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 cursor-pointer">Copy to Clipboard</button>
+        </div>
+        <textarea id="exportTextarea" readonly rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-slate-300 focus:outline-none"></textarea>
+      </div>
+
+      <!-- Import -->
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-slate-300">Restore from Backup JSON</label>
+        <textarea id="importTextarea" rows="3" placeholder="Paste previously exported JSON here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"></textarea>
+        <button onclick="importBackupData()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition cursor-pointer">
+          Restore Backup Data
+        </button>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+        <span class="text-xs text-slate-400">Start fresh with default habits?</span>
+        <button id="resetConfirmBtn" onclick="handleFactoryReset()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-semibold transition cursor-pointer">
+          Reset Everything
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none"></div>
+
+  <script>
+    // =========================================================================
+    // 1. DEFAULT STATE & PERSISTENT LOCAL STORAGE
+    // =========================================================================
+    const STORAGE_KEY = 'pointquest_tracker_state_v1';
+
+    const DEFAULT_STATE = {
+      balance: 0,
+      resetConfig: {
+        time: '00:00', // HH:MM
+        scheduledTitle: 'Midnight Daily Baseline Penalty',
+        scheduledPoints: -50,
+        lastResetDateKey: ''
+      },
+      habits: [
+        { id: 'h1', title: 'Water Bottle', points: 5, type: 'positive', dailyLimit: 5, order: 0 },
+        { id: 'h2', title: 'Morning Mobility', points: 10, type: 'positive', dailyLimit: 1, order: 1 },
+        { id: 'h3', title: 'Commute @ 8am', points: 10, type: 'positive', dailyLimit: 1, order: 2 },
+        { id: 'h_clean', title: 'Clean House (before 9pm)', points: 10, type: 'positive', dailyLimit: 1, order: 3 },
+        { id: 'h4', title: 'Shower @ 9pm', points: 10, type: 'positive', dailyLimit: 1, order: 4 },
+        { id: 'h5', title: 'Sick Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', order: 5 },
+        { id: 'h6', title: 'Mid Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', order: 6 },
+        { id: 'h7', title: 'Swim (< 1km)', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_swim', order: 7 },
+        { id: 'h8', title: 'Swim (1km+)', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_swim', order: 8 },
+        { id: 'h9', title: 'Run (<10km)', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_run', order: 9 },
+        { id: 'h10', title: 'Run (10km+)', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_run', order: 10 },
+        { id: 'h_meal', title: 'Meal Prep', points: 20, type: 'positive', dailyLimit: 1, order: 11 },
+        { id: 'h11', title: 'Balcony Read (30+ mins)', points: 10, type: 'positive', dailyLimit: 1, order: 12 },
+        { id: 'h_lang', title: 'Language Practice (30+ mins)', points: 20, type: 'positive', dailyLimit: 1, order: 13 },
+        { id: 'h12', title: 'Yoga', points: 20, type: 'positive', dailyLimit: 1, order: 14 },
+        { id: 'h13', title: 'Pickleball', points: 20, type: 'positive', dailyLimit: 1, order: 15 },
+        { id: 'h14', title: 'Demo Forest', points: 20, type: 'positive', dailyLimit: 1, order: 16 },
+        { id: 'h15', title: 'Hit Snooze / Woke Up Late', points: 10, type: 'negative', order: 17 },
+        { id: 'h16', title: 'Skipped Workout', points: 20, type: 'negative', order: 18 },
+        { id: 'h17', title: 'Doomscrolled > 1 hr', points: 15, type: 'negative', order: 19 },
+        { id: 'h18', title: 'Junk Food / Impulse Spend', points: 10, type: 'negative', order: 20 }
+      ],
+      rewards: [
+        { id: 'r1', title: '1 Hour Video Games', cost: 25, icon: '🎮' }
+      ],
+      logs: []
+    };
+
+    let appState = loadState();
+    let isEditingHabits = false;
+    let editingHabitId = null;
+    let pairingHabitId = null;
+    let editingRewardId = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            return {
+              balance: typeof parsed.balance === 'number' ? parsed.balance : DEFAULT_STATE.balance,
+              resetConfig: parsed.resetConfig
+                ? { ...DEFAULT_STATE.resetConfig, ...parsed.resetConfig }
+                : { ...DEFAULT_STATE.resetConfig },
+              habits: Array.isArray(parsed.habits)
+                ? parsed.habits
+                : JSON.parse(JSON.stringify(DEFAULT_STATE.habits)),
+              rewards: Array.isArray(parsed.rewards)
+                ? parsed.rewards
+                : JSON.parse(JSON.stringify(DEFAULT_STATE.rewards)),
+              logs: Array.isArray(parsed.logs) ? parsed.logs : []
+            };
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load state from localStorage:', err);
+      }
+      return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+
+    function saveState() {
+      appState.habits = appState.habits.map((h, index) => ({
+        ...h,
+        order: index
+      }));
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (err) {
+        console.error('Failed to save state to localStorage:', err);
+      }
+    }
+
+    // =========================================================================
+    // 2. CORE POINT & HABIT ACTIONS
+    // =========================================================================
+    function triggerHabit(habitId, sourceLabel = '') {
+      const habit = appState.habits.find(h => h.id === habitId);
+      if (!habit) return;
+
+      const isPositive = habit.type === 'positive';
+      
+      // If part of a group, checking group completion status
+      if (isPositive && habit.groupId) {
+        const groupMems = appState.habits.filter(x => x.groupId === habit.groupId);
+        const anyGroupCompleted = groupMems.some(gm => {
+          const limit = (typeof gm.dailyLimit === 'number' && gm.dailyLimit > 0) ? gm.dailyLimit : 1;
+          return getCompletedPositiveCountToday(gm.id) >= limit;
+        });
+        if (anyGroupCompleted) {
+          showToast(`This linked group has already been completed for today!`, 'info');
+          return;
+        }
+      } else if (isPositive) {
+        const maxLimit = (typeof habit.dailyLimit === 'number' && habit.dailyLimit > 0) ? habit.dailyLimit : 1;
+        const completedCount = getCompletedPositiveCountToday(habit.id);
+        if (completedCount >= maxLimit) {
+          showToast(`"${habit.title}" has reached its daily limit of ${maxLimit} for today!`, 'info');
+          return;
+        }
+      }
+
+      const delta = isPositive ? Math.abs(habit.points) : -Math.abs(habit.points);
+      appState.balance += delta;
+
+      const logEntry = {
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        habitId: habit.id,
+        title: sourceLabel ? `${habit.title} (${sourceLabel})` : habit.title,
+        delta: delta,
+        category: isPositive ? 'positive' : 'negative',
+        timestamp: new Date().toISOString()
+      };
+
+      appState.logs.unshift(logEntry);
+      saveState();
+      renderAll();
+      animateBalanceChange(delta);
+
+      if (isPositive) {
+        showToast(`+${delta} pts — ${habit.title}`, 'success');
+      } else {
+        showToast(`${delta} pts — ${habit.title}`, 'danger');
+      }
+    }
+
+    function redeemReward(rewardId) {
+      const reward = appState.rewards.find(r => r.id === rewardId);
+      if (!reward) return;
+
+      if (appState.balance < reward.cost) {
+        const needed = reward.cost - appState.balance;
+        showToast(`Need ${needed} more pts for "${reward.title}"`, 'info');
+        return;
+      }
+
+      appState.balance -= reward.cost;
+      const logEntry = {
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        title: `Redeemed: ${reward.title}`,
+        delta: -reward.cost,
+        category: 'redeem',
+        timestamp: new Date().toISOString()
+      };
+
+      appState.logs.unshift(logEntry);
+      saveState();
+      renderAll();
+      animateBalanceChange(-reward.cost);
+      showToast(`Enjoy! Redeemed "${reward.title}" (-${reward.cost} pts)`, 'reward');
+    }
+
+    function undoLastAction() {
+      if (appState.logs.length === 0) return;
+      const last = appState.logs.shift();
+      appState.balance -= last.delta;
+      saveState();
+      renderAll();
+      animateBalanceChange(-last.delta);
+      showToast(`Undid "${last.title}"`, 'info');
+    }
+
+    function removeSingleLog(logId) {
+      const index = appState.logs.findIndex(l => l.id === logId);
+      if (index === -1) return;
+      const [removed] = appState.logs.splice(index, 1);
+      appState.balance -= removed.delta;
+      saveState();
+      renderAll();
+      showToast(`Reverted "${removed.title}"`, 'info');
+    }
+
+    function clearLogsOnly() {
+      if (appState.logs.length === 0) return;
+      appState.logs = [];
+      saveState();
+      renderAll();
+      showToast('Activity history cleared (balance kept).', 'info');
+    }
+
+    // =========================================================================
+    // 3. CUSTOM HABIT & REWARD CREATION / EDITING / PAIRING / ORDERING
+    // =========================================================================
+    function toggleForm(formId) {
+      const el = document.getElementById(formId);
+      if (!el) return;
+      el.classList.toggle('hidden');
+      const input = el.querySelector('input');
+      if (input && !el.classList.contains('hidden')) {
+        input.focus();
+      }
+    }
+
+    function handleAddHabit(event, type) {
+      event.preventDefault();
+      const titleInput = document.getElementById(type === 'positive' ? 'posTitleInput' : 'negTitleInput');
+      const pointsInput = document.getElementById(type === 'positive' ? 'posPointsInput' : 'negPointsInput');
+
+      const title = titleInput.value.trim();
+      const points = parseInt(pointsInput.value, 10);
+      if (!title || isNaN(points) || points <= 0) return;
+
+      appState.habits.push({
+        id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+        title,
+        points,
+        type,
+        dailyLimit: 1,
+        order: appState.habits.length
+      });
+
+      titleInput.value = '';
+      pointsInput.value = '';
+      toggleForm(type === 'positive' ? 'positiveForm' : 'negativeForm');
+
+      saveState();
+      renderHabits();
+      showToast(`Added "${title}" (${type === 'positive' ? '+' : '-'}${points} pts)`, 'success');
+    }
+
+    function deleteHabit(event, habitId) {
+      if (event) event.stopPropagation();
+      const target = appState.habits.find(h => h.id === habitId);
+      if (!target) return;
+
+      const gid = target.groupId;
+      appState.habits = appState.habits.filter(h => h.id !== habitId);
+
+      // Clean up linked group if fewer than 2 members remain
+      if (gid) {
+        const remaining = appState.habits.filter(h => h.groupId === gid);
+        if (remaining.length < 2) {
+          remaining.forEach(h => {
+            delete h.groupId;
+          });
+        }
+      }
+
+      if (editingHabitId === habitId) editingHabitId = null;
+      if (pairingHabitId === habitId) pairingHabitId = null;
+
+      saveState();
+      renderHabits();
+      showToast(`Deleted "${target.title}"`, 'info');
+    }
+
+    function toggleEditHabitsMode() {
+      isEditingHabits = !isEditingHabits;
+      editingHabitId = null;
+      pairingHabitId = null;
+      editingRewardId = null;
+
+      const btn = document.getElementById('toggleEditHabitsBtn');
+      const label = document.getElementById('toggleEditHabitsLabel');
+      const badge = document.getElementById('habitsModeBadge');
+      const subtitle = document.getElementById('habitsSubtitle');
+      const addPosBtn = document.getElementById('addPosBtn');
+      const addNegBtn = document.getElementById('addNegBtn');
+      const posForm = document.getElementById('positiveForm');
+      const negForm = document.getElementById('negativeForm');
+
+      const rewardsBadge = document.getElementById('rewardsModeBadge');
+      const rewardsSubtitle = document.getElementById('rewardsSubtitle');
+      const addRewardBtnEl = document.getElementById('addRewardBtnEl');
+      const rewardForm = document.getElementById('rewardForm');
+
+      if (isEditingHabits) {
+        if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer';
+        if (label) label.textContent = 'Done';
+        if (badge) {
+          badge.textContent = 'Edit, Link & Reorder';
+          badge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+        }
+        if (subtitle) subtitle.textContent = 'Click any habit or penalty to edit, or click Link to pair habits together.';
+        if (addPosBtn) addPosBtn.classList.remove('hidden');
+        if (addNegBtn) addNegBtn.classList.remove('hidden');
+
+        if (rewardsBadge) {
+          rewardsBadge.textContent = 'Edit Mode';
+          rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+        }
+        if (rewardsSubtitle) rewardsSubtitle.textContent = 'Click any reward to edit its details.';
+        if (addRewardBtnEl) addRewardBtnEl.classList.remove('hidden');
+      } else {
+        if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer';
+        if (label) label.textContent = 'Editor';
+        if (badge) {
+          badge.textContent = 'Tap to Log';
+          badge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300';
+        }
+        if (subtitle) subtitle.textContent = 'Earn points for positive routines or log penalties for slip-ups.';
+        if (addPosBtn) addPosBtn.classList.add('hidden');
+        if (addNegBtn) addNegBtn.classList.add('hidden');
+        if (posForm) posForm.classList.add('hidden');
+        if (negForm) negForm.classList.add('hidden');
+
+        if (rewardsBadge) {
+          rewardsBadge.textContent = 'Redeem';
+          rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300';
+        }
+        if (rewardsSubtitle) rewardsSubtitle.textContent = 'Cash in your hard-earned points for guilt-free fun.';
+        if (addRewardBtnEl) addRewardBtnEl.classList.add('hidden');
+        if (rewardForm) rewardForm.classList.add('hidden');
+      }
+
+      renderHabits();
+      renderRewards();
+    }
+
+    function startInlineEditHabit(event, habitId) {
+      if (event) event.stopPropagation();
+      editingHabitId = habitId;
+      pairingHabitId = null;
+      renderHabits();
+      const input = document.getElementById(`editHabitTitle_${habitId}`);
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    function cancelInlineEditHabit(event) {
+      if (event) event.stopPropagation();
+      editingHabitId = null;
+      renderHabits();
+    }
+
+    function saveInlineEditHabit(event, habitId) {
+      event.preventDefault();
+      event.stopPropagation();
+      const habit = appState.habits.find(h => h.id === habitId);
+      if (!habit) return;
+
+      const titleInput = document.getElementById(`editHabitTitle_${habitId}`);
+      const pointsInput = document.getElementById(`editHabitPoints_${habitId}`);
+      const limitInput = document.getElementById(`editHabitLimit_${habitId}`);
+      
+      const newTitle = titleInput ? titleInput.value.trim() : '';
+      const newPoints = pointsInput ? parseInt(pointsInput.value, 10) : habit.points;
+      const newLimit = (habit.type === 'positive' && limitInput && !habit.groupId) ? parseInt(limitInput.value, 10) : 1;
+
+      if (!newTitle || isNaN(newPoints) || newPoints <= 0) return;
+
+      habit.title = newTitle;
+      habit.points = newPoints;
+      if (habit.type === 'positive' && !habit.groupId) {
+        habit.dailyLimit = isNaN(newLimit) || newLimit < 1 ? 1 : newLimit;
+      }
+      editingHabitId = null;
+
+      saveState();
+      renderHabits();
+      showToast(`Updated "${newTitle}"`, 'success');
+    }
+
+    function moveHabitOrder(event, habitId, direction) {
+      event.stopPropagation();
+      const targetHabit = appState.habits.find(h => h.id === habitId);
+      if (!targetHabit) return;
+
+      const sameTypeHabits = appState.habits.filter(h => h.type === targetHabit.type);
+      
+      if (targetHabit.type === 'positive' && targetHabit.groupId) {
+        const groupItems = sameTypeHabits.filter(h => h.groupId === targetHabit.groupId);
+        const firstIdx = sameTypeHabits.findIndex(h => h.id === groupItems[0].id);
+        const lastIdx = sameTypeHabits.findIndex(h => h.id === groupItems[groupItems.length - 1].id);
+
+        if ((habitId === groupItems[0].id && direction === -1 && firstIdx > 0) ||
+            (habitId === groupItems[groupItems.length - 1].id && direction === 1 && lastIdx < sameTypeHabits.length - 1)) {
+          
+          const nonGroupHabits = sameTypeHabits.filter(h => h.groupId !== targetHabit.groupId);
+          const insertBlockAt = direction === -1 ? firstIdx - 1 : firstIdx + 1;
+          
+          nonGroupHabits.splice(insertBlockAt, 0, ...groupItems);
+          
+          const negatives = appState.habits.filter(h => h.type === 'negative');
+          appState.habits = [...nonGroupHabits, ...negatives];
+          saveState();
+          renderHabits();
+          return;
+        }
+
+        const groupPos = groupItems.findIndex(h => h.id === habitId);
+        const targetGroupPos = groupPos + direction;
+        if (targetGroupPos >= 0 && targetGroupPos < groupItems.length) {
+          const itemA = groupItems[groupPos];
+          const itemB = groupItems[targetGroupPos];
+          const globalIdxA = appState.habits.findIndex(h => h.id === itemA.id);
+          const globalIdxB = appState.habits.findIndex(h => h.id === itemB.id);
+          
+          const temp = appState.habits[globalIdxA];
+          appState.habits[globalIdxA] = appState.habits[globalIdxB];
+          appState.habits[globalIdxB] = temp;
+
+          saveState();
+          renderHabits();
+          return;
+        }
+      }
+
+      const sameTypeIndices = [];
+      appState.habits.forEach((h, idx) => {
+        if (h.type === targetHabit.type) {
+          sameTypeIndices.push(idx);
+        }
+      });
+
+      const currentGlobalIdx = appState.habits.findIndex(h => h.id === habitId);
+      const posInGroup = sameTypeIndices.indexOf(currentGlobalIdx);
+      const swapPosInGroup = posInGroup + direction;
+
+      if (swapPosInGroup < 0 || swapPosInGroup >= sameTypeIndices.length) return;
+
+      const swapGlobalIdx = sameTypeIndices[swapPosInGroup];
+      const temp = appState.habits[currentGlobalIdx];
+      appState.habits[currentGlobalIdx] = appState.habits[swapGlobalIdx];
+      appState.habits[swapGlobalIdx] = temp;
+
+      saveState();
+      renderHabits();
+    }
+
+    function togglePairMode(event, habitId) {
+      event.stopPropagation();
+      pairingHabitId = pairingHabitId === habitId ? null : habitId;
+      editingHabitId = null;
+      renderHabits();
+      if (pairingHabitId) {
+        const h = appState.habits.find(x => x.id === habitId);
+        showToast(`Select another habit to link with "${h ? h.title : ''}"`, 'info');
+      }
+    }
+
+    function handleHabitClickInEditMode(habitId) {
+      if (!isEditingHabits) return;
+      const target = appState.habits.find(h => h.id === habitId && h.type === 'positive');
+      if (!target) return;
+
+      if (pairingHabitId) {
+        if (pairingHabitId === habitId) {
+          pairingHabitId = null;
+          renderHabits();
+        } else {
+          pairHabitsTogether(null, pairingHabitId, habitId);
+        }
+      } else {
+        startInlineEditHabit(null, habitId);
+      }
+    }
+
+    function pairHabitsTogether(event, firstHabitId, secondHabitId) {
+      if (event) event.stopPropagation();
+      if (!firstHabitId || !secondHabitId || firstHabitId === secondHabitId) return;
+
+      const first = appState.habits.find(h => h.id === firstHabitId && h.type === 'positive');
+      const second = appState.habits.find(h => h.id === secondHabitId && h.type === 'positive');
+      if (!first || !second) return;
+
+      let targetGroupId = second.groupId || first.groupId;
+      if (!targetGroupId) {
+        targetGroupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      }
+
+      first.groupId = targetGroupId;
+      first.dailyLimit = 1;
+      second.groupId = targetGroupId;
+      second.dailyLimit = 1;
+      pairingHabitId = null;
+
+      const positives = appState.habits.filter(h => h.type === 'positive');
+      const negatives = appState.habits.filter(h => h.type === 'negative');
+
+      const reorderedPos = [];
+      const processed = new Set();
+      positives.forEach(h => {
+        if (h.groupId) {
+          if (!processed.has(h.groupId)) {
+            processed.add(h.groupId);
+            const groupMems = positives.filter(x => x.groupId === h.groupId);
+            groupMems.forEach(gm => reorderedPos.push(gm));
+          }
+        } else {
+          reorderedPos.push(h);
+        }
+      });
+
+      appState.habits = [...reorderedPos, ...negatives];
+      saveState();
+      renderAll();
+      showToast(`Linked "${first.title}" & "${second.title}"!`, 'success');
+    }
+
+    function unlinkHabitGroup(event, habitId, unlinkAll = false) {
+      if (event) event.stopPropagation();
+      const target = appState.habits.find(h => h.id === habitId);
+      if (!target || !target.groupId) return;
+
+      const gid = target.groupId;
+
+      if (unlinkAll) {
+        appState.habits.forEach(h => {
+          if (h.groupId === gid) {
+            delete h.groupId;
+          }
+        });
+      } else {
+        delete target.groupId;
+        const remaining = appState.habits.filter(h => h.groupId === gid);
+        if (remaining.length < 2) {
+          remaining.forEach(h => {
+            delete h.groupId;
+          });
+        }
+      }
+
+      pairingHabitId = null;
+      saveState();
+      renderAll();
+      showToast(unlinkAll ? 'Unlinked entire habit group.' : `Removed "${target.title}" from linked group.`, 'info');
+    }
+
+    function handleAddReward(event) {
+      event.preventDefault();
+      const titleInput = document.getElementById('rewardTitleInput');
+      const costInput = document.getElementById('rewardCostInput');
+
+      const title = titleInput.value.trim();
+      const cost = parseInt(costInput.value, 10);
+      if (!title || isNaN(cost) || cost <= 0) return;
+
+      const icons = ['🎮', '🏆', '🍕', '🎬', '🎧', '☕', '🛍️', '🌟'];
+      const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+
+      appState.rewards.push({
+        id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+        title,
+        cost,
+        icon: randomIcon
+      });
+
+      titleInput.value = '';
+      costInput.value = '';
+      toggleForm('rewardForm');
+
+      saveState();
+      renderRewards();
+      showToast(`Created reward "${title}" (${cost} pts)`, 'success');
+    }
+
+    function deleteReward(event, rewardId) {
+      event.stopPropagation();
+      appState.rewards = appState.rewards.filter(r => r.id !== rewardId);
+      saveState();
+      renderRewards();
+    }
+
+    function startInlineEditReward(event, rewardId) {
+      if (event) event.stopPropagation();
+      if (!isEditingHabits) return;
+      editingRewardId = rewardId;
+      renderRewards();
+      const input = document.getElementById(`editRewardTitle_${rewardId}`);
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    function cancelInlineEditReward(event) {
+      if (event) event.stopPropagation();
+      editingRewardId = null;
+      renderRewards();
+    }
+
+    function saveInlineEditReward(event, rewardId) {
+      event.preventDefault();
+      event.stopPropagation();
+      const reward = appState.rewards.find(r => r.id === rewardId);
+      if (!reward) return;
+
+      const titleInput = document.getElementById(`editRewardTitle_${rewardId}`);
+      const costInput = document.getElementById(`editRewardCost_${rewardId}`);
+      const iconInput = document.getElementById(`editRewardIcon_${rewardId}`);
+
+      const newTitle = titleInput ? titleInput.value.trim() : '';
+      const newCost = costInput ? parseInt(costInput.value, 10) : reward.cost;
+      const newIcon = iconInput ? iconInput.value.trim() : reward.icon;
+
+      if (!newTitle || isNaN(newCost) || newCost <= 0) return;
+
+      reward.title = newTitle;
+      reward.cost = newCost;
+      if (newIcon) reward.icon = newIcon;
+      editingRewardId = null;
+
+      saveState();
+      renderRewards();
+      showToast(`Updated reward "${newTitle}"`, 'success');
+    }
+
+    // =========================================================================
+    // 4. RENDERING FUNCTIONS
+    // =========================================================================
+    function renderAll() {
+      renderHeaderStats();
+      renderHabits();
+      renderRewards();
+      renderLogs();
+    }
+
+    function renderHeaderStats() {
+      const balanceEl = document.getElementById('liveBalance');
+      balanceEl.textContent = appState.balance;
+      balanceEl.className = `text-2xl sm:text-3xl font-extrabold tracking-tight ${
+        appState.balance < 0 ? 'text-rose-400' : 'text-white'
+      }`;
+
+      const activeDateKey = getEffectiveResetDateKey(new Date());
+      let earnedToday = 0;
+      let lostToday = 0;
+      let spentToday = 0;
+
+      appState.logs.forEach(log => {
+        if (getEffectiveResetDateKey(new Date(log.timestamp)) === activeDateKey) {
+          if (log.category === 'positive') earnedToday += log.delta;
+          else if (log.category === 'negative') lostToday += Math.abs(log.delta);
+          else if (log.category === 'redeem') spentToday += Math.abs(log.delta);
+        }
+      });
+
+      document.getElementById('todayEarned').textContent = `+${earnedToday}`;
+      document.getElementById('todayLost').textContent = `-${lostToday}`;
+      document.getElementById('todaySpent').textContent = `${spentToday}`;
+      document.getElementById('undoLastBtn').disabled = appState.logs.length === 0;
+    }
+
+    function renderHabits() {
+      const posContainer = document.getElementById('positiveHabitList');
+      const negContainer = document.getElementById('negativeHabitList');
+      if (!posContainer || !negContainer) return;
+
+      const allPositives = appState.habits.filter(h => h.type === 'positive');
+      
+      const positives = isEditingHabits
+        ? allPositives
+        : allPositives.filter(h => {
+            if (h.groupId) {
+              const groupMems = allPositives.filter(x => x.groupId === h.groupId);
+              const anyGroupCompleted = groupMems.some(gm => {
+                const limit = (typeof gm.dailyLimit === 'number' && gm.dailyLimit > 0) ? gm.dailyLimit : 1;
+                return getCompletedPositiveCountToday(gm.id) >= limit;
+              });
+              return !anyGroupCompleted;
+            }
+            const limit = (typeof h.dailyLimit === 'number' && h.dailyLimit > 0) ? h.dailyLimit : 1;
+            return getCompletedPositiveCountToday(h.id) < limit;
+          });
+
+      const negatives = appState.habits.filter(h => h.type === 'negative');
+
+      const renderHabitCard = (h, idx, listLength, isPositive) => {
+        const accentText = isPositive ? 'text-emerald-300' : 'text-rose-300';
+        const accentBadge = isPositive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300';
+        const iconBg = isPositive
+          ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400'
+          : 'bg-rose-500/10 group-hover:bg-rose-500/20 text-rose-400';
+        const hoverBorder = isPositive
+          ? 'hover:bg-emerald-950/30 hover:border-emerald-500/40'
+          : 'hover:bg-rose-950/30 hover:border-rose-500/40';
+        
+        const maxLimit = (isPositive && typeof h.dailyLimit === 'number' && h.dailyLimit > 0) ? h.dailyLimit : 1;
+        const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
+        const remainingCount = Math.max(0, maxLimit - completedCount);
+        
+        const groupPartners = isPositive && h.groupId
+          ? allPositives.filter(other => other.groupId === h.groupId && other.id !== h.id)
+          : [];
+
+        if (isEditingHabits && editingHabitId === h.id) {
+          return `
+            <form
+              onsubmit="saveInlineEditHabit(event, '${h.id}')"
+              onclick="event.stopPropagation()"
+              class="p-3.5 rounded-xl bg-slate-950 border border-indigo-500/60 space-y-2.5 shadow-lg shadow-indigo-500/10"
+            >
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  id="editHabitTitle_${h.id}"
+                  value="${escapeHtml(h.title)}"
+                  required
+                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+                <input
+                  type="number"
+                  id="editHabitPoints_${h.id}"
+                  value="${h.points}"
+                  min="1"
+                  max="1000"
+                  required
+                  class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              ${isPositive && !h.groupId ? `
+                <div class="flex items-center gap-2">
+                  <label class="text-[11px] text-slate-400">Max times per day:</label>
+                  <input
+                    type="number"
+                    id="editHabitLimit_${h.id}"
+                    value="${maxLimit}"
+                    min="1"
+                    max="20"
+                    class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              ` : ''}
+              <div class="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onclick="deleteHabit(event, '${h.id}')"
+                  class="text-xs text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
+                >
+                  Delete
+                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onclick="cancelInlineEditHabit(event)"
+                    class="px-2.5 py-1 rounded-lg text-xs text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </form>
+          `;
+        }
+
+        if (isEditingHabits) {
+          const isBeingPaired = isPositive && pairingHabitId === h.id;
+          const isPairingCandidate = isPositive && pairingHabitId && pairingHabitId !== h.id;
+
+          return `
+            <div
+              onclick="${isPositive ? `handleHabitClickInEditMode('${h.id}')` : `startInlineEditHabit(event, '${h.id}')`}"
+              class="group flex items-center justify-between gap-2 px-3.5 py-3 rounded-xl bg-slate-950/90 border ${
+                isBeingPaired
+                  ? 'border-indigo-400 bg-indigo-950/40 ring-2 ring-indigo-500/30'
+                  : isPairingCandidate
+                  ? 'border-dashed border-indigo-400/70 hover:bg-indigo-950/30 cursor-pointer'
+                  : 'border-indigo-500/40 hover:border-indigo-400 cursor-pointer'
+              } transition-all"
+            >
+              <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                <!-- Reorder Arrows -->
+                <div class="flex flex-col gap-0.5 shrink-0" onclick="event.stopPropagation()">
+                  <button
+                    type="button"
+                    onclick="moveHabitOrder(event, '${h.id}', -1)"
+                    ${idx === 0 ? 'disabled' : ''}
+                    title="Move up"
+                    class="p-1 rounded bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none text-slate-400 hover:text-white transition cursor-pointer"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onclick="moveHabitOrder(event, '${h.id}', 1)"
+                    ${idx === listLength - 1 ? 'disabled' : ''}
+                    title="Move down"
+                    class="p-1 rounded bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none text-slate-400 hover:text-white transition cursor-pointer"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
+                    ${isPositive && !h.groupId && maxLimit > 1 ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${maxLimit}x/day</span>` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                ${isPositive ? (
+                  h.groupId ? `
+                    <button
+                      type="button"
+                      onclick="unlinkHabitGroup(event, '${h.id}', false)"
+                      title="Remove this habit from the linked group"
+                      class="px-2 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition cursor-pointer"
+                    >
+                      Unlink
+                    </button>
+                  ` : `
+                    <button
+                      type="button"
+                      onclick="togglePairMode(event, '${h.id}')"
+                      title="Link with another habit so completing one completes the group"
+                      class="px-2 py-1 rounded-lg ${isBeingPaired ? 'bg-indigo-600 text-white' : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700'} text-[11px] font-semibold transition cursor-pointer"
+                    >
+                      ${isBeingPaired ? 'Select Pair...' : 'Link'}
+                    </button>
+                  `
+                ) : ''}
+
+                <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${accentBadge}">
+                  ${isPositive ? '+' : '-'}${h.points} pts
+                </span>
+              </div>
+            </div>
+          `;
+        }
+
+        // Standard (Non-Editor) View
+        return `
+          <div
+            onclick="triggerHabit('${h.id}')"
+            class="group flex items-center justify-between px-4 py-3.5 rounded-xl bg-slate-950/70 border border-indigo-500/40 ${hoverBorder} transition-all active:scale-[0.985] cursor-pointer select-none"
+          >
+            <div class="flex items-center gap-3 min-w-0 pr-2">
+              <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
+                ${isPositive ? '+' : '−'}
+              </div>
+              <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate">${escapeHtml(h.title)}</span>
+                ${isPositive && !h.groupId && maxLimit > 1 ? `
+                  <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    ${remainingCount} remaining today
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+
+          <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${accentBadge} shrink-0">
+            ${isPositive ? '+' : '-'}${h.points} pts
+          </span>
+        </div>
+      `;
+    };
+
+    // Render Positive Habits (grouping linked items visually)
+    if (positives.length === 0) {
+      posContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">All positive habits completed for today! 🎉</p>`;
+    } else {
+      const renderedPos = [];
+      const renderedGroups = new Set();
+
+      positives.forEach((h, idx) => {
+        if (h.groupId) {
+          if (!renderedGroups.has(h.groupId)) {
+            renderedGroups.add(h.groupId);
+            const groupItems = positives.filter(x => x.groupId === h.groupId);
+            const cardsHtml = groupItems.map(gm => {
+              const gmIdx = positives.findIndex(x => x.id === gm.id);
+              return renderHabitCard(gm, gmIdx, positives.length, true);
+            }).join('');
+
+            renderedPos.push(`
+              <div class="p-2.5 rounded-2xl bg-indigo-950/20 border border-indigo-500/40 space-y-2">
+                ${isEditingHabits ? `
+                  <div class="flex items-center justify-between px-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1">
+                      <span>🔗 Linked Group (Pick One)</span>
+                    </span>
+                    <button
+                      type="button"
+                      onclick="unlinkHabitGroup(event, '${groupItems[0].id}', true)"
+                      class="text-[10px] text-slate-400 hover:text-rose-300 cursor-pointer"
+                    >
+                      Unlink All
+                    </button>
+                  </div>
+                ` : ''}
+                <div class="space-y-2">
+                  ${cardsHtml}
+                </div>
+              </div>
+            `);
+          }
+        } else {
+          renderedPos.push(renderHabitCard(h, idx, positives.length, true));
+        }
+      });
+
+      posContainer.innerHTML = renderedPos.join('');
+    }
+
+      // Render Negative Habits / Penalties
+      if (negatives.length === 0) {
+        negContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No penalties configured.</p>`;
+      } else {
+        negContainer.innerHTML = negatives
+          .map((h, idx) => renderHabitCard(h, idx, negatives.length, false))
+          .join('');
+      }
+    }
+
+    function renderRewards() {
+      const grid = document.getElementById('rewardStoreGrid');
+      if (!grid) return;
+
+      if (appState.rewards.length === 0) {
+        grid.innerHTML = `<p class="col-span-full text-xs text-slate-500 text-center py-8">No rewards yet. Click "+ Add Custom Reward" in Editor mode to add one!</p>`;
+        return;
+      }
+
+      grid.innerHTML = appState.rewards.map(reward => {
+        if (isEditingHabits && editingRewardId === reward.id) {
+          return `
+            <form
+              onsubmit="saveInlineEditReward(event, '${reward.id}')"
+              onclick="event.stopPropagation()"
+              class="flex flex-col justify-between p-4 rounded-2xl bg-slate-950 border border-indigo-500/60 space-y-2.5 shadow-lg shadow-indigo-500/10"
+            >
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    id="editRewardIcon_${reward.id}"
+                    value="${escapeHtml(reward.icon || '🎁')}"
+                    maxlength="4"
+                    class="w-12 text-center bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
+                  <input
+                    type="text"
+                    id="editRewardTitle_${reward.id}"
+                    value="${escapeHtml(reward.title)}"
+                    required
+                    class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div class="flex items-center gap-2">
+                  <label class="text-[11px] text-slate-400">Point cost:</label>
+                  <input
+                    type="number"
+                    id="editRewardCost_${reward.id}"
+                    value="${reward.cost}"
+                    min="1"
+                    max="5000"
+                    required
+                    class="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <button
+                  type="button"
+                  onclick="deleteReward(event, '${reward.id}')"
+                  class="text-xs text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
+                >
+                  Delete
+                </button>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onclick="cancelInlineEditReward(event)"
+                    class="px-2 py-1 rounded-lg text-xs text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </form>
+          `;
+        }
+
+        if (isEditingHabits) {
+          return `
+            <div
+              onclick="startInlineEditReward(event, '${reward.id}')"
+              class="relative flex flex-col justify-between p-4 rounded-2xl bg-slate-950/90 border border-indigo-500/40 hover:border-indigo-400 transition-all cursor-pointer shadow-md shadow-indigo-500/5 group"
+            >
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xl">
+                    ${reward.icon || '🎁'}
+                  </div>
+                </div>
+                <h3 class="text-sm font-bold text-white leading-snug">${escapeHtml(reward.title)}</h3>
+                <p class="text-xs font-semibold text-amber-400 mt-1">${reward.cost} PTS</p>
+              </div>
+            </div>
+          `;
+        }
+
+        const canAfford = appState.balance >= reward.cost;
+        const progressPct = Math.max(0, Math.min(100, Math.round((appState.balance / reward.cost) * 100)));
+
+        return `
+          <div class="relative flex flex-col justify-between p-4 rounded-2xl bg-slate-950/80 border ${
+            canAfford ? 'border-amber-500/40 shadow-lg shadow-amber-500/5' : 'border-slate-800'
+          } transition-all">
+            <div>
+              <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xl mb-3">
+                ${reward.icon || '🎁'}
+              </div>
+              <h3 class="text-sm font-bold text-white pr-2 leading-snug">${escapeHtml(reward.title)}</h3>
+              <p class="text-xs font-semibold text-amber-400 mt-1">${reward.cost} PTS</p>
+            </div>
+
+            <div class="mt-4 space-y-2.5">
+              <div class="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden">
+                <div
+                  class="h-full rounded-full transition-all duration-300 ${canAfford ? 'bg-amber-400' : 'bg-indigo-500/60'}"
+                  style="width: ${progressPct}%"
+                ></div>
+              </div>
+
+              <button
+                onclick="redeemReward('${reward.id}')"
+                class="w-full py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer ${
+                  canAfford
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-md shadow-amber-500/20'
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                }"
+              >
+                ${canAfford ? 'Redeem Reward' : `Need ${reward.cost - appState.balance} more pts`}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderLogs() {
+      const container = document.getElementById('activityLogList');
+      if (appState.logs.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No activity recorded yet. Complete a habit above to earn points!</p>`;
+        return;
+      }
+
+      container.innerHTML = appState.logs.slice(0, 40).map(log => {
+        const isPos = log.delta > 0;
+        const isRedeem = log.category === 'redeem';
+        const badgeClass = isPos
+          ? 'bg-emerald-500/15 text-emerald-300'
+          : isRedeem
+          ? 'bg-amber-500/15 text-amber-300'
+          : 'bg-rose-500/15 text-rose-300';
+
+        const dotClass = isPos
+          ? 'bg-emerald-400'
+          : isRedeem
+          ? 'bg-amber-400'
+          : 'bg-rose-400';
+
+        const timeLabel = formatTimestamp(log.timestamp);
+
+        return `
+          <div class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-2 h-2 rounded-full shrink-0 ${dotClass}"></span>
+              <div class="min-w-0">
+                <p class="text-xs font-medium text-slate-200 truncate">${escapeHtml(log.title)}</p>
+                <p class="text-[10px] text-slate-500">${timeLabel}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0 ml-2">
+              <span class="px-2 py-0.5 rounded-md text-xs font-bold ${badgeClass}">
+                ${isPos ? '+' : ''}${log.delta} pts
+              </span>
+              <button
+                onclick="removeSingleLog('${log.id}')"
+                title="Revert this entry"
+                class="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded text-slate-500 hover:text-rose-400 transition cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 5. RESET TIME & SCHEDULED POINTS CONFIGURATION
+    // =========================================================================
+    function openResetConfigModal() {
+      const modal = document.getElementById('resetConfigModal');
+      document.getElementById('resetTimeInput').value = appState.resetConfig.time || '00:00';
+      document.getElementById('scheduledTitleInput').value = appState.resetConfig.scheduledTitle !== undefined ? appState.resetConfig.scheduledTitle : 'Midnight Daily Baseline Penalty';
+      document.getElementById('scheduledPointsInput').value = appState.resetConfig.scheduledPoints !== undefined ? appState.resetConfig.scheduledPoints : -50;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeResetConfigModal() {
+      const modal = document.getElementById('resetConfigModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveResetConfig() {
+      const timeVal = document.getElementById('resetTimeInput').value.trim() || '00:00';
+      const titleVal = document.getElementById('scheduledTitleInput').value.trim();
+      const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
+
+      appState.resetConfig.time = timeVal;
+      appState.resetConfig.scheduledTitle = titleVal;
+      appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
+
+      saveState();
+      closeResetConfigModal();
+      showToast('Reset schedule & scheduled points updated!', 'success');
+      checkResetRollover();
+    }
+
+    // =========================================================================
+    // 6. MOBILE TABS, BACKUP MODAL & UI UTILITIES
+    // =========================================================================
+    function switchMobileHabitTab(tab) {
+      const posCol = document.getElementById('positiveColumn');
+      const negCol = document.getElementById('negativeColumn');
+      const tabPosBtn = document.getElementById('tabPosBtn');
+      const tabNegBtn = document.getElementById('tabNegBtn');
+
+      if (tab === 'positive') {
+        posCol.classList.remove('hidden');
+        negCol.classList.add('hidden');
+        tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
+        tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+      } else {
+        negCol.classList.remove('hidden');
+        negCol.classList.add('flex');
+        posCol.classList.add('hidden');
+        tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
+        tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+      }
+    }
+
+    function openBackupModal() {
+      const modal = document.getElementById('backupModal');
+      const exportArea = document.getElementById('exportTextarea');
+      exportArea.value = JSON.stringify(appState);
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeBackupModal() {
+      const modal = document.getElementById('backupModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function copyBackupData() {
+      const exportArea = document.getElementById('exportTextarea');
+      exportArea.select();
+      document.execCommand('copy');
+      showToast('Backup JSON copied to clipboard!', 'success');
+    }
+
+    function importBackupData() {
+      const raw = document.getElementById('importTextarea').value.trim();
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed.balance !== 'number' || !Array.isArray(parsed.habits)) {
+          throw new Error('Invalid format');
+        }
+        appState = {
+          balance: parsed.balance,
+          resetConfig: parsed.resetConfig || DEFAULT_STATE.resetConfig,
+          habits: parsed.habits,
+          rewards: Array.isArray(parsed.rewards) ? parsed.rewards : [],
+          logs: Array.isArray(parsed.logs) ? parsed.logs : []
+        };
+        saveState();
+        renderAll();
+        document.getElementById('importTextarea').value = '';
+        closeBackupModal();
+        showToast('Backup restored successfully!', 'success');
+      } catch (e) {
+        showToast('Invalid JSON backup format.', 'danger');
+      }
+    }
+
+    let resetPending = false;
+    function handleFactoryReset() {
+      const btn = document.getElementById('resetConfirmBtn');
+      if (!resetPending) {
+        resetPending = true;
+        btn.textContent = 'Click again to confirm reset';
+        setTimeout(() => {
+          resetPending = false;
+          if (btn) btn.textContent = 'Reset Everything';
+        }, 3500);
+        return;
+      }
+      resetPending = false;
+      btn.textContent = 'Reset Everything';
+      appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      saveState();
+      renderAll();
+      closeBackupModal();
+      showToast('Reset to default habits & starter points.', 'info');
+    }
+
+    function animateBalanceChange(delta) {
+      const balanceEl = document.getElementById('liveBalance');
+      balanceEl.classList.remove('animate-balance-pop');
+      void balanceEl.offsetWidth;
+      balanceEl.classList.add('animate-balance-pop');
+
+      const container = document.getElementById('floatingDeltaContainer');
+      const floater = document.createElement('span');
+      floater.textContent = `${delta > 0 ? '+' : ''}${delta}`;
+      floater.className = `animate-float-score text-sm font-extrabold ${
+        delta > 0 ? 'text-emerald-400' : 'text-rose-400'
+      }`;
+      container.appendChild(floater);
+      setTimeout(() => floater.remove(), 900);
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      const styles = {
+        success: 'bg-slate-900 border-emerald-500/40 text-emerald-200',
+        danger: 'bg-slate-900 border-rose-500/40 text-rose-200',
+        reward: 'bg-slate-900 border-amber-500/40 text-amber-200',
+        info: 'bg-slate-900 border-indigo-500/40 text-slate-200'
+      };
+
+      toast.className = `toast-enter pointer-events-auto px-4 py-3 rounded-2xl border shadow-2xl text-xs font-medium flex items-center justify-between gap-2 ${
+        styles[type] || styles.info
+      }`;
+      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        toast.style.transition = 'all 0.2s ease';
+        setTimeout(() => toast.remove(), 220);
+      }, 2800);
+    }
+
+    function formatTimestamp(iso) {
+      try {
+        const date = new Date(iso);
+        const now = new Date();
+        const isToday = getEffectiveResetDateKey(date) === getEffectiveResetDateKey(now);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return isToday ? `Today at ${timeStr}` : `${date.toLocaleDateString()} · ${timeStr}`;
+      } catch {
+        return '';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // =========================================================================
+    // 7. CUSTOM RESET TIME, ROLLOVERS & SCHEDULED POINT ADJUSTMENTS
+    // =========================================================================
+    function getEffectiveResetDateKey(dateObj) {
+      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '00:00';
+      const [rHour, rMin] = timeStr.split(':').map(Number);
+
+      const d = new Date(dateObj.getTime());
+      const currentMinutes = d.getHours() * 60 + d.getMinutes();
+      const resetMinutes = rHour * 60 + (rMin || 0);
+
+      if (currentMinutes < resetMinutes) {
+        d.setDate(d.getDate() - 1);
+      }
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getCompletedPositiveCountToday(habitId) {
+      const activeDateKey = getEffectiveResetDateKey(new Date());
+      let count = 0;
+
+      appState.logs.forEach(log => {
+        if (log.category === 'positive' && getEffectiveResetDateKey(new Date(log.timestamp)) === activeDateKey) {
+          if (log.habitId === habitId) {
+            count++;
+          } else {
+            const matchedHabit = appState.habits.find(
+              h => h.id === habitId && h.type === 'positive' && (log.title === h.title || log.title.startsWith(`${h.title} (`))
+            );
+            if (matchedHabit) count++;
+          }
+        }
+      });
+      return count;
+    }
+
+    let lastCheckedDateKey = getEffectiveResetDateKey(new Date());
+
+    function checkResetRollover() {
+      const currentKey = getEffectiveResetDateKey(new Date());
+      if (currentKey !== lastCheckedDateKey) {
+        lastCheckedDateKey = currentKey;
+
+        if (
+          appState.resetConfig &&
+          appState.resetConfig.scheduledPoints !== 0 &&
+          appState.resetConfig.lastResetDateKey !== currentKey
+        ) {
+          appState.resetConfig.lastResetDateKey = currentKey;
+          const sPoints = appState.resetConfig.scheduledPoints;
+          const sTitle = appState.resetConfig.scheduledTitle.trim() || 'Scheduled Daily Adjustment';
+
+          appState.balance += sPoints;
+          appState.logs.unshift({
+            id: 'log_sched_' + Date.now(),
+            title: sTitle,
+            delta: sPoints,
+            category: sPoints > 0 ? 'positive' : 'negative',
+            timestamp: new Date().toISOString()
+          });
+          showToast(`Scheduled Adjustment: ${sPoints > 0 ? '+' : ''}${sPoints} pts (${sTitle})`, sPoints > 0 ? 'success' : 'danger');
+        }
+
+        saveState();
+        renderAll();
+        showToast('🌅 Daily habits have refreshed for the new reset cycle!', 'info');
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        checkResetRollover();
+      }
+    });
+    setInterval(checkResetRollover, 20000);
+
+    // Sync state across multiple open tabs if localStorage changes
+    window.addEventListener('storage', (event) => {
+      if (event.key === STORAGE_KEY && event.newValue) {
+        appState = loadState();
+        renderAll();
+      }
+    });
+
+    // Initialize UI on load & check daily reset rollover
+    renderAll();
+    checkResetRollover();
+  </script>
+</body>
+</html>
