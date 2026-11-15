@@ -574,19 +574,19 @@
       habits: [
         { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
         { id: 'h2', title: '🦿 Morning Mobility', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 1 },
-        { id: 'h3', title: '🚦 Commute @ 8am', points: 10, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: '', order: 2 },
-        { id: 'h_eff_morn', title: '⚡ Efficient Morning', points: 5, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: '', order: 3 },
-        { id: 'h_clean', title: '🧹 Clean House (before 9pm)', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 4 },
-        { id: 'h4', title: '🚿 Shower (at 9pm)', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 5 },
+        { id: 'h_eff_morn', title: '⚡ Efficient Morning', points: 5, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: 'Under 45 mins', order: 2 },
+        { id: 'h3', title: '🚦 Commute', points: 10, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: 'Before 8am', order: 3 },
+        { id: 'h_clean', title: '🧹 Clean House', points: 10, type: 'positive', dailyLimit: 1, subtext: 'Before 9pm', order: 4 },
+        { id: 'h4', title: '🚿 Shower', points: 10, type: 'positive', dailyLimit: 1, subtext: 'Before 9pm', order: 5 },
         { id: 'h_meal', title: '🍽️ Meal Prep', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 6 },
-        { id: 'h11', title: '📚 Balcony Read (30+ mins)', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 7 },
-        { id: 'h_lang', title: '🗣️ Language Practice (30+ mins)', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 8 },
-        { id: 'h5', title: '💪 Sick Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: '', order: 9 },
-        { id: 'h6', title: '💪 Mid Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: '', order: 10 },
-        { id: 'h7', title: '🏊 Swim (< 1km)', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 11 },
-        { id: 'h8', title: '🏊 Swim (1km+)', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 12 },
-        { id: 'h9', title: '🏃 Run (<10km)', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 13 },
-        { id: 'h10', title: '🏃 Run (10km+)', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 14 },
+        { id: 'h11', title: '📚 Balcony Read', points: 10, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 7 },
+        { id: 'h_lang', title: '🗣️ Language Practice', points: 20, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 8 },
+        { id: 'h5', title: '💪 Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Intense', order: 9 },
+        { id: 'h6', title: '💪 Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Moderate', order: 10 },
+        { id: 'h7', title: '🏊 Swim', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 1km', order: 11 },
+        { id: 'h8', title: '🏊 Swim', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 1km', order: 12 },
+        { id: 'h9', title: '🏃 Run', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 10km', order: 13 },
+        { id: 'h10', title: '🏃 Run', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 10km', order: 14 },
         { id: 'h12', title: '🧘 Yoga', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 15 },
         { id: 'h13', title: '🥒 Pickleball', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 16 },
         { id: 'h14', title: '🚴 Demo Forest', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 17 },
@@ -1267,6 +1267,9 @@
         const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
         const remainingCount = Math.max(0, maxLimit - completedCount);
 
+        // Subtext rule: if maxLimit > 1, hide subtext outside of editor mode
+        const showSubtext = h.subtext && (isEditingHabits || maxLimit === 1);
+
         if (isEditingHabits && editingHabitId === h.id) {
           return `
             <form
@@ -1436,7 +1439,7 @@
               </div>
               <div class="min-w-0">
                 <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
-                ${h.subtext ? `
+                ${showSubtext ? `
                   <span class="text-[11px] text-slate-400 block mt-0.5 truncate">
                     ${escapeHtml(h.subtext)}
                   </span>
