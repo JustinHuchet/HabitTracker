@@ -1304,7 +1304,6 @@
 
         const showSubtext = h.subtext && (isEditingHabits || maxLimit === 1);
         const showProgress = isPositive && !h.groupId && maxLimit > 1;
-        const hasSecondaryLine = showSubtext || showProgress;
 
         if (isEditingHabits && editingHabitId === h.id) {
           return `
@@ -1391,7 +1390,7 @@
           return `
             <div
               onclick="${isPositive ? `handleHabitClickInEditMode('${h.id}')` : `startInlineEditHabit(event, '${h.id}')`}"
-              class="group flex items-center justify-between gap-2 px-4 min-h-[52px] py-2.5 ${
+              class="group flex items-center justify-between gap-2 px-4 h-[64px] ${
                 inGroup ? '' : 'rounded-xl bg-slate-950/90 border border-indigo-500/40'
               } ${
                 isBeingPaired
@@ -1433,7 +1432,7 @@
                     <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
                     ${isPositive && !h.groupId && maxLimit > 1 ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${maxLimit}x/day</span>` : ''}
                   </div>
-                  ${h.subtext ? `<span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>` : ''}
+                  ${h.subtext ? `<span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>` : `<span class="text-[11px] text-transparent block mt-0.5 select-none" aria-hidden="true">&nbsp;</span>`}
                 </div>
               </div>
 
@@ -1468,11 +1467,11 @@
           `;
         }
 
-        // Standard (Non-Editor) View — vertically centered if no subtext/progress, two-line stack if subtext/progress present
+        // Standard (Non-Editor) View — fixed height h-[64px] with uniform internal text block for identical bubble heights
         return `
           <div
             onclick="triggerHabit('${h.id}')"
-            class="group flex items-center justify-between px-4 min-h-[52px] py-2.5 ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
+            class="group flex items-center justify-between px-4 h-[64px] ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
           >
             <div class="flex items-center gap-3 min-w-0 pr-2">
               <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
@@ -1488,7 +1487,9 @@
                   <span class="text-[11px] text-slate-400 block mt-0.5">
                     Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
                   </span>
-                ` : ''}
+                ` : `
+                  <span class="text-[11px] text-transparent block mt-0.5 select-none" aria-hidden="true">&nbsp;</span>
+                `}
               </div>
             </div>
 
