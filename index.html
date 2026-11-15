@@ -250,12 +250,12 @@
             </div>
 
             <!-- Add Custom Positive Habit Form -->
-            <form id="positiveForm" onsubmit="handleAddHabit(event, 'positive')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-3">
+            <form id="positiveForm" onsubmit="handleAddHabit(event, 'positive')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-2.5">
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <input
                   type="text"
                   id="posTitleInput"
-                  placeholder="e.g., Read 20 pages"
+                  placeholder="e.g., 📖 Read 20 pages"
                   required
                   class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
@@ -269,6 +269,12 @@
                   class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
+              <input
+                type="text"
+                id="posSubtextInput"
+                placeholder="Optional subtext (e.g., Non-fiction or Kindle)"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
               <div class="flex justify-end gap-2">
                 <button type="button" onclick="toggleForm('positiveForm')" class="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white">Cancel</button>
                 <button type="submit" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer">Save Habit</button>
@@ -301,12 +307,12 @@
             </div>
 
             <!-- Add Custom Penalty Form -->
-            <form id="negativeForm" onsubmit="handleAddHabit(event, 'negative')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-rose-500/30 space-y-3">
+            <form id="negativeForm" onsubmit="handleAddHabit(event, 'negative')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-rose-500/30 space-y-2.5">
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <input
                   type="text"
                   id="negTitleInput"
-                  placeholder="e.g., Stayed up past midnight"
+                  placeholder="e.g., 🌙 Stayed up past midnight"
                   required
                   class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
                 />
@@ -320,6 +326,12 @@
                   class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
                 />
               </div>
+              <input
+                type="text"
+                id="negSubtextInput"
+                placeholder="Optional subtext / note"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+              />
               <div class="flex justify-end gap-2">
                 <button type="button" onclick="toggleForm('negativeForm')" class="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white">Cancel</button>
                 <button type="submit" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white cursor-pointer">Save Penalty</button>
@@ -560,29 +572,30 @@
         lastResetDate: ''
       },
       habits: [
-        { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, order: 0 },
-        { id: 'h2', title: '🦿 Morning Mobility', points: 10, type: 'positive', dailyLimit: 1, order: 1 },
-        { id: 'h3', title: '🚦 Commute @ 8am', points: 10, type: 'positive', dailyLimit: 1, order: 2 },
-        { id: 'h_clean', title: '🧹 Clean House (before 9pm)', points: 10, type: 'positive', dailyLimit: 1, order: 3 },
-        { id: 'h4', title: '🚿 Shower (at 9pm)', points: 10, type: 'positive', dailyLimit: 1, order: 4 },
-        { id: 'h_meal', title: '🍽️ Meal Prep', points: 20, type: 'positive', dailyLimit: 1, order: 5 },
-        { id: 'h11', title: '📚 Balcony Read (30+ mins)', points: 10, type: 'positive', dailyLimit: 1, order: 6 },
-        { id: 'h_lang', title: '🗣️ Language Practice (30+ mins)', points: 20, type: 'positive', dailyLimit: 1, order: 7 },
-        { id: 'h5', title: '💪 Sick Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', order: 8 },
-        { id: 'h6', title: '💪 Mid Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', order: 9 },
-        { id: 'h7', title: '🌊 Swim (< 1km)', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_swim', order: 10 },
-        { id: 'h8', title: '🌊 Swim (1km+)', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_swim', order: 11 },
-        { id: 'h9', title: '🏃 Run (<10km)', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_run', order: 12 },
-        { id: 'h10', title: '🏃 Run (10km+)', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_run', order: 13 },
-        { id: 'h12', title: '🧘 Yoga', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_wellness', order: 14 },
-        { id: 'h13', title: '🥒 Pickleball', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_wellness', order: 15 },
-        { id: 'h14', title: '🚵 Demo Forest', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_wellness', order: 16 },
-        { id: 'h_mtb', title: '🚴 Mountain Bike', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_snow_dirt', order: 17 },
-        { id: 'h_ski', title: '🎿 Ski', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_snow_dirt', order: 18 },
-        { id: 'h15', title: '⏰ Hit Snooze / Woke Up Late', points: 10, type: 'negative', order: 19 },
-        { id: 'h16', title: '🛋️ Skipped Workout', points: 20, type: 'negative', order: 20 },
-        { id: 'h17', title: '📱 Doomscrolled > 1 hr', points: 15, type: 'negative', order: 21 },
-        { id: 'h18', title: '🍔 Junk Food / Impulse Spend', points: 10, type: 'negative', order: 22 }
+        { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
+        { id: 'h2', title: '🦿 Morning Mobility', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 1 },
+        { id: 'h3', title: '🚦 Commute @ 8am', points: 10, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: '', order: 2 },
+        { id: 'h_eff_morn', title: '⚡ Efficient Morning', points: 5, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: '', order: 3 },
+        { id: 'h_clean', title: '🧹 Clean House (before 9pm)', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 4 },
+        { id: 'h4', title: '🚿 Shower (at 9pm)', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 5 },
+        { id: 'h_meal', title: '🍽️ Meal Prep', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 6 },
+        { id: 'h11', title: '📚 Balcony Read (30+ mins)', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 7 },
+        { id: 'h_lang', title: '🗣️ Language Practice (30+ mins)', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 8 },
+        { id: 'h5', title: '💪 Sick Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: '', order: 9 },
+        { id: 'h6', title: '💪 Mid Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: '', order: 10 },
+        { id: 'h7', title: '🏊 Swim (< 1km)', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 11 },
+        { id: 'h8', title: '🏊 Swim (1km+)', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 12 },
+        { id: 'h9', title: '🏃 Run (<10km)', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 13 },
+        { id: 'h10', title: '🏃 Run (10km+)', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 14 },
+        { id: 'h12', title: '🧘 Yoga', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 15 },
+        { id: 'h13', title: '🥒 Pickleball', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 16 },
+        { id: 'h14', title: '🚴 Demo Forest', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 17 },
+        { id: 'h_mtb', title: '🚵 Mountain Bike', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 18 },
+        { id: 'h_ski', title: '⛷️ Ski', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 19 },
+        { id: 'h15', title: '⏰ Hit Snooze / Woke Up Late', points: 10, type: 'negative', subtext: '', order: 20 },
+        { id: 'h16', title: '🛋️ Skipped Workout', points: 20, type: 'negative', subtext: '', order: 21 },
+        { id: 'h17', title: '📱 Doomscrolled > 1 hr', points: 15, type: 'negative', subtext: '', order: 22 },
+        { id: 'h18', title: '🍔 Junk Food / Impulse Spend', points: 10, type: 'negative', subtext: '', order: 23 }
       ],
       rewards: [
         { id: 'r1', title: '1 Hour Video Games', cost: 25, icon: '🎮' }
@@ -701,9 +714,10 @@
       }
 
       appState.balance -= reward.cost;
+      const emojiPrefix = reward.icon ? `${reward.icon} ` : '';
       const logEntry = {
         id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-        title: `Redeemed: ${reward.title}`,
+        title: `Redeemed: ${emojiPrefix}${reward.title}`,
         delta: -reward.cost,
         category: 'redeem',
         timestamp: new Date().toISOString()
@@ -714,7 +728,7 @@
       saveState();
       renderAll();
       animateBalanceChange(-reward.cost);
-      showToast(`Enjoy! Redeemed "${reward.title}" (-${reward.cost} pts)`, 'reward');
+      showToast(`Enjoy! Redeemed "${emojiPrefix}${reward.title}" (-${reward.cost} pts)`, 'reward');
     }
 
     function undoLastAction() {
@@ -770,9 +784,11 @@
       event.preventDefault();
       const titleInput = document.getElementById(type === 'positive' ? 'posTitleInput' : 'negTitleInput');
       const pointsInput = document.getElementById(type === 'positive' ? 'posPointsInput' : 'negPointsInput');
+      const subtextInput = document.getElementById(type === 'positive' ? 'posSubtextInput' : 'negSubtextInput');
 
       const title = titleInput.value.trim();
       const points = parseInt(pointsInput.value, 10);
+      const subtext = subtextInput ? subtextInput.value.trim() : '';
       if (!title || isNaN(points) || points <= 0) return;
 
       appState.habits.push({
@@ -781,11 +797,13 @@
         points,
         type,
         dailyLimit: 1,
+        subtext,
         order: appState.habits.length
       });
 
       titleInput.value = '';
       pointsInput.value = '';
+      if (subtextInput) subtextInput.value = '';
       toggleForm(type === 'positive' ? 'positiveForm' : 'negativeForm');
 
       saveState();
@@ -907,16 +925,19 @@
 
       const titleInput = document.getElementById(`editHabitTitle_${habitId}`);
       const pointsInput = document.getElementById(`editHabitPoints_${habitId}`);
+      const subtextInput = document.getElementById(`editHabitSubtext_${habitId}`);
       const limitInput = document.getElementById(`editHabitLimit_${habitId}`);
       
       const newTitle = titleInput ? titleInput.value.trim() : '';
       const newPoints = pointsInput ? parseInt(pointsInput.value, 10) : habit.points;
+      const newSubtext = subtextInput ? subtextInput.value.trim() : '';
       const newLimit = (habit.type === 'positive' && limitInput && !habit.groupId) ? parseInt(limitInput.value, 10) : 1;
 
       if (!newTitle || isNaN(newPoints) || newPoints <= 0) return;
 
       habit.title = newTitle;
       habit.points = newPoints;
+      habit.subtext = newSubtext;
       if (habit.type === 'positive' && !habit.groupId) {
         habit.dailyLimit = isNaN(newLimit) || newLimit < 1 ? 1 : newLimit;
       }
@@ -929,7 +950,6 @@
 
     function moveHabitOrder(event, habitId, direction) {
       event.stopPropagation();
-      // Prevent browser focus trap on destroyed DOM nodes during rapid clicks
       if (document.activeElement) document.activeElement.blur();
 
       const targetHabit = appState.habits.find(h => h.id === habitId);
@@ -1235,7 +1255,6 @@
       const negatives = appState.habits.filter(h => h.type === 'negative');
 
       const renderHabitCard = (h, idx, listLength, isPositive) => {
-        const accentText = isPositive ? 'text-emerald-300' : 'text-rose-300';
         const accentBadge = isPositive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300';
         const iconBg = isPositive
           ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400'
@@ -1247,10 +1266,6 @@
         const maxLimit = (isPositive && typeof h.dailyLimit === 'number' && h.dailyLimit > 0) ? h.dailyLimit : 1;
         const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
         const remainingCount = Math.max(0, maxLimit - completedCount);
-        
-        const groupPartners = isPositive && h.groupId
-          ? allPositives.filter(other => other.groupId === h.groupId && other.id !== h.id)
-          : [];
 
         if (isEditingHabits && editingHabitId === h.id) {
           return `
@@ -1275,6 +1290,15 @@
                   max="1000"
                   required
                   class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  id="editHabitSubtext_${h.id}"
+                  value="${escapeHtml(h.subtext || '')}"
+                  placeholder="Optional subtext (appears below title)"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
               ${isPositive && !h.groupId ? `
@@ -1365,6 +1389,7 @@
                     <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
                     ${isPositive && !h.groupId && maxLimit > 1 ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${maxLimit}x/day</span>` : ''}
                   </div>
+                  ${h.subtext ? `<span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>` : ''}
                 </div>
               </div>
 
@@ -1411,6 +1436,11 @@
               </div>
               <div class="min-w-0">
                 <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
+                ${h.subtext ? `
+                  <span class="text-[11px] text-slate-400 block mt-0.5 truncate">
+                    ${escapeHtml(h.subtext)}
+                  </span>
+                ` : ''}
                 ${isPositive && !h.groupId && maxLimit > 1 ? `
                   <span class="text-[11px] text-slate-400 block mt-0.5">
                     Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
