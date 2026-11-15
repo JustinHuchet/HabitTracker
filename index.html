@@ -212,8 +212,8 @@
         <!-- Positive Habits Column -->
         <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/20">
           <div>
-            <!-- Sticky Positive Habits Header -->
-            <div class="sticky top-[135px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+            <!-- Sticky Positive Habits Header (Includes Mobile Tab Switcher) -->
+            <div class="sticky top-[135px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <span class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base">+</span>
@@ -228,6 +228,16 @@
                   class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition cursor-pointer"
                 >
                   + Add Habit
+                </button>
+              </div>
+
+              <!-- Mobile Tab Switcher (Visible on small screens) -->
+              <div class="flex sm:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 w-full">
+                <button id="tabPosBtn" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition">
+                  + Positive Habits
+                </button>
+                <button id="tabNegBtn" onclick="switchMobileHabitTab('negative')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
+                  - Penalties
                 </button>
               </div>
             </div>
@@ -270,10 +280,10 @@
         </div>
 
         <!-- Negative Habits / Penalties Column -->
-        <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/20">
+        <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/20" style="display: none;">
           <div>
-            <!-- Sticky Penalties Header -->
-            <div class="sticky top-[135px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+            <!-- Sticky Penalties Header (Includes Mobile Tab Switcher) -->
+            <div class="sticky top-[135px] sm:top-20 z-25 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <span class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-base">−</span>
@@ -288,6 +298,16 @@
                   class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition cursor-pointer"
                 >
                   + Add Penalty
+                </button>
+              </div>
+
+              <!-- Mobile Tab Switcher (Visible on small screens) -->
+              <div class="flex sm:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 w-full">
+                <button id="tabPosBtn2" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
+                  + Positive Habits
+                </button>
+                <button id="tabNegBtn2" onclick="switchMobileHabitTab('negative')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition">
+                  - Penalties
                 </button>
               </div>
             </div>
@@ -1764,7 +1784,62 @@
     }
 
     // =========================================================================
-    // 6. ROBUST DETERMINISTIC CYCLE & COUNT LOGIC (UTC)
+    // 6. MOBILE TAB SWITCHER LOGIC
+    // =========================================================================
+    function switchMobileHabitTab(tab) {
+      const posCol = document.getElementById('positiveColumn');
+      const negCol = document.getElementById('negativeColumn');
+      const tabPosBtn = document.getElementById('tabPosBtn');
+      const tabNegBtn = document.getElementById('tabNegBtn');
+      const tabPosBtn2 = document.getElementById('tabPosBtn2');
+      const tabNegBtn2 = document.getElementById('tabNegBtn2');
+
+      if (!posCol || !negCol) return;
+
+      if (tab === 'positive') {
+        posCol.style.display = 'flex';
+        negCol.style.display = 'none';
+        if (tabPosBtn) tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
+        if (tabNegBtn) tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+        if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
+        if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+      } else {
+        negCol.style.display = 'flex';
+        posCol.style.display = 'none';
+        if (tabNegBtn) tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
+        if (tabPosBtn) tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+        if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
+        if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      const posCol = document.getElementById('positiveColumn');
+      const negCol = document.getElementById('negativeColumn');
+      if (window.innerWidth >= 768) {
+        if (posCol) posCol.style.display = 'flex';
+        if (negCol) negCol.style.display = 'flex';
+      } else {
+        if (posCol && negCol) {
+          const isPosVisible = posCol.style.display !== 'none';
+          const isNegVisible = negCol.style.display !== 'none';
+          if (!isPosVisible && !isNegVisible) {
+            posCol.style.display = 'flex';
+            negCol.style.display = 'none';
+          }
+        }
+      }
+    });
+
+    if (window.innerWidth < 768) {
+      const posCol = document.getElementById('positiveColumn');
+      const negCol = document.getElementById('negativeColumn');
+      if (posCol) posCol.style.display = 'flex';
+      if (negCol) negCol.style.display = 'none';
+    }
+
+    // =========================================================================
+    // 7. ROBUST DETERMINISTIC CYCLE & COUNT LOGIC (UTC)
     // =========================================================================
     function getCurrentCycleStartTime(dateObj = new Date()) {
       const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
