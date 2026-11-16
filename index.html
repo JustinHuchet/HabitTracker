@@ -1997,4 +1997,128 @@
       }
     }
 
-    function escape
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function openBackupModal() {
+      const modal = document.getElementById('backupModal');
+      const textarea = document.getElementById('exportTextarea');
+      if (textarea) {
+        textarea.value = JSON.stringify(appState, null, 2);
+      }
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeBackupModal() {
+      const modal = document.getElementById('backupModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function copyBackupData() {
+      const textarea = document.getElementById('exportTextarea');
+      if (!textarea) return;
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Backup JSON copied to clipboard!', 'success');
+      } catch (err) {
+        showToast('Failed to copy to clipboard', 'danger');
+      }
+    }
+
+    function importBackupData() {
+      const textarea = document.getElementById('importTextarea');
+      if (!textarea) return;
+      const raw = textarea.value.trim();
+      if (!raw) {
+        showToast('Please paste valid backup JSON first.', 'info');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.habits)) {
+          appState = parsed;
+          saveState();
+          renderAll();
+          closeBackupModal();
+          showToast('Successfully restored backup data!', 'success');
+        } else {
+          showToast('Invalid backup JSON structure.', 'danger');
+        }
+      } catch (err) {
+        showToast('Failed to parse JSON backup.', 'danger');
+      }
+    }
+
+    function handleFactoryReset() {
+      if (confirm('Are you sure you want to reset all habits and progress to defaults?')) {
+        appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        saveState();
+        renderAll();
+        closeBackupModal();
+        showToast('Reset to default habits & settings.', 'info');
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      let bgClass = 'bg-slate-900 border-slate-700 text-slate-100';
+      if (type === 'success') bgClass = 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200';
+      else if (type === 'danger') bgClass = 'bg-rose-950/90 border-rose-500/40 text-rose-200';
+      else if (type === 'reward') bgClass = 'bg-amber-950/90 border-amber-500/40 text-amber-200';
+
+      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-xl text-xs font-medium toast-enter backdrop-blur-md ${bgClass}`;
+      toast.textContent = message;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.25s ease';
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    function animateBalanceChange(delta) {
+      const container = document.getElementById('floatingDeltaContainer');
+      if (!container) return;
+
+      const badge = document.createElement('div');
+      badge.className = `text-xs font-extrabold px-2 py-0.5 rounded-lg shadow-lg animate-float-score ${
+        delta > 0 ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
+      }`;
+      badge.textContent = delta > 0 ? `+${delta}` : delta;
+
+      container.appendChild(badge);
+      setTimeout(() => badge.remove(), 850);
+    }
+
+    // Initialize UI on load & check daily reset rollover
+    renderAll();
+    checkResetRollover();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
