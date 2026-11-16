@@ -473,6 +473,7 @@
             type="time"
             id="resetTimeInput"
             value="07:00"
+            oninput="updateNextRefreshPreview()"
             class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-indigo-500"
           />
           <div class="flex items-center gap-1.5 text-xs text-indigo-400 font-medium bg-indigo-500/10 border border-indigo-500/20 px-3 py-2.5 rounded-xl">
@@ -483,6 +484,12 @@
           </div>
         </div>
         <p class="text-xs text-slate-400">Habits refresh automatically when this time arrives each day.</p>
+      </div>
+
+      <!-- Next Refresh Preview Box -->
+      <div class="p-3.5 bg-slate-950/80 border border-indigo-500/30 rounded-2xl space-y-1">
+        <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh</span>
+        <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
       </div>
 
       <!-- 2. Scheduled Point Adjustment -->
@@ -641,7 +648,6 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed && typeof parsed === 'object') {
-            // Migrate legacy lastResetDate string to lastResetTimestamp if needed
             let parsedTimestamp = 0;
             if (parsed.resetConfig) {
               if (typeof parsed.resetConfig.lastResetTimestamp === 'number') {
@@ -999,7 +1005,6 @@
         return;
       }
 
-      // Block-based reordering for positive habits to support new habits & linked groups robustly
       const positives = appState.habits.filter(h => h.type === 'positive');
       const blocks = [];
       const processedGroups = new Set();
@@ -1489,7 +1494,6 @@
           `;
         }
 
-        // Standard (Non-Editor) View — fixed h-[64px], perfectly centered single-line vs multi-line
         return `
           <div
             onclick="triggerHabit('${h.id}')"
@@ -1526,7 +1530,6 @@
         `;
       };
 
-      // Render Positive Habits
       if (positives.length === 0) {
         posContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">All positive habits completed for today! 🎉</p>`;
       } else {
@@ -1571,7 +1574,6 @@
         posContainer.innerHTML = renderedPos.join('');
       }
 
-      // Render Negative Habits / Penalties
       if (negatives.length === 0) {
         negContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No penalties configured.</p>`;
       } else {
@@ -1779,6 +1781,51 @@
     // =========================================================================
     // 5. RESET TIME & SCHEDULED POINTS CONFIGURATION
     // =========================================================================
+    function getNextResetTimestamp(config, lastResetTimestamp, now = new Date()) {
+      const timeStr = (config && config.time) || '07:00';
+      const [rHour, rMin] = timeStr.split(':').map(Number);
+
+      if (!lastResetTimestamp || lastResetTimestamp === 0) {
+        // Never reset yet: find today's or tomorrow's reset time at the configured hour/minute
+        const year = now.getUTCFullYear();
+        const month = now.getUTCMonth();
+        const day = now.getUTCDate();
+        let target = new Date(Date.UTC(year, month, day, rHour, rMin || 0, 0));
+        if (now.getTime() >= target.getTime()) {
+          target = new Date(target.getTime() + 24 * 60 * 60 * 1000);
+        }
+        return target.getTime();
+      } else {
+        // At least one reset has occurred: must be >= lastResetTimestamp + 24 hours,
+        // matching the new rHour:rMin time of day.
+        let candidateTime = Date.UTC(
+          new Date(lastResetTimestamp).getUTCFullYear(),
+          new Date(lastResetTimestamp).getUTCMonth(),
+          new Date(lastResetTimestamp).getUTCDate(),
+          rHour, rMin || 0, 0
+        );
+        if (candidateTime <= lastResetTimestamp) {
+          candidateTime += 24 * 60 * 60 * 1000;
+        }
+        while (candidateTime < lastResetTimestamp + 24 * 60 * 60 * 1000) {
+          candidateTime += 24 * 60 * 60 * 1000;
+        }
+        return candidateTime;
+      }
+    }
+
+    function updateNextRefreshPreview() {
+      const timeInputVal = document.getElementById('resetTimeInput').value || '07:00';
+      const tempConfig = { ...appState.resetConfig, time: timeInputVal };
+      const nextTs = getNextResetTimestamp(tempConfig, appState.resetConfig.lastResetTimestamp, new Date());
+      const dateObj = new Date(nextTs);
+      const formatted = dateObj.toUTCString();
+      const labelEl = document.getElementById('nextRefreshTimeLabel');
+      if (labelEl) {
+        labelEl.textContent = formatted;
+      }
+    }
+
     function openResetConfigModal() {
       const modal = document.getElementById('resetConfigModal');
       document.getElementById('resetTimeInput').value = appState.resetConfig.time || '07:00';
@@ -1789,6 +1836,8 @@
       if (tzLabelEl) {
         tzLabelEl.textContent = 'UTC Time';
       }
+
+      updateNextRefreshPreview();
 
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -1808,10 +1857,6 @@
       appState.resetConfig.time = timeVal;
       appState.resetConfig.scheduledTitle = titleVal;
       appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
-
-      // Anchor lastResetTimestamp to the current cycle start so editing the reset time
-      // never retroactively triggers an immediate reset/adjustment.
-      appState.resetConfig.lastResetTimestamp = getCurrentCycleStartTime(new Date()).getTime();
 
       saveState();
       closeResetConfigModal();
@@ -1848,7 +1893,6 @@
         if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
       }
 
-      // Position top-most habit/penalty cleanly right beneath the sticky section header
       requestAnimationFrame(() => {
         const mainHeader = document.getElementById('mainHeader');
         const activeHeader = document.getElementById(tab === 'positive' ? 'positiveColumnHeader' : 'negativeColumnHeader');
@@ -1857,7 +1901,7 @@
         if (activeList) {
           const mainHeaderHeight = mainHeader ? mainHeader.offsetHeight : 0;
           const sectionHeaderHeight = activeHeader ? activeHeader.offsetHeight : 0;
-          const marginSpacing = 16; // matches mb-4 spacing below sticky header
+          const marginSpacing = 16;
           const listTop = activeList.getBoundingClientRect().top + window.scrollY;
           const targetScrollY = Math.max(0, listTop - mainHeaderHeight - sectionHeaderHeight - marginSpacing);
 
@@ -1903,20 +1947,21 @@
     // 7. ROBUST DETERMINISTIC CYCLE & COUNT LOGIC (UTC)
     // =========================================================================
     function getCurrentCycleStartTime(dateObj = new Date()) {
-      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
-      const [rHour, rMin] = timeStr.split(':').map(Number);
-
-      const year = dateObj.getUTCFullYear();
-      const month = dateObj.getUTCMonth();
-      const day = dateObj.getUTCDate();
-
-      const todayReset = new Date(Date.UTC(year, month, day, rHour, rMin || 0, 0));
-
-      if (dateObj.getTime() >= todayReset.getTime()) {
-        return todayReset;
-      } else {
-        return new Date(todayReset.getTime() - 24 * 60 * 60 * 1000);
+      if (!appState.resetConfig.lastResetTimestamp || appState.resetConfig.lastResetTimestamp === 0) {
+        // Before first reset, treat cycle start as today's or yesterday's scheduled time
+        const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
+        const [rHour, rMin] = timeStr.split(':').map(Number);
+        const year = dateObj.getUTCFullYear();
+        const month = dateObj.getUTCMonth();
+        const day = dateObj.getUTCDate();
+        const todayReset = new Date(Date.UTC(year, month, day, rHour, rMin || 0, 0));
+        if (dateObj.getTime() >= todayReset.getTime()) {
+          return todayReset;
+        } else {
+          return new Date(todayReset.getTime() - 24 * 60 * 60 * 1000);
+        }
       }
+      return new Date(appState.resetConfig.lastResetTimestamp);
     }
 
     function isLogCurrentCycle(timestampISO) {
@@ -1960,28 +2005,25 @@
 
     function checkResetRollover() {
       const now = new Date();
-      const cycleStart = getCurrentCycleStartTime(now);
+      const nextReset = getNextResetTimestamp(appState.resetConfig, appState.resetConfig.lastResetTimestamp, now);
 
-      // First-time open or factory reset: anchor to current cycle start without triggering adjustment
       if (!appState.resetConfig.lastResetTimestamp || appState.resetConfig.lastResetTimestamp === 0) {
-        appState.resetConfig.lastResetTimestamp = cycleStart.getTime();
+        // First-time app open: set lastResetTimestamp to the upcoming scheduled reset without triggering adjustments/resets
+        appState.resetConfig.lastResetTimestamp = nextReset;
         saveState();
         renderAll();
         return;
       }
 
-      if (appState.resetConfig.lastResetTimestamp >= cycleStart.getTime()) {
-        return;
+      if (now.getTime() >= nextReset) {
+        appState.resetConfig.lastResetTimestamp = nextReset;
+        appState.logs = [];
+        applyScheduledAdjustment(now);
+
+        saveState();
+        renderAll();
+        showToast('🌅 Daily habits & ledger have refreshed for the new reset cycle!', 'info');
       }
-
-      // New cycle reached: record reset timestamp, wipe ledger, and apply adjustment
-      appState.resetConfig.lastResetTimestamp = cycleStart.getTime();
-      appState.logs = [];
-      applyScheduledAdjustment(now);
-
-      saveState();
-      renderAll();
-      showToast('🌅 Daily habits & ledger have refreshed for the new reset cycle!', 'info');
     }
 
     document.addEventListener('visibilitychange', () => {
