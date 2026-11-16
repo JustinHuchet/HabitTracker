@@ -31,7 +31,7 @@
   </script>
   <style>
     :root {
-      --header-height: 140px; /* Dynamic fallback */
+      --header-height: 140px;
     }
 
     body {
@@ -41,7 +41,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Custom subtle scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -57,45 +56,18 @@
       background: #334155;
     }
 
-    /* Floating score pop animation */
     @keyframes floatUpFade {
-      0% {
-        opacity: 1;
-        transform: translateY(0) scale(0.95);
-      }
-      50% {
-        opacity: 1;
-        transform: translateY(-22px) scale(1.08);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-38px) scale(1);
-      }
+      0% { opacity: 1; transform: translateY(0) scale(0.95); }
+      50% { opacity: 1; transform: translateY(-22px) scale(1.08); }
+      100% { opacity: 0; transform: translateY(-38px) scale(1); }
     }
     .animate-float-score {
       animation: floatUpFade 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* Pulse ring on balance update */
-    @keyframes balancePop {
-      0% { transform: scale(1); }
-      40% { transform: scale(1.07); }
-      100% { transform: scale(1); }
-    }
-    .animate-balance-pop {
-      animation: balancePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    /* Toast slide-in */
     @keyframes slideInToast {
-      from {
-        opacity: 0;
-        transform: translateY(16px) scale(0.96);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .toast-enter {
       animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -462,14 +434,14 @@
       </div>
 
       <p class="text-xs text-slate-400 leading-relaxed">
-        Choose the exact time of day when your daily habits reset/reappear. You can also attach a scheduled daily point adjustment (positive bonus or negative penalty) that automatically applies when the reset triggers.
+        Choose the exact time of day (24-hour format, e.g., 23:22) when your daily habits reset/reappear in UTC. You can also attach a scheduled daily point adjustment that automatically applies when the reset triggers.
       </p>
 
       <!-- 1. Reset Time Picker -->
       <div class="space-y-2">
         <div class="flex items-center justify-between">
-          <label class="text-xs font-semibold text-slate-300">Habit Reset Time (Daily)</label>
-          <span class="text-[11px] text-indigo-400 font-medium">24-hour format (e.g., 14:30 for 2:30 PM)</span>
+          <label class="text-xs font-semibold text-slate-300">Habit Reset Time (Daily UTC)</label>
+          <span class="text-[11px] text-indigo-400 font-medium">24-hour format (e.g., 23:22)</span>
         </div>
         <div class="flex items-center gap-3">
           <input
@@ -486,12 +458,12 @@
             <span id="detectedTimezoneLabel">UTC Time</span>
           </div>
         </div>
-        <p class="text-xs text-slate-400">Habits refresh automatically when this time arrives each day.</p>
+        <p class="text-xs text-slate-400">Habits refresh automatically when this UTC time arrives each day.</p>
       </div>
 
       <!-- Next Refresh Preview Box -->
       <div class="p-3.5 bg-slate-950/80 border border-indigo-500/30 rounded-2xl space-y-1">
-        <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh</span>
+        <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
         <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
       </div>
 
@@ -520,12 +492,17 @@
         </div>
       </div>
 
-      <!-- Save Button -->
-      <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-        <button onclick="closeResetConfigModal()" class="px-4 py-2.5 rounded-xl text-xs text-slate-400 hover:text-white">Cancel</button>
-        <button onclick="saveResetConfig()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition cursor-pointer">
-          Save Schedule Settings
+      <!-- Actions & Test Reset -->
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+        <button onclick="testTriggerResetNow()" type="button" class="px-3.5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-semibold transition cursor-pointer">
+          ⚡ Test Reset Now
         </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeResetConfigModal()" class="px-3 py-2.5 rounded-xl text-xs text-slate-400 hover:text-white">Cancel</button>
+          <button onclick="saveResetConfig()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition cursor-pointer">
+            Save Schedule
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1782,32 +1759,32 @@
     }
 
     // =========================================================================
-    // 5. RESET TIME & SCHEDULED POINTS CONFIGURATION
+    // 5. RESET TIME & SCHEDULED POINTS CONFIGURATION (UTC MODE)
     // =========================================================================
     function getNextResetTimestamp(config, lastResetTimestamp, now = new Date()) {
       const timeStr = (config && config.time) || '07:00';
       const [rHour, rMin] = timeStr.split(':').map(Number);
+      const nowMs = now.getTime();
 
       if (!lastResetTimestamp || lastResetTimestamp === 0) {
-        // Never reset yet: find today's or tomorrow's reset time at the configured hour/minute
         const year = now.getUTCFullYear();
         const month = now.getUTCMonth();
         const day = now.getUTCDate();
-        let target = new Date(Date.UTC(year, month, day, rHour, rMin || 0, 0));
-        if (now.getTime() >= target.getTime()) {
-          target = new Date(target.getTime() + 24 * 60 * 60 * 1000);
+        let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
+        if (nowMs >= target) {
+          target += 24 * 60 * 60 * 1000;
         }
-        return target.getTime();
+        return target;
       } else {
-        // At least one reset has occurred: must be >= lastResetTimestamp + 24 hours,
-        // aligned with rHour:rMin.
+        let lastDate = new Date(lastResetTimestamp);
         let candidateTime = Date.UTC(
-          new Date(lastResetTimestamp).getUTCFullYear(),
-          new Date(lastResetTimestamp).getUTCMonth(),
-          new Date(lastResetTimestamp).getUTCDate(),
+          lastDate.getUTCFullYear(),
+          lastDate.getUTCMonth(),
+          lastDate.getUTCDate(),
           rHour, rMin || 0, 0
         );
-        while (candidateTime <= lastResetTimestamp || candidateTime < now.getTime()) {
+
+        while (candidateTime <= lastResetTimestamp || candidateTime < nowMs) {
           candidateTime += 24 * 60 * 60 * 1000;
         }
         return candidateTime;
@@ -1861,7 +1838,30 @@
       saveState();
       closeResetConfigModal();
       showToast('Reset schedule & scheduled points updated!', 'success');
+      
+      // Immediately evaluate reset rollover upon saving
+      checkResetRollover();
       renderAll();
+    }
+
+    function testTriggerResetNow() {
+      const timeVal = document.getElementById('resetTimeInput').value.trim() || '07:00';
+      const titleVal = document.getElementById('scheduledTitleInput').value.trim();
+      const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
+
+      appState.resetConfig.time = timeVal;
+      appState.resetConfig.scheduledTitle = titleVal;
+      appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
+
+      const now = new Date();
+      appState.resetConfig.lastResetTimestamp = now.getTime() - 1000; // force past
+      appState.logs = [];
+      applyScheduledAdjustment(now);
+
+      saveState();
+      closeResetConfigModal();
+      renderAll();
+      showToast('⚡ Test Reset triggered successfully!', 'success');
     }
 
     // =========================================================================
@@ -2005,19 +2005,6 @@
     function checkResetRollover() {
       const now = new Date();
       const nextReset = getNextResetTimestamp(appState.resetConfig, appState.resetConfig.lastResetTimestamp, now);
-
-      if (!appState.resetConfig.lastResetTimestamp || appState.resetConfig.lastResetTimestamp === 0) {
-        // First-time app open: check if we have reached or passed the upcoming reset time
-        if (now.getTime() >= nextReset) {
-          appState.resetConfig.lastResetTimestamp = nextReset;
-          appState.logs = [];
-          applyScheduledAdjustment(now);
-          saveState();
-          renderAll();
-          showToast('🌅 Daily habits & ledger have refreshed for the new reset cycle!', 'info');
-        }
-        return;
-      }
 
       if (now.getTime() >= nextReset) {
         appState.resetConfig.lastResetTimestamp = nextReset;
