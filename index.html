@@ -292,7 +292,7 @@
                 <div class="flex items-center gap-2.5">
                   <span class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-base">−</span>
                   <div>
-                    <h3 class="text-sm font-bold text-rose-300">Penalties & Slip-Ups</h3>
+                    <h3 class="text-sm font-bold text-rose-300">Penalties</h3>
                     <p class="text-[11px] text-slate-400">Hold yourself accountable</p>
                   </div>
                 </div>
@@ -606,7 +606,7 @@
         { id: 'h_meal', title: '🍽️ Meal Prep', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 6 },
         { id: 'h11', title: '📚 Balcony Read', points: 10, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 7 },
         { id: 'h_lang', title: '🗣️ Language Practice', points: 20, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 8 },
-        { id: 'h5', title: '💪 Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Complete', order: 9 },
+        { id: 'h5', title: '💪 Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Full-Ass', order: 9 },
         { id: 'h6', title: '💪 Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Half-assed', order: 10 },
         { id: 'h7', title: '🏊 Swim', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 1km', order: 11 },
         { id: 'h8', title: '🏊 Swim', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 1km', order: 12 },
@@ -1834,8 +1834,9 @@
         if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
       }
 
-      // Return user to the top of the section smoothly
-      const sectionEl = posCol.closest('section') || posCol;
+      // Return user to the top-most habit/penalty available
+      const activeCol = tab === 'positive' ? posCol : negCol;
+      const sectionEl = activeCol.closest('section') || activeCol;
       sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
