@@ -1951,10 +1951,26 @@
       const day = String(now.getUTCDate()).padStart(2, '0');
       const todayDateKey = `${year}-${month}-${day}`;
 
-      // First-time load or factory reset: initialize date & immediately apply today's scheduled adjustment
+      // First-time load or factory reset: initialize lastResetDate so that adjustment
+      // only fires the first time reset time is hit *after* this first open.
       if (!appState.resetConfig.lastResetDate) {
-        appState.resetConfig.lastResetDate = todayDateKey;
-        applyScheduledAdjustment(now);
+        const [rHour, rMin] = (appState.resetConfig.time || '07:00').split(':').map(Number);
+        const todayReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), rHour, rMin || 0, 0));
+        
+        let initialResetDate;
+        if (now.getTime() >= todayReset.getTime()) {
+          // Opened after today's reset time -> next reset is tomorrow
+          initialResetDate = todayDateKey;
+        } else {
+          // Opened before today's reset time -> next reset is today at reset time
+          const yesterday = new Date(todayReset.getTime() - 24 * 60 * 60 * 1000);
+          const yYear = yesterday.getUTCFullYear();
+          const yMonth = String(yesterday.getUTCMonth() + 1).padStart(2, '0');
+          const yDay = String(yesterday.getUTCDate()).padStart(2, '0');
+          initialResetDate = `${yYear}-${yMonth}-${yDay}`;
+        }
+
+        appState.resetConfig.lastResetDate = initialResetDate;
         saveState();
         renderAll();
         return;
