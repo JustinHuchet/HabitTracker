@@ -1929,6 +1929,21 @@
       return count;
     }
 
+    function applyScheduledAdjustment(now) {
+      const sPoints = appState.resetConfig.scheduledPoints;
+      if (sPoints !== 0) {
+        const sTitle = (appState.resetConfig.scheduledTitle || '').trim() || 'Scheduled Daily Adjustment';
+        appState.balance += sPoints;
+        appState.logs.unshift({
+          id: 'log_sched_' + Date.now(),
+          title: sTitle,
+          delta: sPoints,
+          category: sPoints > 0 ? 'positive' : 'negative',
+          timestamp: now.toISOString()
+        });
+      }
+    }
+
     function checkResetRollover() {
       const now = new Date();
       const year = now.getUTCFullYear();
@@ -1936,9 +1951,12 @@
       const day = String(now.getUTCDate()).padStart(2, '0');
       const todayDateKey = `${year}-${month}-${day}`;
 
+      // First-time load or factory reset: initialize date & immediately apply today's scheduled adjustment
       if (!appState.resetConfig.lastResetDate) {
         appState.resetConfig.lastResetDate = todayDateKey;
+        applyScheduledAdjustment(now);
         saveState();
+        renderAll();
         return;
       }
 
@@ -1954,18 +1972,7 @@
         // Wipe the ledger for the new day
         appState.logs = [];
 
-        const sPoints = appState.resetConfig.scheduledPoints;
-        if (sPoints !== 0) {
-          const sTitle = (appState.resetConfig.scheduledTitle || '').trim() || 'Scheduled Daily Adjustment';
-          appState.balance += sPoints;
-          appState.logs.unshift({
-            id: 'log_sched_' + Date.now(),
-            title: sTitle,
-            delta: sPoints,
-            category: sPoints > 0 ? 'positive' : 'negative',
-            timestamp: now.toISOString()
-          });
-        }
+        applyScheduledAdjustment(now);
 
         saveState();
         renderAll();
@@ -2067,6 +2074,7 @@
       if (confirm('Are you sure you want to reset all habits and progress to defaults?')) {
         appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
         saveState();
+        checkResetRollover();
         renderAll();
         closeBackupModal();
         showToast('Reset to default habits & settings.', 'info');
