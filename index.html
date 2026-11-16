@@ -217,7 +217,7 @@
         <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/20">
           <div>
             <!-- Sticky Positive Habits Header (Includes Mobile Tab Switcher) -->
-            <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
+            <div id="positiveColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <span class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base">+</span>
@@ -287,7 +287,7 @@
         <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-black/25">
           <div>
             <!-- Sticky Penalties Header (Includes Mobile Tab Switcher) -->
-            <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
+            <div id="negativeColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <span class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-base">−</span>
@@ -1834,10 +1834,25 @@
         if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
       }
 
-      // Return user to the top-most habit/penalty available
-      const activeCol = tab === 'positive' ? posCol : negCol;
-      const sectionEl = activeCol.closest('section') || activeCol;
-      sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Position top-most habit/penalty cleanly right beneath the sticky section header
+      requestAnimationFrame(() => {
+        const mainHeader = document.getElementById('mainHeader');
+        const activeHeader = document.getElementById(tab === 'positive' ? 'positiveColumnHeader' : 'negativeColumnHeader');
+        const activeList = document.getElementById(tab === 'positive' ? 'positiveHabitList' : 'negativeHabitList');
+
+        if (activeList) {
+          const mainHeaderHeight = mainHeader ? mainHeader.offsetHeight : 0;
+          const sectionHeaderHeight = activeHeader ? activeHeader.offsetHeight : 0;
+          const marginSpacing = 16; // matches mb-4 spacing below sticky header
+          const listTop = activeList.getBoundingClientRect().top + window.scrollY;
+          const targetScrollY = Math.max(0, listTop - mainHeaderHeight - sectionHeaderHeight - marginSpacing);
+
+          window.scrollTo({
+            top: targetScrollY,
+            behavior: 'smooth'
+          });
+        }
+      });
     }
 
     window.addEventListener('resize', () => {
@@ -1982,128 +1997,4 @@
       }
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function openBackupModal() {
-      const modal = document.getElementById('backupModal');
-      const textarea = document.getElementById('exportTextarea');
-      if (textarea) {
-        textarea.value = JSON.stringify(appState, null, 2);
-      }
-      if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-      }
-    }
-
-    function closeBackupModal() {
-      const modal = document.getElementById('backupModal');
-      if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-      }
-    }
-
-    function copyBackupData() {
-      const textarea = document.getElementById('exportTextarea');
-      if (!textarea) return;
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast('Backup JSON copied to clipboard!', 'success');
-      } catch (err) {
-        showToast('Failed to copy to clipboard', 'danger');
-      }
-    }
-
-    function importBackupData() {
-      const textarea = document.getElementById('importTextarea');
-      if (!textarea) return;
-      const raw = textarea.value.trim();
-      if (!raw) {
-        showToast('Please paste valid backup JSON first.', 'info');
-        return;
-      }
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.habits)) {
-          appState = parsed;
-          saveState();
-          renderAll();
-          closeBackupModal();
-          showToast('Successfully restored backup data!', 'success');
-        } else {
-          showToast('Invalid backup JSON structure.', 'danger');
-        }
-      } catch (err) {
-        showToast('Failed to parse JSON backup.', 'danger');
-      }
-    }
-
-    function handleFactoryReset() {
-      if (confirm('Are you sure you want to reset all habits and progress to defaults?')) {
-        appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-        saveState();
-        renderAll();
-        closeBackupModal();
-        showToast('Reset to default habits & settings.', 'info');
-      }
-    }
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      if (!container) return;
-
-      const toast = document.createElement('div');
-      let bgClass = 'bg-slate-900 border-slate-700 text-slate-100';
-      if (type === 'success') bgClass = 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200';
-      else if (type === 'danger') bgClass = 'bg-rose-950/90 border-rose-500/40 text-rose-200';
-      else if (type === 'reward') bgClass = 'bg-amber-950/90 border-amber-500/40 text-amber-200';
-
-      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-xl text-xs font-medium toast-enter backdrop-blur-md ${bgClass}`;
-      toast.textContent = message;
-
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        toast.style.transition = 'all 0.25s ease';
-        setTimeout(() => toast.remove(), 250);
-      }, 3000);
-    }
-
-    function animateBalanceChange(delta) {
-      const container = document.getElementById('floatingDeltaContainer');
-      if (!container) return;
-
-      const badge = document.createElement('div');
-      badge.className = `text-xs font-extrabold px-2 py-0.5 rounded-lg shadow-lg animate-float-score ${
-        delta > 0 ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
-      }`;
-      badge.textContent = delta > 0 ? `+${delta}` : delta;
-
-      container.appendChild(badge);
-      setTimeout(() => badge.remove(), 850);
-    }
-
-    // Initialize UI on load & check daily reset rollover
-    renderAll();
-    checkResetRollover();
-  </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js');
-      });
-    }
-  </script>
-</body>
-</html>
+    function escape
