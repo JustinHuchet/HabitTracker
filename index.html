@@ -440,7 +440,7 @@
         </div>
       </div>
 
-      <div id="activityLogList" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+      <div id="activityLogList" class="space-y-2"></div>
     </section>
 
   </main>
@@ -1811,6 +1811,10 @@
         if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
         if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
       }
+
+      // Return user to the top of the section smoothly
+      const sectionEl = posCol.closest('section') || posCol;
+      sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     window.addEventListener('resize', () => {
