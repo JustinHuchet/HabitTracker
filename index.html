@@ -1797,17 +1797,14 @@
         return target.getTime();
       } else {
         // At least one reset has occurred: must be >= lastResetTimestamp + 24 hours,
-        // matching the new rHour:rMin time of day.
+        // aligned with rHour:rMin.
         let candidateTime = Date.UTC(
           new Date(lastResetTimestamp).getUTCFullYear(),
           new Date(lastResetTimestamp).getUTCMonth(),
           new Date(lastResetTimestamp).getUTCDate(),
           rHour, rMin || 0, 0
         );
-        if (candidateTime <= lastResetTimestamp) {
-          candidateTime += 24 * 60 * 60 * 1000;
-        }
-        while (candidateTime < lastResetTimestamp + 24 * 60 * 60 * 1000) {
+        while (candidateTime <= lastResetTimestamp || candidateTime < now.getTime()) {
           candidateTime += 24 * 60 * 60 * 1000;
         }
         return candidateTime;
@@ -1948,7 +1945,6 @@
     // =========================================================================
     function getCurrentCycleStartTime(dateObj = new Date()) {
       if (!appState.resetConfig.lastResetTimestamp || appState.resetConfig.lastResetTimestamp === 0) {
-        // Before first reset, treat cycle start as today's or yesterday's scheduled time
         const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
         const [rHour, rMin] = timeStr.split(':').map(Number);
         const year = dateObj.getUTCFullYear();
@@ -2005,15 +2001,13 @@
 
     function checkResetRollover() {
       const now = new Date();
-      const nextReset = getNextResetTimestamp(appState.resetConfig, appState.resetConfig.lastResetTimestamp, now);
-
+      
+      // If no reset has occurred yet, do not lock in lastResetTimestamp on startup.
       if (!appState.resetConfig.lastResetTimestamp || appState.resetConfig.lastResetTimestamp === 0) {
-        // First-time app open: set lastResetTimestamp to the upcoming scheduled reset without triggering adjustments/resets
-        appState.resetConfig.lastResetTimestamp = nextReset;
-        saveState();
-        renderAll();
         return;
       }
+
+      const nextReset = getNextResetTimestamp(appState.resetConfig, appState.resetConfig.lastResetTimestamp, now);
 
       if (now.getTime() >= nextReset) {
         appState.resetConfig.lastResetTimestamp = nextReset;
