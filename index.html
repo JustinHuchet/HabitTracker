@@ -434,7 +434,7 @@
       </div>
 
       <p class="text-xs text-slate-400 leading-relaxed">
-        Choose the exact time of day (24-hour format, e.g., 23:22) when your daily habits reset/reappear in UTC. You can also attach a scheduled daily point adjustment that automatically applies when the reset triggers.
+        Choose the exact time of day (24-hour format, e.g., 23:22) when your daily habits reset/reappear in UTC. Changing the reset time after a reset ensures a minimum 24-hour gap from the previous fire time.
       </p>
 
       <!-- 1. Reset Time Picker -->
@@ -574,6 +574,7 @@
     // 1. DEFAULT STATE & PERSISTENT LOCAL STORAGE
     // =========================================================================
     const STORAGE_KEY = 'pointquest_tracker_state_v1';
+    const EPOCH_TIME = new Date('1970-01-01T00:00:00Z').getTime();
 
     const DEFAULT_STATE = {
       balance: 0,
@@ -581,7 +582,7 @@
         time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
-        lastResetTimestamp: new Date('1970-01-01T00:00:00Z').getTime()
+        lastResetTimestamp: EPOCH_TIME
       },
       habits: [
         { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
@@ -628,7 +629,7 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed && typeof parsed === 'object') {
-            let parsedTimestamp = new Date('1970-01-01T00:00:00Z').getTime();
+            let parsedTimestamp = EPOCH_TIME;
             if (parsed.resetConfig) {
               if (typeof parsed.resetConfig.lastResetTimestamp === 'number') {
                 parsedTimestamp = parsed.resetConfig.lastResetTimestamp;
@@ -1762,17 +1763,8 @@
     }
 
     // =========================================================================
-    // 5. UNIFIED RESET LOGIC WITH FRESH APP / FIRST-RUN BYPASS
+    // 5. UNIFIED RESET LOGIC WITH MINIMUM 24-HOUR POST-FIRE RULE
     // =========================================================================
-    function isSameUTCDate(ts1, ts2) {
-      if (!ts1 || !ts2) return false;
-      const d1 = new Date(ts1);
-      const d2 = new Date(ts2);
-      return d1.getUTCFullYear() === d2.getUTCFullYear() &&
-             d1.getUTCMonth() === d2.getUTCMonth() &&
-             d1.getUTCDate() === d2.getUTCDate();
-    }
-
     function getNextResetTimestamp(config, lastResetTimestamp, now = new Date()) {
       const timeStr = (config && config.time) || '07:00';
       const [rHour, rMin] = timeStr.split(':').map(Number);
@@ -1783,19 +1775,21 @@
       
       let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
 
-      const epochTime = new Date('1970-01-01T00:00:00Z').getTime();
-      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0 || lastResetTimestamp === epochTime;
+      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === EPOCH_TIME;
 
-      if (nowMs >= target || (!isFreshApp && lastResetTimestamp && isSameUTCDate(lastResetTimestamp, target))) {
-        target += 24 * 60 * 60 * 1000;
-      }
-
-      if (!isFreshApp) {
-        while (target <= nowMs || (lastResetTimestamp && target <= lastResetTimestamp)) {
+      if (isFreshApp) {
+        // 1. First-time login / fresh state: default to 7:00 AM UTC of the next upcoming day (or today if not reached yet)
+        if (target <= nowMs) {
           target += 24 * 60 * 60 * 1000;
         }
       } else {
-        while (target <= nowMs) {
+        // 4. Post-fire manual adjustment / rollover rule:
+        // The next time it fires must be a minimum of 24 hours after the previous lastResetTimestamp.
+        const minAllowedTarget = lastResetTimestamp + (24 * 60 * 60 * 1000);
+        
+        // If the user's chosen time of day results in a target less than 24 hours from the last fire time,
+        // advance it day-by-day until it meets or exceeds the minimum 24-hour gap and is strictly in the future.
+        while (target < minAllowedTarget || target <= nowMs) {
           target += 24 * 60 * 60 * 1000;
         }
       }
@@ -1839,7 +1833,7 @@
     }
 
     function saveResetConfig() {
-      const timeVal = document.getElementById('resetTimeInput').value.trim() || '00:00';
+      const timeVal = document.getElementById('resetTimeInput').value.trim() || '07:00';
       const titleVal = document.getElementById('scheduledTitleInput').value.trim();
       const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
 
@@ -1960,7 +1954,8 @@
     function isLogCurrentCycle(timestampISO) {
       if (!timestampISO) return false;
       const logTime = new Date(timestampISO).getTime();
-      const lastReset = appState.resetConfig.lastResetTimestamp || 0;
+      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_TIME;
+      if (lastReset === EPOCH_TIME) return true;
       return logTime >= lastReset;
     }
 
@@ -1998,18 +1993,21 @@
 
     function checkResetRollover() {
       const now = new Date();
-      const lastReset = appState.resetConfig.lastResetTimestamp || 0;
-      const epochTime = new Date('1970-01-01T00:00:00Z').getTime();
+      const nowMs = now.getTime();
+      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_TIME;
 
-      if (lastReset === 0 || lastReset === epochTime) {
-        // Fresh app installation with 1970 epoch: establish initial baseline without overwriting to exact current minute
+      // If brand new (epoch), initialize nextReset baseline without firing immediately
+      if (lastReset === EPOCH_TIME) {
+        appState.resetConfig.lastResetTimestamp = getNextResetTimestamp(appState.resetConfig, EPOCH_TIME, now);
+        saveState();
         return;
       }
 
-      const nextReset = getNextResetTimestamp(appState.resetConfig, lastReset, new Date(lastReset));
+      // Calculate when the next reset is due based on current config and last fired timestamp
+      const nextResetDue = getNextResetTimestamp(appState.resetConfig, lastReset, new Date(lastReset));
 
-      if (now.getTime() >= nextReset) {
-        appState.resetConfig.lastResetTimestamp = nextReset;
+      if (nowMs >= nextResetDue) {
+        appState.resetConfig.lastResetTimestamp = nextResetDue;
         appState.logs = [];
         applyScheduledAdjustment(now);
 
