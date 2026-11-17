@@ -1764,6 +1764,8 @@
     // =========================================================================
     // 5. UNIFIED RESET LOGIC WITH FRESH APP / FIRST-RUN BYPASS
     // =========================================================================
+    const EPOCH_START = new Date('1970-01-01T00:00:00Z').getTime();
+
     function isSameUTCDate(ts1, ts2) {
       if (!ts1 || !ts2) return false;
       const d1 = new Date(ts1);
@@ -1783,21 +1785,19 @@
       
       let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
 
-      // FRESH APP EXCEPTION: If lastResetTimestamp is 0 (never reset yet), allow immediate triggering today
-      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0;
+      // Check if this is a fresh app state (0 or Jan 1 1970 epoch)
+      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0 || lastResetTimestamp === EPOCH_START;
 
-      // If we are past target today, OR (if not a fresh app) a reset already occurred on this calendar date, push to tomorrow
       if (nowMs >= target || (!isFreshApp && lastResetTimestamp && isSameUTCDate(lastResetTimestamp, target))) {
         target += 24 * 60 * 60 * 1000;
       }
 
-      // Ensure target is strictly in the future (unless fresh app and target is in the future today)
       if (!isFreshApp) {
         while (target <= nowMs || (lastResetTimestamp && target <= lastResetTimestamp)) {
           target += 24 * 60 * 60 * 1000;
         }
       } else {
-        // For fresh app, if target today has already passed, schedule for next occurrence
+        // For fresh app, if target time today has already passed, schedule for the next occurrence
         while (target <= nowMs) {
           target += 24 * 60 * 60 * 1000;
         }
@@ -2003,7 +2003,7 @@
       const now = new Date();
       const lastReset = appState.resetConfig.lastResetTimestamp || 0;
 
-      if (lastReset === 0) {
+      if (lastReset === 0 || lastReset === EPOCH_START) {
         // Fresh app installation: establish initial baseline without triggering an immediate retroactive wipe
         appState.resetConfig.lastResetTimestamp = now.getTime();
         saveState();
