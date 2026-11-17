@@ -434,7 +434,7 @@
       </div>
 
       <p class="text-xs text-slate-400 leading-relaxed">
-        Choose the exact time of day (24-hour format, e.g., 23:22) when your daily habits reset/reappear in UTC. Changing the reset time after a reset ensures a minimum 24-hour gap from the previous fire time.
+        Choose the exact time of day (24-hour format, e.g., 23:22) when your daily habits reset/reappear in UTC. You can also attach a scheduled daily point adjustment that automatically applies when the reset triggers.
       </p>
 
       <!-- 1. Reset Time Picker -->
@@ -574,7 +574,7 @@
     // 1. DEFAULT STATE & PERSISTENT LOCAL STORAGE
     // =========================================================================
     const STORAGE_KEY = 'pointquest_tracker_state_v1';
-    const EPOCH_TIME = new Date('1970-01-01T00:00:00Z').getTime();
+    const EPOCH_RESET = new Date('1970-01-01T00:00:00Z').getTime();
 
     const DEFAULT_STATE = {
       balance: 0,
@@ -582,7 +582,7 @@
         time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
-        lastResetTimestamp: EPOCH_TIME
+        lastResetTimestamp: EPOCH_RESET
       },
       habits: [
         { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
@@ -629,7 +629,7 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed && typeof parsed === 'object') {
-            let parsedTimestamp = EPOCH_TIME;
+            let parsedTimestamp = EPOCH_RESET;
             if (parsed.resetConfig) {
               if (typeof parsed.resetConfig.lastResetTimestamp === 'number') {
                 parsedTimestamp = parsed.resetConfig.lastResetTimestamp;
@@ -676,7 +676,7 @@
     // 2. CORE POINT & HABIT ACTIONS
     // =========================================================================
     function triggerHabit(habitId, sourceLabel = '') {
-      checkResetRollover(); // Always verify reset cycle before action
+      checkResetRollover(); 
       const habit = appState.habits.find(h => h.id === habitId);
       if (!habit) return;
 
@@ -1763,35 +1763,38 @@
     }
 
     // =========================================================================
-    // 5. UNIFIED RESET LOGIC WITH MINIMUM 24-HOUR POST-FIRE RULE
+    // 5. ROBUST SCHEDULER & 24H MINIMUM BUFFER LOGIC
     // =========================================================================
     function getNextResetTimestamp(config, lastResetTimestamp, now = new Date()) {
       const timeStr = (config && config.time) || '07:00';
       const [rHour, rMin] = timeStr.split(':').map(Number);
       const nowMs = now.getTime();
-      const year = now.getUTCFullYear();
-      const month = now.getUTCMonth();
-      const day = now.getUTCDate();
-      
-      let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-
-      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === EPOCH_TIME;
+      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0 || lastResetTimestamp === EPOCH_RESET;
 
       if (isFreshApp) {
-        // 1. First-time login / fresh state: default to 7:00 AM UTC of the next upcoming day (or today if not reached yet)
-        if (target <= nowMs) {
+        // First-time launch or epoch: default to 7:00 AM UTC of the next upcoming day (or today if time hasn't passed)
+        const year = now.getUTCFullYear();
+        const month = now.getUTCMonth();
+        const day = now.getUTCDate();
+        let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
+        while (target <= nowMs) {
           target += 24 * 60 * 60 * 1000;
         }
-      } else {
-        // 4. Post-fire manual adjustment / rollover rule:
-        // The next time it fires must be a minimum of 24 hours after the previous lastResetTimestamp.
-        const minAllowedTarget = lastResetTimestamp + (24 * 60 * 60 * 1000);
-        
-        // If the user's chosen time of day results in a target less than 24 hours from the last fire time,
-        // advance it day-by-day until it meets or exceeds the minimum 24-hour gap and is strictly in the future.
-        while (target < minAllowedTarget || target <= nowMs) {
-          target += 24 * 60 * 60 * 1000;
-        }
+        return target;
+      }
+
+      // If user has a valid lastResetTimestamp, next fire must be at least 24 hours after lastResetTimestamp,
+      // aligned to the chosen UTC time of day.
+      const lastDate = new Date(lastResetTimestamp);
+      const year = lastDate.getUTCFullYear();
+      const month = lastDate.getUTCMonth();
+      const day = lastDate.getUTCDate();
+
+      let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
+
+      // Ensure target is strictly >= lastResetTimestamp + 24 hours
+      while (target < lastResetTimestamp + (24 * 60 * 60 * 1000)) {
+        target += 24 * 60 * 60 * 1000;
       }
 
       return target;
@@ -1859,7 +1862,7 @@
       appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
 
       const now = new Date();
-      appState.resetConfig.lastResetTimestamp = now.getTime() - 86400000; // force past
+      appState.resetConfig.lastResetTimestamp = now.getTime(); 
       appState.logs = [];
       applyScheduledAdjustment(now);
 
@@ -1954,8 +1957,7 @@
     function isLogCurrentCycle(timestampISO) {
       if (!timestampISO) return false;
       const logTime = new Date(timestampISO).getTime();
-      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_TIME;
-      if (lastReset === EPOCH_TIME) return true;
+      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_RESET;
       return logTime >= lastReset;
     }
 
@@ -1993,21 +1995,19 @@
 
     function checkResetRollover() {
       const now = new Date();
-      const nowMs = now.getTime();
-      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_TIME;
+      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_RESET;
 
-      // If brand new (epoch), initialize nextReset baseline without firing immediately
-      if (lastReset === EPOCH_TIME) {
-        appState.resetConfig.lastResetTimestamp = getNextResetTimestamp(appState.resetConfig, EPOCH_TIME, now);
+      if (lastReset === EPOCH_RESET) {
+        // First run with epoch timestamp: set initial baseline to right now so future checks compare correctly
+        appState.resetConfig.lastResetTimestamp = now.getTime();
         saveState();
         return;
       }
 
-      // Calculate when the next reset is due based on current config and last fired timestamp
-      const nextResetDue = getNextResetTimestamp(appState.resetConfig, lastReset, new Date(lastReset));
+      const nextReset = getNextResetTimestamp(appState.resetConfig, lastReset, new Date(lastReset));
 
-      if (nowMs >= nextResetDue) {
-        appState.resetConfig.lastResetTimestamp = nextResetDue;
+      if (now.getTime() >= nextReset) {
+        appState.resetConfig.lastResetTimestamp = now.getTime();
         appState.logs = [];
         applyScheduledAdjustment(now);
 
