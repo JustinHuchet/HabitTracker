@@ -581,7 +581,7 @@
         time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
-        lastResetTimestamp: 0
+        lastResetTimestamp: new Date('1970-01-01T00:00:00Z').getTime()
       },
       habits: [
         { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
@@ -628,7 +628,7 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed && typeof parsed === 'object') {
-            let parsedTimestamp = 0;
+            let parsedTimestamp = new Date('1970-01-01T00:00:00Z').getTime();
             if (parsed.resetConfig) {
               if (typeof parsed.resetConfig.lastResetTimestamp === 'number') {
                 parsedTimestamp = parsed.resetConfig.lastResetTimestamp;
