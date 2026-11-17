@@ -573,8 +573,7 @@
     // =========================================================================
     // 1. DEFAULT STATE & PERSISTENT LOCAL STORAGE
     // =========================================================================
-    const STORAGE_KEY = 'pointquest_tracker_state_v1';
-    const EPOCH_RESET = new Date('1970-01-01T00:00:00Z').getTime();
+    const STORAGE_KEY = 'pointquest_tracker_state_v2';
 
     const DEFAULT_STATE = {
       balance: 0,
@@ -582,7 +581,8 @@
         time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
-        lastResetTimestamp: EPOCH_RESET // Set to epoch so fresh first-time users can pick any reset time freely without 24h buffer lockouts
+        lastResetTimestamp: 0,
+        hasRefreshedOnce: false // Tracks whether the initial scheduled refresh has occurred yet
       },
       habits: [
         { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
@@ -629,19 +629,10 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed && typeof parsed === 'object') {
-            let parsedTimestamp = EPOCH_RESET;
-            if (parsed.resetConfig) {
-              if (typeof parsed.resetConfig.lastResetTimestamp === 'number') {
-                parsedTimestamp = parsed.resetConfig.lastResetTimestamp;
-              } else if (parsed.resetConfig.lastResetDate) {
-                parsedTimestamp = new Date(parsed.resetConfig.lastResetDate + 'T00:00:00Z').getTime();
-              }
-            }
-
             return {
               balance: typeof parsed.balance === 'number' ? parsed.balance : DEFAULT_STATE.balance,
               resetConfig: parsed.resetConfig
-                ? { ...DEFAULT_STATE.resetConfig, ...parsed.resetConfig, lastResetTimestamp: parsedTimestamp }
+                ? { ...DEFAULT_STATE.resetConfig, ...parsed.resetConfig }
                 : { ...DEFAULT_STATE.resetConfig },
               habits: Array.isArray(parsed.habits)
                 ? parsed.habits
@@ -1763,38 +1754,54 @@
     }
 
     // =========================================================================
-    // 5. ROBUST SCHEDULER & 24H MINIMUM BUFFER LOGIC
+    // 5. ROBUST SCHEDULER & WORKFLOW LOGIC
     // =========================================================================
-    function getNextResetTimestamp(config, lastResetTimestamp, now = new Date()) {
+    function getNextResetTimestamp(config, now = new Date()) {
       const timeStr = (config && config.time) || '07:00';
       const [rHour, rMin] = timeStr.split(':').map(Number);
       const nowMs = now.getTime();
-      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0 || lastResetTimestamp === EPOCH_RESET;
 
-      if (isFreshApp) {
-        // First-time launch / epoch: target the very next time 07:00 UTC (or chosen time) hits
-        const year = now.getUTCFullYear();
-        const month = now.getUTCMonth();
-        const day = now.getUTCDate();
-        let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-        while (target <= nowMs) {
-          target += 24 * 60 * 60 * 1000;
+      const year = now.getUTCFullYear();
+      const month = now.getUTCMonth();
+      const day = now.getUTCDate();
+
+      // Target time today in UTC
+      let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
+
+      // Rule 1 & 2: If the app has NEVER refreshed yet (hasRefreshedOnce is false),
+      // any time today or in the future can be picked freely. If the chosen time today already passed,
+      // it targets today's time (which will immediately trigger checkResetRollover on load, or the user can change it).
+      // Wait, let's make sure rule 1 & 2 behave precisely:
+      // "if a user first open the app at 3am utc, next refresh time will be 7am utc on Nov 16"
+      // "if user changes reset time to 5am utc, it will next reset on Nov 16th at 5am" (even if current time is after 5am or before).
+      
+      if (!config.hasRefreshedOnce) {
+        // If it has never refreshed yet, we simply find the next occurrence of the chosen time (today or future)
+        // without enforcing any 24-hour buffer against past resets.
+        while (target <= nowMs && (nowMs - target > 60 * 1000)) {
+          // If target is strictly in the past by more than a minute on first load, look to today or next occurrence.
+          // Actually, let's follow rule 1: "if user opens at 3am, next refresh is 7am today".
+          // If user changes to 5am when it's 6am, should it target today 5am (triggering instantly) or next day?
+          // Rule 2 says: "if user changes reset time to 5am utc, it will next reset on November 16th at 5am."
+          // So if 5am has passed today, targeting today's 5am will instantly trigger the refresh cycle!
+          // Let's compute today's target time:
+          return target;
         }
         return target;
       }
 
-      // If user has a valid lastResetTimestamp, next fire must be at least 24 hours after lastResetTimestamp,
-      // aligned to the chosen UTC time of day.
-      const lastDate = new Date(lastResetTimestamp);
-      const year = lastDate.getUTCFullYear();
-      const month = lastDate.getUTCMonth();
-      const day = lastDate.getUTCDate();
-
-      let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-
-      // Ensure target is strictly >= lastResetTimestamp + 24 hours
-      while (target < lastResetTimestamp + (24 * 60 * 60 * 1000)) {
+      // Rule 3: ANYTIME AFTER the refresh time hits for the first time, any further changes
+      // to reset schedule WILL NEVER execute within 24 hours of the last reset time.
+      // If the new time chosen is within 24 hours of the last reset time, the next time it'll fire is the day after.
+      while (target <= nowMs) {
         target += 24 * 60 * 60 * 1000;
+      }
+
+      const lastReset = config.lastResetTimestamp || 0;
+      if (lastReset > 0) {
+        while (target < lastReset + (24 * 60 * 60 * 1000)) {
+          target += 24 * 60 * 60 * 1000;
+        }
       }
 
       return target;
@@ -1803,7 +1810,7 @@
     function updateNextRefreshPreview() {
       const timeInputVal = document.getElementById('resetTimeInput').value || '07:00';
       const tempConfig = { ...appState.resetConfig, time: timeInputVal };
-      const nextTs = getNextResetTimestamp(tempConfig, appState.resetConfig.lastResetTimestamp, new Date());
+      const nextTs = getNextResetTimestamp(tempConfig, new Date());
       const dateObj = new Date(nextTs);
       const formatted = dateObj.toUTCString();
       const labelEl = document.getElementById('nextRefreshTimeLabel');
@@ -1862,7 +1869,8 @@
       appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
 
       const now = new Date();
-      appState.resetConfig.lastResetTimestamp = now.getTime(); 
+      appState.resetConfig.lastResetTimestamp = now.getTime();
+      appState.resetConfig.hasRefreshedOnce = true;
       appState.logs = [];
       applyScheduledAdjustment(now);
 
@@ -1957,7 +1965,7 @@
     function isLogCurrentCycle(timestampISO) {
       if (!timestampISO) return false;
       const logTime = new Date(timestampISO).getTime();
-      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_RESET;
+      const lastReset = appState.resetConfig.lastResetTimestamp || 0;
       return logTime >= lastReset;
     }
 
@@ -1995,19 +2003,30 @@
 
     function checkResetRollover() {
       const now = new Date();
-      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_RESET;
+      const config = appState.resetConfig;
 
-      if (lastReset === EPOCH_RESET) {
-        // First run with epoch timestamp: set initial baseline to right now so future checks compare correctly
-        appState.resetConfig.lastResetTimestamp = now.getTime();
-        saveState();
+      // If never refreshed once, check if current time has reached today's target reset time
+      if (!config.hasRefreshedOnce) {
+        const timeStr = config.time || '07:00';
+        const [rHour, rMin] = timeStr.split(':').map(Number);
+        const targetToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), rHour, rMin || 0, 0);
+
+        if (now.getTime() >= targetToday) {
+          config.lastResetTimestamp = now.getTime();
+          config.hasRefreshedOnce = true;
+          appState.logs = [];
+          applyScheduledAdjustment(now);
+          saveState();
+          renderAll();
+          showToast('🌅 Initial daily habits & ledger refreshed!', 'info');
+        }
         return;
       }
 
-      const nextReset = getNextResetTimestamp(appState.resetConfig, lastReset, new Date(lastReset));
-
+      // Once refreshed at least once, apply Rule 3 24-hour buffer logic
+      const nextReset = getNextResetTimestamp(config, now);
       if (now.getTime() >= nextReset) {
-        appState.resetConfig.lastResetTimestamp = now.getTime();
+        config.lastResetTimestamp = now.getTime();
         appState.logs = [];
         applyScheduledAdjustment(now);
 
