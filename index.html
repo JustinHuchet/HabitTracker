@@ -1764,15 +1764,32 @@
     // =========================================================================
     // 5. BULLETPROOF RESET TIME & SCHEDULED POINTS CONFIGURATION (UTC MODE)
     // =========================================================================
-    function getNextResetTimestamp(config, now = new Date()) {
+    function isSameUTCDate(ts1, ts2) {
+      if (!ts1 || !ts2) return false;
+      const d1 = new Date(ts1);
+      const d2 = new Date(ts2);
+      return d1.getUTCFullYear() === d2.getUTCFullYear() &&
+             d1.getUTCMonth() === d2.getUTCMonth() &&
+             d1.getUTCDate() === d2.getUTCDate();
+    }
+
+    function getNextResetTimestamp(config, lastResetTimestamp, now = new Date()) {
       const timeStr = (config && config.time) || '07:00';
       const [rHour, rMin] = timeStr.split(':').map(Number);
       const nowMs = now.getTime();
       const year = now.getUTCFullYear();
       const month = now.getUTCMonth();
       const day = now.getUTCDate();
+      
       let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-      if (nowMs >= target) {
+
+      // If we are already past target today, OR if a reset already occurred on this UTC calendar date, push to tomorrow
+      if (nowMs >= target || (lastResetTimestamp && isSameUTCDate(lastResetTimestamp, target))) {
+        target += 24 * 60 * 60 * 1000;
+      }
+
+      // Ensure the target is strictly in the future and strictly after lastResetTimestamp
+      while (target <= nowMs || (lastResetTimestamp && target <= lastResetTimestamp)) {
         target += 24 * 60 * 60 * 1000;
       }
       return target;
@@ -1781,7 +1798,7 @@
     function updateNextRefreshPreview() {
       const timeInputVal = document.getElementById('resetTimeInput').value || '07:00';
       const tempConfig = { ...appState.resetConfig, time: timeInputVal };
-      const nextTs = getNextResetTimestamp(tempConfig, new Date());
+      const nextTs = getNextResetTimestamp(tempConfig, appState.resetConfig.lastResetTimestamp, new Date());
       const dateObj = new Date(nextTs);
       const formatted = dateObj.toUTCString();
       const labelEl = document.getElementById('nextRefreshTimeLabel');
@@ -1826,7 +1843,6 @@
       closeResetConfigModal();
       showToast('Reset schedule & scheduled points updated!', 'success');
       
-      // Immediately evaluate reset rollover upon saving
       checkResetRollover();
       renderAll();
     }
@@ -1993,14 +2009,12 @@
       const currentCycleStart = getCurrentCycleStartTime(now);
       const lastReset = appState.resetConfig.lastResetTimestamp || 0;
 
-      // If lastReset is 0 (brand new app), initialize it to current cycle start without triggering duplicate reward
       if (lastReset === 0) {
         appState.resetConfig.lastResetTimestamp = currentCycleStart;
         saveState();
         return;
       }
 
-      // If we have entered a new cycle, trigger reset
       if (lastReset < currentCycleStart) {
         appState.resetConfig.lastResetTimestamp = currentCycleStart;
         appState.logs = [];
@@ -2019,7 +2033,6 @@
       }
     });
 
-    // High frequency check every 10 seconds
     setInterval(() => {
       checkResetRollover();
     }, 10000);
