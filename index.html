@@ -1762,7 +1762,7 @@
     }
 
     // =========================================================================
-    // 5. BULLETPROOF RESET TIME & SCHEDULED POINTS CONFIGURATION (UTC MODE)
+    // 5. UNIFIED SINGLE SOURCE OF TRUTH FOR RESET LOGIC (UTC)
     // =========================================================================
     function isSameUTCDate(ts1, ts2) {
       if (!ts1 || !ts2) return false;
@@ -1783,12 +1783,11 @@
       
       let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
 
-      // If we are already past target today, OR if a reset already occurred on this UTC calendar date, push to tomorrow
+      // If we are past target today, OR if a reset already occurred on this UTC calendar date, push to tomorrow
       if (nowMs >= target || (lastResetTimestamp && isSameUTCDate(lastResetTimestamp, target))) {
         target += 24 * 60 * 60 * 1000;
       }
 
-      // Ensure the target is strictly in the future and strictly after lastResetTimestamp
       while (target <= nowMs || (lastResetTimestamp && target <= lastResetTimestamp)) {
         target += 24 * 60 * 60 * 1000;
       }
@@ -1947,28 +1946,13 @@
     }
 
     // =========================================================================
-    // 7. BULLETPROOF CYCLE & COUNT LOGIC (UTC)
+    // 7. UNIFIED CYCLE & COUNT LOGIC (DRIVEN SOLELY BY getNextResetTimestamp)
     // =========================================================================
-    function getCurrentCycleStartTime(dateObj = new Date()) {
-      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
-      const [rHour, rMin] = timeStr.split(':').map(Number);
-      const year = dateObj.getUTCFullYear();
-      const month = dateObj.getUTCMonth();
-      const day = dateObj.getUTCDate();
-      const todayReset = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-      
-      if (dateObj.getTime() >= todayReset) {
-        return todayReset;
-      } else {
-        return todayReset - 24 * 60 * 60 * 1000;
-      }
-    }
-
     function isLogCurrentCycle(timestampISO) {
       if (!timestampISO) return false;
       const logTime = new Date(timestampISO).getTime();
-      const cycleStart = getCurrentCycleStartTime(new Date());
-      return logTime >= cycleStart;
+      const lastReset = appState.resetConfig.lastResetTimestamp || 0;
+      return logTime >= lastReset;
     }
 
     function getCompletedPositiveCountToday(habitId) {
@@ -2005,18 +1989,19 @@
 
     function checkResetRollover() {
       const now = new Date();
-      const nowMs = now.getTime();
-      const currentCycleStart = getCurrentCycleStartTime(now);
       const lastReset = appState.resetConfig.lastResetTimestamp || 0;
 
       if (lastReset === 0) {
-        appState.resetConfig.lastResetTimestamp = currentCycleStart;
+        appState.resetConfig.lastResetTimestamp = now.getTime();
         saveState();
         return;
       }
 
-      if (lastReset < currentCycleStart) {
-        appState.resetConfig.lastResetTimestamp = currentCycleStart;
+      // Strictly evaluate next scheduled reset time using getNextResetTimestamp
+      const nextReset = getNextResetTimestamp(appState.resetConfig, lastReset, new Date(lastReset));
+
+      if (now.getTime() >= nextReset) {
+        appState.resetConfig.lastResetTimestamp = nextReset;
         appState.logs = [];
         applyScheduledAdjustment(now);
 
