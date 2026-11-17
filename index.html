@@ -576,25 +576,13 @@
     const STORAGE_KEY = 'pointquest_tracker_state_v1';
     const EPOCH_RESET = new Date('1970-01-01T00:00:00Z').getTime();
 
-    // Helper to calculate the very next 07:00 UTC timestamp from a given reference date
-    function getNext7AmUtc(fromTime = new Date()) {
-      const year = fromTime.getUTCFullYear();
-      const month = fromTime.getUTCMonth();
-      const day = fromTime.getUTCDate();
-      let target = Date.UTC(year, month, day, 7, 0, 0);
-      if (target <= fromTime.getTime()) {
-        target += 24 * 60 * 60 * 1000;
-      }
-      return target;
-    }
-
     const DEFAULT_STATE = {
       balance: 0,
       resetConfig: {
         time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
-        lastResetTimestamp: getNext7AmUtc(new Date()) - (24 * 60 * 60 * 1000) // Sets default last reset such that next reset is the very next 7am UTC
+        lastResetTimestamp: EPOCH_RESET // Set to epoch so fresh first-time users can pick any reset time freely without 24h buffer lockouts
       },
       habits: [
         { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
@@ -648,23 +636,6 @@
               } else if (parsed.resetConfig.lastResetDate) {
                 parsedTimestamp = new Date(parsed.resetConfig.lastResetDate + 'T00:00:00Z').getTime();
               }
-            }
-
-            // If this is an existing app load where lastResetTimestamp was uninitialized (EPOCH_RESET),
-            // ensure it defaults to the correct initial 7am UTC baseline.
-            if (parsedTimestamp === EPOCH_RESET) {
-              const defaultCfg = parsed.resetConfig || DEFAULT_STATE.resetConfig;
-              const timeStr = defaultCfg.time || '07:00';
-              const [rHour, rMin] = timeStr.split(':').map(Number);
-              const now = new Date();
-              const year = now.getUTCFullYear();
-              const month = now.getUTCMonth();
-              const day = now.getUTCDate();
-              let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-              if (target <= now.getTime()) {
-                target += 24 * 60 * 60 * 1000;
-              }
-              parsedTimestamp = target - (24 * 60 * 60 * 1000);
             }
 
             return {
@@ -1801,8 +1772,15 @@
       const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0 || lastResetTimestamp === EPOCH_RESET;
 
       if (isFreshApp) {
-        // First-time launch or epoch: default to 7:00 AM UTC of the next upcoming day (or today if time hasn't passed)
-        return getNext7AmUtc(now);
+        // First-time launch / epoch: target the very next time 07:00 UTC (or chosen time) hits
+        const year = now.getUTCFullYear();
+        const month = now.getUTCMonth();
+        const day = now.getUTCDate();
+        let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
+        while (target <= nowMs) {
+          target += 24 * 60 * 60 * 1000;
+        }
+        return target;
       }
 
       // If user has a valid lastResetTimestamp, next fire must be at least 24 hours after lastResetTimestamp,
@@ -2021,7 +1999,7 @@
 
       if (lastReset === EPOCH_RESET) {
         // First run with epoch timestamp: set initial baseline to right now so future checks compare correctly
-        appState.resetConfig.lastResetTimestamp = getNext7AmUtc(now) - (24 * 60 * 60 * 1000);
+        appState.resetConfig.lastResetTimestamp = now.getTime();
         saveState();
         return;
       }
@@ -2136,8 +2114,6 @@
     function handleFactoryReset() {
       if (confirm('Are you sure you want to reset all habits and progress to defaults?')) {
         appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-        // Ensure factory reset also sets lastResetTimestamp correctly relative to the next 7am UTC
-        appState.resetConfig.lastResetTimestamp = getNext7AmUtc(new Date()) - (24 * 60 * 60 * 1000);
         saveState();
         checkResetRollover();
         renderAll();
