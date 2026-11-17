@@ -1764,8 +1764,6 @@
     // =========================================================================
     // 5. UNIFIED RESET LOGIC WITH FRESH APP / FIRST-RUN BYPASS
     // =========================================================================
-    const EPOCH_START = new Date('1970-01-01T00:00:00Z').getTime();
-
     function isSameUTCDate(ts1, ts2) {
       if (!ts1 || !ts2) return false;
       const d1 = new Date(ts1);
@@ -1785,8 +1783,8 @@
       
       let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
 
-      // Check if this is a fresh app state (0 or Jan 1 1970 epoch)
-      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0 || lastResetTimestamp === EPOCH_START;
+      const epochTime = new Date('1970-01-01T00:00:00Z').getTime();
+      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0 || lastResetTimestamp === epochTime;
 
       if (nowMs >= target || (!isFreshApp && lastResetTimestamp && isSameUTCDate(lastResetTimestamp, target))) {
         target += 24 * 60 * 60 * 1000;
@@ -1797,7 +1795,6 @@
           target += 24 * 60 * 60 * 1000;
         }
       } else {
-        // For fresh app, if target time today has already passed, schedule for the next occurrence
         while (target <= nowMs) {
           target += 24 * 60 * 60 * 1000;
         }
@@ -2002,11 +1999,10 @@
     function checkResetRollover() {
       const now = new Date();
       const lastReset = appState.resetConfig.lastResetTimestamp || 0;
+      const epochTime = new Date('1970-01-01T00:00:00Z').getTime();
 
-      if (lastReset === 0 || lastReset === EPOCH_START) {
-        // Fresh app installation: establish initial baseline without triggering an immediate retroactive wipe
-        appState.resetConfig.lastResetTimestamp = now.getTime();
-        saveState();
+      if (lastReset === 0 || lastReset === epochTime) {
+        // Fresh app installation with 1970 epoch: establish initial baseline without overwriting to exact current minute
         return;
       }
 
