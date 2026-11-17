@@ -110,7 +110,7 @@
 
         <!-- Daily Stats & Action Controls -->
         <div class="flex flex-col md:items-end gap-2">
-          <!-- Top Row: Today's Stats & Gear (Backup) Button -->
+          <!-- Top Row: Today's Stats & Action Buttons -->
           <div class="flex items-center justify-between md:justify-end gap-2">
             <!-- Today's Stats -->
             <div class="flex items-center gap-2.5 sm:gap-3 bg-slate-900/60 border border-slate-800/80 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs">
@@ -132,6 +132,18 @@
                 <span id="todaySpent" class="font-bold text-amber-400">0</span>
               </div>
             </div>
+
+            <!-- 1-Time Point Adjustment Quick Button -->
+            <button
+              onclick="openManualAdjustmentModal()"
+              title="Apply 1-Time Point Adjustment (Bonus or Penalty)"
+              class="p-2 sm:p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-indigo-300 transition-all active:scale-95 cursor-pointer shrink-0 flex items-center gap-1 text-xs font-semibold px-3"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="hidden sm:inline">+/- Adj</span>
+            </button>
 
             <!-- Backup / Settings Gear Button -->
             <button
@@ -421,6 +433,55 @@
 
   </main>
 
+  <!-- 1-Time Point Adjustment Modal -->
+  <div id="manualAdjustmentModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">1-Time Point Adjustment</h3>
+        <button onclick="closeManualAdjustmentModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Instantly add bonus points or apply a one-time penalty adjustment directly to your balance and today's activity log.
+      </p>
+
+      <form onsubmit="handleManualAdjustment(event)" class="space-y-3.5">
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-300">Reason / Description</label>
+          <input
+            type="text"
+            id="adjTitleInput"
+            placeholder="e.g., Bonus reward / Extra task penalty"
+            required
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+          />
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-300">Point Amount (+ for bonus, - for penalty)</label>
+          <input
+            type="number"
+            id="adjPointsInput"
+            placeholder="e.g., 25 or -10"
+            required
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+          />
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeManualAdjustmentModal()" class="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition cursor-pointer">
+            Apply Adjustment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Reset Schedule & Scheduled Points Modal -->
   <div id="resetConfigModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
     <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
@@ -599,7 +660,7 @@
         { id: 'h_meal', title: '🍽️ Meal Prep', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 6 },
         { id: 'h11', title: '📚 Balcony Read', points: 10, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 7 },
         { id: 'h_lang', title: '🗣️ Language Practice', points: 20, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 8 },
-        { id: 'h5', title: '💪 Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Full-Ass', order: 9 },
+        { id: 'h5', title: '💪 Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Full-assed', order: 9 },
         { id: 'h6', title: '💪 Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Half-assed', order: 10 },
         { id: 'h7', title: '🏊 Swim', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 1km', order: 11 },
         { id: 'h8', title: '🏊 Swim', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 1km', order: 12 },
@@ -722,6 +783,54 @@
       } else {
         showToast(`${delta} pts — ${habit.title}`, 'danger');
       }
+    }
+
+    function openManualAdjustmentModal() {
+      const modal = document.getElementById('manualAdjustmentModal');
+      document.getElementById('adjTitleInput').value = '';
+      document.getElementById('adjPointsInput').value = '';
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        const firstInput = document.getElementById('adjTitleInput');
+        if (firstInput) firstInput.focus();
+      }
+    }
+
+    function closeManualAdjustmentModal() {
+      const modal = document.getElementById('manualAdjustmentModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function handleManualAdjustment(event) {
+      event.preventDefault();
+      const titleInput = document.getElementById('adjTitleInput');
+      const pointsInput = document.getElementById('adjPointsInput');
+
+      const title = titleInput.value.trim();
+      const points = parseInt(pointsInput.value, 10);
+      if (!title || isNaN(points) || points === 0) return;
+
+      appState.balance += points;
+      const logEntry = {
+        id: 'log_adj_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        title: `Manual Adj: ${title}`,
+        delta: points,
+        category: points > 0 ? 'positive' : 'negative',
+        timestamp: new Date().toISOString()
+      };
+
+      appState.logs.unshift(logEntry);
+      selectedLogId = null;
+      saveState();
+      renderAll();
+      closeManualAdjustmentModal();
+      animateBalanceChange(points);
+
+      showToast(`${points > 0 ? '+' : ''}${points} pts — ${title}`, points > 0 ? 'success' : 'danger');
     }
 
     function redeemReward(rewardId) {
@@ -2143,7 +2252,6 @@
         return;
       }
 
-      // Second click confirmed — clear storage and reset all state & UI flags
       resetConfirmButtonState();
       try {
         localStorage.removeItem(STORAGE_KEY);
