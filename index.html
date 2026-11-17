@@ -1762,7 +1762,7 @@
     }
 
     // =========================================================================
-    // 5. UNIFIED SINGLE SOURCE OF TRUTH FOR RESET LOGIC (UTC)
+    // 5. UNIFIED RESET LOGIC WITH FRESH APP / FIRST-RUN BYPASS
     // =========================================================================
     function isSameUTCDate(ts1, ts2) {
       if (!ts1 || !ts2) return false;
@@ -1783,14 +1783,26 @@
       
       let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
 
-      // If we are past target today, OR if a reset already occurred on this UTC calendar date, push to tomorrow
-      if (nowMs >= target || (lastResetTimestamp && isSameUTCDate(lastResetTimestamp, target))) {
+      // FRESH APP EXCEPTION: If lastResetTimestamp is 0 (never reset yet), allow immediate triggering today
+      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0;
+
+      // If we are past target today, OR (if not a fresh app) a reset already occurred on this calendar date, push to tomorrow
+      if (nowMs >= target || (!isFreshApp && lastResetTimestamp && isSameUTCDate(lastResetTimestamp, target))) {
         target += 24 * 60 * 60 * 1000;
       }
 
-      while (target <= nowMs || (lastResetTimestamp && target <= lastResetTimestamp)) {
-        target += 24 * 60 * 60 * 1000;
+      // Ensure target is strictly in the future (unless fresh app and target is in the future today)
+      if (!isFreshApp) {
+        while (target <= nowMs || (lastResetTimestamp && target <= lastResetTimestamp)) {
+          target += 24 * 60 * 60 * 1000;
+        }
+      } else {
+        // For fresh app, if target today has already passed, schedule for next occurrence
+        while (target <= nowMs) {
+          target += 24 * 60 * 60 * 1000;
+        }
       }
+
       return target;
     }
 
@@ -1946,7 +1958,7 @@
     }
 
     // =========================================================================
-    // 7. UNIFIED CYCLE & COUNT LOGIC (DRIVEN SOLELY BY getNextResetTimestamp)
+    // 7. UNIFIED CYCLE & COUNT LOGIC
     // =========================================================================
     function isLogCurrentCycle(timestampISO) {
       if (!timestampISO) return false;
@@ -1992,12 +2004,12 @@
       const lastReset = appState.resetConfig.lastResetTimestamp || 0;
 
       if (lastReset === 0) {
+        // Fresh app installation: establish initial baseline without triggering an immediate retroactive wipe
         appState.resetConfig.lastResetTimestamp = now.getTime();
         saveState();
         return;
       }
 
-      // Strictly evaluate next scheduled reset time using getNextResetTimestamp
       const nextReset = getNextResetTimestamp(appState.resetConfig, lastReset, new Date(lastReset));
 
       if (now.getTime() >= nextReset) {
