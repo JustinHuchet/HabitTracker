@@ -1,2172 +1,638 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PointQuest — Habit & Reward Tracker</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#070a13" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            slate: {
-              850: '#151e32',
-              925: '#0b101d',
-              950: '#070a13',
-            },
-          },
-        },
-      },
-    };
-  </script>
-  <style>
-    :root {
-      --header-height: 140px;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #070a13;
-      color: #f8fafc;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0b101d;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #1e293b;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #334155;
-    }
-
-    @keyframes floatUpFade {
-      0% { opacity: 1; transform: translateY(0) scale(0.95); }
-      50% { opacity: 1; transform: translateY(-22px) scale(1.08); }
-      100% { opacity: 0; transform: translateY(-38px) scale(1); }
-    }
-    .animate-float-score {
-      animation: floatUpFade 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes slideInToast {
-      from { opacity: 0; transform: translateY(16px) scale(0.96); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .toast-enter {
-      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PointQuest - Gamified Habit & Reward Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                            text: '#f8fafc',
+                            muted: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white pb-20">
-
-  <!-- Top Navigation & Live Balance Sticky Header -->
-  <header id="mainHeader" class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-xl">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        
-        <!-- Brand & Live Balance -->
-        <div class="flex items-center justify-between md:justify-start gap-4">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
-              <h1 class="text-base sm:text-lg font-bold tracking-tight text-white leading-none">PointQuest</h1>
-              <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">Earn Discipline. Buy Freedom.</p>
-            </div>
-          </div>
-
-          <!-- Live Point Counter Pill -->
-          <div class="relative flex items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl px-3.5 py-1.5 sm:px-4 sm:py-2 shadow-inner">
-            <div>
-              <span class="block text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-slate-400">Available Balance</span>
-              <div class="flex items-baseline gap-1.5">
-                <span id="liveBalance" class="text-xl sm:text-3xl font-extrabold tracking-tight text-white">0</span>
-                <span class="text-[11px] sm:text-xs font-semibold text-indigo-400">PTS</span>
-              </div>
-            </div>
-            <div id="floatingDeltaContainer" class="pointer-events-none absolute -top-2 right-2"></div>
-          </div>
-        </div>
-
-        <!-- Daily Stats & Action Controls -->
-        <div class="flex flex-col md:items-end gap-2">
-          <!-- Top Row: Today's Stats & Gear (Backup) Button -->
-          <div class="flex items-center justify-between md:justify-end gap-2">
-            <!-- Today's Stats -->
-            <div class="flex items-center gap-2.5 sm:gap-3 bg-slate-900/60 border border-slate-800/80 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span class="text-slate-400">Today:</span>
-                <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
-              </div>
-              <span class="text-slate-700">|</span>
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                <span class="text-slate-400">Penalties:</span>
-                <span id="todayLost" class="font-bold text-rose-400">-0</span>
-              </div>
-              <span class="text-slate-700 hidden sm:inline">|</span>
-              <div class="hidden sm:flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                <span class="text-slate-400">Spent:</span>
-                <span id="todaySpent" class="font-bold text-amber-400">0</span>
-              </div>
-            </div>
-
-            <!-- Backup / Settings Gear Button -->
-            <button
-              onclick="openBackupModal()"
-              title="Backup, Restore, or Reset Data"
-              class="p-2 sm:p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer shrink-0"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Bottom Row: Scheduler & Editor Buttons -->
-          <div class="flex items-center justify-end gap-2 w-full">
-            <!-- Scheduler Button -->
-            <button
-              onclick="openResetConfigModal()"
-              title="Configure Habit Refresh Time & Scheduled Points"
-              class="flex-1 sm:flex-initial p-2 sm:p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold px-3"
-            >
-              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Scheduler</span>
-            </button>
-
-            <!-- Editor Button -->
-            <button
-              id="toggleEditHabitsBtn"
-              onclick="toggleEditHabitsMode()"
-              class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer"
-            >
-              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span id="toggleEditHabitsLabel">Editor</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Dashboard Grid -->
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-6 space-y-8">
-
-    <!-- Section 1: Actions & Habits (Positive vs Negative) -->
-    <section aria-labelledby="habits-heading">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        
-        <!-- Positive Habits Column -->
-        <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col shadow-xl shadow-black/20">
-          <div>
-            <!-- Sticky Positive Habits Header (Includes Mobile Tab Switcher) -->
-            <div id="positiveColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base">+</span>
-                  <div>
-                    <h3 class="text-sm font-bold text-emerald-300">Positive Habits</h3>
-                    <p class="text-[11px] text-slate-400">Build momentum & stack points</p>
-                  </div>
-                </div>
-                <button
-                  id="addPosBtn"
-                  onclick="toggleForm('positiveForm')"
-                  class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition cursor-pointer"
-                >
-                  + Add Habit
-                </button>
-              </div>
-
-              <!-- Mobile Tab Switcher (Visible on small screens) -->
-              <div class="flex sm:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 w-full">
-                <button id="tabPosBtn" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition">
-                  + Positive Habits
-                </button>
-                <button id="tabNegBtn" onclick="switchMobileHabitTab('negative')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
-                  - Penalties
-                </button>
-              </div>
-            </div>
-
-            <!-- Add Custom Positive Habit Form -->
-            <form id="positiveForm" onsubmit="handleAddHabit(event, 'positive')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-2.5">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <input
-                  type="text"
-                  id="posTitleInput"
-                  placeholder="e.g., 📖 Read 20 pages"
-                  required
-                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
-                <input
-                  type="number"
-                  id="posPointsInput"
-                  placeholder="Points (e.g. 15)"
-                  min="1"
-                  max="1000"
-                  required
-                  class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <input
-                type="text"
-                id="posSubtextInput"
-                placeholder="Optional subtext (e.g., Non-fiction or Kindle)"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              />
-              <div class="flex justify-end gap-2">
-                <button type="button" onclick="toggleForm('positiveForm')" class="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer">Save Habit</button>
-              </div>
-            </form>
-
-            <!-- Positive Habit List -->
-            <div id="positiveHabitList" class="space-y-2.5"></div>
-          </div>
-        </div>
-
-        <!-- Negative Habits / Penalties Column -->
-        <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col shadow-xl shadow-black/25">
-          <div>
-            <!-- Sticky Penalties Header (Includes Mobile Tab Switcher) -->
-            <div id="negativeColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-base">−</span>
-                  <div>
-                    <h3 class="text-sm font-bold text-rose-300">Penalties</h3>
-                    <p class="text-[11px] text-slate-400">Hold yourself accountable</p>
-                  </div>
-                </div>
-                <button
-                  id="addNegBtn"
-                  onclick="toggleForm('negativeForm')"
-                  class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition cursor-pointer"
-                >
-                  + Add Penalty
-                </button>
-              </div>
-
-              <!-- Mobile Tab Switcher (Visible on small screens) -->
-              <div class="flex sm:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 w-full">
-                <button id="tabPosBtn2" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
-                  + Positive Habits
-                </button>
-                <button id="tabNegBtn2" onclick="switchMobileHabitTab('negative')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition">
-                  - Penalties
-                </button>
-              </div>
-            </div>
-
-            <!-- Add Custom Penalty Form -->
-            <form id="negativeForm" onsubmit="handleAddHabit(event, 'negative')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-rose-500/30 space-y-2.5">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <input
-                  type="text"
-                  id="negTitleInput"
-                  placeholder="e.g., 🌙 Stayed up past midnight"
-                  required
-                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
-                />
-                <input
-                  type="number"
-                  id="negPointsInput"
-                  placeholder="Deduct (e.g. 15)"
-                  min="1"
-                  max="1000"
-                  required
-                  class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
-                />
-              </div>
-              <input
-                type="text"
-                id="negSubtextInput"
-                placeholder="Optional subtext / note"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
-              />
-              <div class="flex justify-end gap-2">
-                <button type="button" onclick="toggleForm('negativeForm')" class="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white cursor-pointer">Save Penalty</button>
-              </div>
-            </form>
-
-            <!-- Negative Habit List -->
-            <div id="negativeHabitList" class="space-y-2.5"></div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- Section 2: Reward Store -->
-    <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/25">
-      <!-- Sticky Reward Store Header -->
-      <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-5 border-b border-slate-800/80 rounded-t-2xl">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-              </svg>
-            </div>
-            <div>
-              <h2 id="rewards-heading" class="text-lg font-bold text-white flex items-center gap-2">
-                <span>Reward Store</span>
-                <span id="rewardsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Redeem</span>
-              </h2>
-              <p id="rewardsSubtitle" class="text-xs text-slate-400">Cash in your hard-earned points for guilt-free fun.</p>
-            </div>
-          </div>
-
-          <button
-            id="addRewardBtnEl"
-            onclick="toggleForm('rewardForm')"
-            class="hidden self-start sm:self-auto text-xs font-semibold px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer"
-          >
-            + Add Custom Reward
-          </button>
-        </div>
-      </div>
-
-      <!-- Add Custom Reward Form -->
-      <form id="rewardForm" onsubmit="handleAddReward(event)" class="hidden mb-5 p-4 rounded-xl bg-slate-950/80 border border-amber-500/30">
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-          <input
-            type="text"
-            id="rewardTitleInput"
-            placeholder="Reward name (e.g., 1 Hr Gaming)"
-            required
-            class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-          />
-          <input
-            type="number"
-            id="rewardCostInput"
-            placeholder="Point cost (e.g., 25)"
-            min="1"
-            max="5000"
-            required
-            class="bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-          />
-          <div class="flex gap-2">
-            <button type="submit" class="flex-1 px-4 py-2 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition cursor-pointer">
-              Create Reward
-            </button>
-            <button type="button" onclick="toggleForm('rewardForm')" class="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white">
-              Cancel
-            </button>
-          </div>
-        </div>
-      </form>
-
-      <!-- Rewards Grid -->
-      <div id="rewardStoreGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-    </section>
-
-    <!-- Section 3: Today's Activities -->
-    <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/25">
-      <!-- Sticky Today's Activities Header -->
-      <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-4 border-b border-slate-800/80 rounded-t-2xl">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 id="log-heading" class="text-lg font-bold text-white">Today's Activities</h2>
-            <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards for today. Click an entry to select it.</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button
-              id="undoLastBtn"
-              onclick="undoLastAction()"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs font-semibold text-slate-200 border border-slate-700 transition cursor-pointer"
-            >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
-              <span>Undo Last</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="activityLogList" class="space-y-2"></div>
-    </section>
-
-  </main>
-
-  <!-- Reset Schedule & Scheduled Points Modal -->
-  <div id="resetConfigModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold text-white">Habit Reset & Scheduled Points</h3>
-        <button onclick="closeResetConfigModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <p class="text-xs text-slate-400 leading-relaxed">
-        Choose the exact time of day (24-hour format, e.g., 23:22) when your daily habits reset/reappear in UTC. You can also attach a scheduled daily point adjustment that automatically applies when the reset triggers.
-      </p>
-
-      <!-- 1. Reset Time Picker -->
-      <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <label class="text-xs font-semibold text-slate-300">Habit Reset Time (Daily UTC)</label>
-          <span class="text-[11px] text-indigo-400 font-medium">24-hour format (e.g., 23:22)</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <input
-            type="time"
-            id="resetTimeInput"
-            value="07:00"
-            oninput="updateNextRefreshPreview()"
-            class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-indigo-500"
-          />
-          <div class="flex items-center gap-1.5 text-xs text-indigo-400 font-medium bg-indigo-500/10 border border-indigo-500/20 px-3 py-2.5 rounded-xl">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span id="detectedTimezoneLabel">UTC Time</span>
-          </div>
-        </div>
-        <p class="text-xs text-slate-400">Habits refresh automatically when this UTC time arrives each day.</p>
-      </div>
-
-      <!-- Next Refresh Preview Box -->
-      <div class="p-3.5 bg-slate-950/80 border border-indigo-500/30 rounded-2xl space-y-1">
-        <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
-        <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
-      </div>
-
-      <!-- 2. Scheduled Point Adjustment -->
-      <div class="space-y-3 pt-3 border-t border-slate-800">
-        <div>
-          <label class="text-xs font-semibold text-slate-300">Scheduled Daily Point Adjustment (Optional)</label>
-          <p class="text-[11px] text-slate-400 mt-0.5">Automatically add positive points (bonus) or remove points (penalty) at reset time.</p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input
-            type="text"
-            id="scheduledTitleInput"
-            placeholder="Reason (e.g., Daily Baseline Upkeep)"
-            class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
-          />
-          <div class="flex items-center gap-2">
-            <input
-              type="number"
-              id="scheduledPointsInput"
-              placeholder="+/- Points (e.g. 10 or -15)"
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Actions & Test Reset -->
-      <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-        <button onclick="testTriggerResetNow()" type="button" class="px-3.5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-semibold transition cursor-pointer">
-          ⚡ Test Reset Now
-        </button>
-        <div class="flex items-center gap-2">
-          <button onclick="closeResetConfigModal()" class="px-3 py-2.5 rounded-xl text-xs text-slate-400 hover:text-white">Cancel</button>
-          <button onclick="saveResetConfig()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition cursor-pointer">
-            Save Schedule
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Backup / Export / Import / Reset Modal -->
-  <div id="backupModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold text-white">Data Backup & Reset</h3>
-        <button onclick="closeBackupModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <p class="text-xs text-slate-400 leading-relaxed">
-        Your points, custom habits, rewards, and activity logs are automatically saved in your browser's local storage and persist across refreshes. Export a backup code anytime to save or restore your progress.
-      </p>
-
-      <!-- Export -->
-      <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <label class="text-xs font-semibold text-slate-300">Export Backup JSON</label>
-          <button onclick="copyBackupData()" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 cursor-pointer">Copy to Clipboard</button>
-        </div>
-        <textarea id="exportTextarea" readonly rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-slate-300 focus:outline-none"></textarea>
-      </div>
-
-      <!-- Import -->
-      <div class="space-y-2">
-        <label class="text-xs font-semibold text-slate-300">Restore from Backup JSON</label>
-        <textarea id="importTextarea" rows="3" placeholder="Paste previously exported JSON here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"></textarea>
-        <button onclick="importBackupData()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition cursor-pointer">
-          Restore Backup Data
-        </button>
-      </div>
-
-      <!-- Danger Zone -->
-      <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
-        <span class="text-xs text-slate-400">Start fresh with default habits?</span>
-        <button id="resetConfirmBtn" onclick="handleFactoryReset()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-semibold transition cursor-pointer">
-          Reset Everything
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Notification Container -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none"></div>
-
-  <script>
-    // =========================================================================
-    // 0. DYNAMIC HEADER HEIGHT CALCULATOR (STICKY OFFSET)
-    // =========================================================================
-    function updateHeaderHeightOffset() {
-      const mainHeader = document.getElementById('mainHeader');
-      if (mainHeader) {
-        const height = mainHeader.offsetHeight;
-        document.documentElement.style.setProperty('--header-height', height + 'px');
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', updateHeaderHeightOffset);
-    window.addEventListener('load', updateHeaderHeightOffset);
-    window.addEventListener('resize', updateHeaderHeightOffset);
-
-    // =========================================================================
-    // 1. DEFAULT STATE & PERSISTENT LOCAL STORAGE
-    // =========================================================================
-    const STORAGE_KEY = 'pointquest_tracker_state_v1';
-    const EPOCH_RESET = new Date('1970-01-01T00:00:00Z').getTime();
-
-    const DEFAULT_STATE = {
-      balance: 0,
-      resetConfig: {
-        time: '07:00', // HH:MM in UTC
-        scheduledTitle: 'Midnight Daily Baseline Penalty',
-        scheduledPoints: -50,
-        lastResetTimestamp: EPOCH_RESET
-      },
-      habits: [
-        { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
-        { id: 'h2', title: '🦿 Morning Mobility', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 1 },
-        { id: 'h_eff_morn', title: '⚡ Efficient Morning', points: 5, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: 'Under 45 mins', order: 2 },
-        { id: 'h3', title: '🚦 Commute', points: 10, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: 'Before 8am', order: 3 },
-        { id: 'h_clean', title: '🧹 Clean House', points: 10, type: 'positive', dailyLimit: 1, subtext: 'Before 9pm', order: 4 },
-        { id: 'h4', title: '🚿 Shower', points: 10, type: 'positive', dailyLimit: 1, subtext: 'Before 9pm', order: 5 },
-        { id: 'h_meal', title: '🍽️ Meal Prep', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 6 },
-        { id: 'h11', title: '📚 Balcony Read', points: 10, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 7 },
-        { id: 'h_lang', title: '🗣️ Language Practice', points: 20, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 8 },
-        { id: 'h5', title: '💪 Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Full-Ass', order: 9 },
-        { id: 'h6', title: '💪 Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Half-assed', order: 10 },
-        { id: 'h7', title: '🏊 Swim', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 1km', order: 11 },
-        { id: 'h8', title: '🏊 Swim', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 1km', order: 12 },
-        { id: 'h9', title: '🏃 Run', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 10km', order: 13 },
-        { id: 'h10', title: '🏃 Run', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 10km', order: 14 },
-        { id: 'h12', title: '🧘 Yoga', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 15 },
-        { id: 'h13', title: '🥒 Pickleball', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 16 },
-        { id: 'h14', title: '🚴 Demo Forest', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 17 },
-        { id: 'h_mtb', title: '🚵 Mountain Bike', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 18 },
-        { id: 'h_ski', title: '⛷️ Ski', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 19 },
-        { id: 'h15', title: '⏰ Hit Snooze / Woke Up Late', points: 10, type: 'negative', subtext: '', order: 20 },
-        { id: 'h16', title: '🛋️ Skipped Workout', points: 20, type: 'negative', subtext: '', order: 21 },
-        { id: 'h17', title: '📱 Doomscrolled > 1 hr', points: 15, type: 'negative', subtext: '', order: 22 },
-        { id: 'h18', title: '🍔 Junk Food / Impulse Spend', points: 10, type: 'negative', subtext: '', order: 23 }
-      ],
-      rewards: [
-        { id: 'r1', title: '1 Hour Video Games', cost: 25, icon: '🎮' }
-      ],
-      logs: []
-    };
-
-    let appState = loadState();
-    let isEditingHabits = false;
-    let editingHabitId = null;
-    let pairingHabitId = null;
-    let editingRewardId = null;
-    let selectedLogId = null;
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && typeof parsed === 'object') {
-            let parsedTimestamp = EPOCH_RESET;
-            if (parsed.resetConfig) {
-              if (typeof parsed.resetConfig.lastResetTimestamp === 'number') {
-                parsedTimestamp = parsed.resetConfig.lastResetTimestamp;
-              } else if (parsed.resetConfig.lastResetDate) {
-                parsedTimestamp = new Date(parsed.resetConfig.lastResetDate + 'T00:00:00Z').getTime();
-              }
-            }
-
-            return {
-              balance: typeof parsed.balance === 'number' ? parsed.balance : DEFAULT_STATE.balance,
-              resetConfig: parsed.resetConfig
-                ? { ...DEFAULT_STATE.resetConfig, ...parsed.resetConfig, lastResetTimestamp: parsedTimestamp }
-                : { ...DEFAULT_STATE.resetConfig },
-              habits: Array.isArray(parsed.habits)
-                ? parsed.habits
-                : JSON.parse(JSON.stringify(DEFAULT_STATE.habits)),
-              rewards: Array.isArray(parsed.rewards)
-                ? parsed.rewards
-                : JSON.parse(JSON.stringify(DEFAULT_STATE.rewards)),
-              logs: Array.isArray(parsed.logs) ? parsed.logs : []
-            };
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load state from localStorage:', err);
-      }
-      return JSON.parse(JSON.stringify(DEFAULT_STATE));
-    }
-
-    function saveState() {
-      appState.habits = appState.habits.map((h, index) => ({
-        ...h,
-        order: index
-      }));
-
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      } catch (err) {
-        console.error('Failed to save state to localStorage:', err);
-      }
-    }
-
-    // =========================================================================
-    // 2. CORE POINT & HABIT ACTIONS
-    // =========================================================================
-    function triggerHabit(habitId, sourceLabel = '') {
-      checkResetRollover(); 
-      const habit = appState.habits.find(h => h.id === habitId);
-      if (!habit) return;
-
-      const isPositive = habit.type === 'positive';
-      
-      if (isPositive && habit.groupId) {
-        const groupMems = appState.habits.filter(x => x.groupId === habit.groupId);
-        const anyGroupCompleted = groupMems.some(gm => {
-          const limit = (typeof gm.dailyLimit === 'number' && gm.dailyLimit > 0) ? gm.dailyLimit : 1;
-          return getCompletedPositiveCountToday(gm.id) >= limit;
-        });
-        if (anyGroupCompleted) {
-          showToast(`This linked group has already been completed for today!`, 'info');
-          return;
-        }
-      } else if (isPositive) {
-        const maxLimit = (typeof habit.dailyLimit === 'number' && habit.dailyLimit > 0) ? habit.dailyLimit : 1;
-        const completedCount = getCompletedPositiveCountToday(habit.id);
-        if (completedCount >= maxLimit) {
-          showToast(`"${habit.title}" has reached its daily limit of ${maxLimit} for today!`, 'info');
-          return;
-        }
-      }
-
-      const delta = isPositive ? Math.abs(habit.points) : -Math.abs(habit.points);
-      appState.balance += delta;
-
-      const logEntry = {
-        id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-        habitId: habit.id,
-        title: sourceLabel ? `${habit.title} (${sourceLabel})` : habit.title,
-        delta: delta,
-        category: isPositive ? 'positive' : 'negative',
-        timestamp: new Date().toISOString()
-      };
-
-      appState.logs.unshift(logEntry);
-      selectedLogId = null;
-      saveState();
-      renderAll();
-      animateBalanceChange(delta);
-
-      if (isPositive) {
-        showToast(`+${delta} pts — ${habit.title}`, 'success');
-      } else {
-        showToast(`${delta} pts — ${habit.title}`, 'danger');
-      }
-    }
-
-    function redeemReward(rewardId) {
-      checkResetRollover();
-      const reward = appState.rewards.find(r => r.id === rewardId);
-      if (!reward) return;
-
-      if (appState.balance < reward.cost) {
-        const needed = reward.cost - appState.balance;
-        showToast(`Need ${needed} more pts for "${reward.title}"`, 'info');
-        return;
-      }
-
-      appState.balance -= reward.cost;
-      const emojiPrefix = reward.icon ? `${reward.icon} ` : '';
-      const logEntry = {
-        id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-        title: `Redeemed: ${emojiPrefix}${reward.title}`,
-        delta: -reward.cost,
-        category: 'redeem',
-        timestamp: new Date().toISOString()
-      };
-
-      appState.logs.unshift(logEntry);
-      selectedLogId = null;
-      saveState();
-      renderAll();
-      animateBalanceChange(-reward.cost);
-      showToast(`Enjoy! Redeemed "${emojiPrefix}${reward.title}" (-${reward.cost} pts)`, 'reward');
-    }
-
-    function undoLastAction() {
-      if (appState.logs.length === 0) return;
-      const last = appState.logs.shift();
-      appState.balance -= last.delta;
-      selectedLogId = null;
-      saveState();
-      renderAll();
-      animateBalanceChange(-last.delta);
-      showToast(`Undid "${last.title}"`, 'info');
-    }
-
-    function removeSingleLog(logId) {
-      const index = appState.logs.findIndex(l => l.id === logId);
-      if (index === -1) return;
-      const [removed] = appState.logs.splice(index, 1);
-      appState.balance -= removed.delta;
-      if (selectedLogId === logId) selectedLogId = null;
-      saveState();
-      renderAll();
-      showToast(`Reverted "${removed.title}"`, 'info');
-    }
-
-    function toggleLogSelect(logId) {
-      selectedLogId = selectedLogId === logId ? null : logId;
-      renderLogs();
-    }
-
-    // =========================================================================
-    // 3. CUSTOM HABIT & REWARD CREATION / EDITING / PAIRING / ORDERING
-    // =========================================================================
-    function toggleForm(formId) {
-      const el = document.getElementById(formId);
-      if (!el) return;
-      el.classList.toggle('hidden');
-      const input = el.querySelector('input');
-      if (input && !el.classList.contains('hidden')) {
-        input.focus();
-      }
-      setTimeout(updateHeaderHeightOffset, 50);
-    }
-
-    function handleAddHabit(event, type) {
-      event.preventDefault();
-      const titleInput = document.getElementById(type === 'positive' ? 'posTitleInput' : 'negTitleInput');
-      const pointsInput = document.getElementById(type === 'positive' ? 'posPointsInput' : 'negPointsInput');
-      const subtextInput = document.getElementById(type === 'positive' ? 'posSubtextInput' : 'negSubtextInput');
-
-      const title = titleInput.value.trim();
-      const points = parseInt(pointsInput.value, 10);
-      const subtext = subtextInput ? subtextInput.value.trim() : '';
-      if (!title || isNaN(points) || points <= 0) return;
-
-      const newHabit = {
-        id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
-        title,
-        points,
-        type,
-        dailyLimit: 1,
-        subtext,
-        order: 0
-      };
-
-      if (type === 'positive') {
-        const firstNegIdx = appState.habits.findIndex(h => h.type === 'negative');
-        if (firstNegIdx !== -1) {
-          appState.habits.splice(firstNegIdx, 0, newHabit);
-        } else {
-          appState.habits.push(newHabit);
-        }
-      } else {
-        appState.habits.push(newHabit);
-      }
-
-      titleInput.value = '';
-      pointsInput.value = '';
-      if (subtextInput) subtextInput.value = '';
-      toggleForm(type === 'positive' ? 'positiveForm' : 'negativeForm');
-
-      saveState();
-      renderHabits();
-      showToast(`Added "${title}" (${type === 'positive' ? '+' : '-'}${points} pts)`, 'success');
-    }
-
-    function deleteHabit(event, habitId) {
-      if (event) event.stopPropagation();
-      const target = appState.habits.find(h => h.id === habitId);
-      if (!target) return;
-
-      const gid = target.groupId;
-      appState.habits = appState.habits.filter(h => h.id !== habitId);
-
-      if (gid) {
-        const remaining = appState.habits.filter(h => h.groupId === gid);
-        if (remaining.length < 2) {
-          remaining.forEach(h => {
-            delete h.groupId;
-          });
-        }
-      }
-
-      if (editingHabitId === habitId) editingHabitId = null;
-      if (pairingHabitId === habitId) pairingHabitId = null;
-
-      saveState();
-      renderHabits();
-      showToast(`Deleted "${target.title}"`, 'info');
-    }
-
-    function toggleEditHabitsMode() {
-      isEditingHabits = !isEditingHabits;
-      editingHabitId = null;
-      pairingHabitId = null;
-      editingRewardId = null;
-
-      const btn = document.getElementById('toggleEditHabitsBtn');
-      const label = document.getElementById('toggleEditHabitsLabel');
-      const addPosBtn = document.getElementById('addPosBtn');
-      const addNegBtn = document.getElementById('addNegBtn');
-      const posForm = document.getElementById('positiveForm');
-      const negForm = document.getElementById('negativeForm');
-
-      const rewardsBadge = document.getElementById('rewardsModeBadge');
-      const rewardsSubtitle = document.getElementById('rewardsSubtitle');
-      const addRewardBtnEl = document.getElementById('addRewardBtnEl');
-      const rewardForm = document.getElementById('rewardForm');
-
-      if (isEditingHabits) {
-        if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer';
-        if (label) label.textContent = 'Done';
-        if (addPosBtn) addPosBtn.classList.remove('hidden');
-        if (addNegBtn) addNegBtn.classList.remove('hidden');
-
-        if (rewardsBadge) {
-          rewardsBadge.textContent = 'Edit Mode';
-          rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
-        }
-        if (rewardsSubtitle) rewardsSubtitle.textContent = 'Click any reward to edit its details.';
-        if (addRewardBtnEl) addRewardBtnEl.classList.remove('hidden');
-      } else {
-        if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer';
-        if (label) label.textContent = 'Editor';
-        if (addPosBtn) addPosBtn.classList.add('hidden');
-        if (addNegBtn) addNegBtn.classList.add('hidden');
-        if (posForm) posForm.classList.add('hidden');
-        if (negForm) negForm.classList.add('hidden');
-
-        if (rewardsBadge) {
-          rewardsBadge.textContent = 'Redeem';
-          rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300';
-        }
-        if (rewardsSubtitle) rewardsSubtitle.textContent = 'Cash in your hard-earned points for guilt-free fun.';
-        if (addRewardBtnEl) addRewardBtnEl.classList.add('hidden');
-        if (rewardForm) rewardForm.classList.add('hidden');
-      }
-
-      renderHabits();
-      renderRewards();
-      setTimeout(updateHeaderHeightOffset, 50);
-    }
-
-    function startInlineEditHabit(event, habitId) {
-      if (event) event.stopPropagation();
-      editingHabitId = habitId;
-      pairingHabitId = null;
-      renderHabits();
-      const input = document.getElementById(`editHabitTitle_${habitId}`);
-      if (input) {
-        input.focus();
-        input.select();
-      }
-    }
-
-    function cancelInlineEditHabit(event) {
-      if (event) event.stopPropagation();
-      editingHabitId = null;
-      renderHabits();
-    }
-
-    function saveInlineEditHabit(event, habitId) {
-      event.preventDefault();
-      event.stopPropagation();
-      const habit = appState.habits.find(h => h.id === habitId);
-      if (!habit) return;
-
-      const titleInput = document.getElementById(`editHabitTitle_${habitId}`);
-      const pointsInput = document.getElementById(`editHabitPoints_${habitId}`);
-      const subtextInput = document.getElementById(`editHabitSubtext_${habitId}`);
-      const limitInput = document.getElementById(`editHabitLimit_${habitId}`);
-      
-      const newTitle = titleInput ? titleInput.value.trim() : '';
-      const newPoints = pointsInput ? parseInt(pointsInput.value, 10) : habit.points;
-      const newSubtext = subtextInput ? subtextInput.value.trim() : '';
-      const newLimit = (habit.type === 'positive' && limitInput && !habit.groupId) ? parseInt(limitInput.value, 10) : 1;
-
-      if (!newTitle || isNaN(newPoints) || newPoints <= 0) return;
-
-      habit.title = newTitle;
-      habit.points = newPoints;
-      habit.subtext = newSubtext;
-      if (habit.type === 'positive' && !habit.groupId) {
-        habit.dailyLimit = isNaN(newLimit) || newLimit < 1 ? 1 : newLimit;
-      }
-      editingHabitId = null;
-
-      saveState();
-      renderHabits();
-      showToast(`Updated "${newTitle}"`, 'success');
-    }
-
-    function moveHabitOrder(event, habitId, direction) {
-      event.stopPropagation();
-      if (document.activeElement) document.activeElement.blur();
-
-      const targetHabit = appState.habits.find(h => h.id === habitId);
-      if (!targetHabit) return;
-
-      if (targetHabit.type === 'negative') {
-        const negatives = appState.habits.filter(h => h.type === 'negative');
-        const pos = negatives.findIndex(h => h.id === habitId);
-        const newPos = pos + direction;
-        if (newPos < 0 || newPos >= negatives.length) return;
-
-        const temp = negatives[pos];
-        negatives[pos] = negatives[newPos];
-        negatives[newPos] = temp;
-
-        const positives = appState.habits.filter(h => h.type === 'positive');
-        appState.habits = [...positives, ...negatives];
-        saveState();
-        renderHabits();
-        return;
-      }
-
-      const positives = appState.habits.filter(h => h.type === 'positive');
-      const blocks = [];
-      const processedGroups = new Set();
-
-      positives.forEach(h => {
-        if (h.groupId) {
-          if (!processedGroups.has(h.groupId)) {
-            processedGroups.add(h.groupId);
-            const groupMems = positives.filter(x => x.groupId === h.groupId);
-            blocks.push({ type: 'group', groupId: h.groupId, habits: groupMems });
-          }
-        } else {
-          blocks.push({ type: 'single', habit: h });
-        }
-      });
-
-      let blockIdx = -1;
-      let habitIdxInGroup = -1;
-      blocks.forEach((b, bIdx) => {
-        if (b.type === 'single') {
-          if (b.habit.id === habitId) blockIdx = bIdx;
-        } else {
-          const gIdx = b.habits.findIndex(x => x.id === habitId);
-          if (gIdx !== -1) {
-            blockIdx = bIdx;
-            habitIdxInGroup = gIdx;
-          }
-        }
-      });
-
-      if (blockIdx === -1) return;
-
-      const targetBlock = blocks[blockIdx];
-
-      if (targetBlock.type === 'group' && habitIdxInGroup !== -1) {
-        const newGroupPos = habitIdxInGroup + direction;
-        if (newGroupPos >= 0 && newGroupPos < targetBlock.habits.length) {
-          const temp = targetBlock.habits[habitIdxInGroup];
-          targetBlock.habits[habitIdxInGroup] = targetBlock.habits[newGroupPos];
-          targetBlock.habits[newGroupPos] = temp;
-        } else {
-          const newBlockIdx = blockIdx + direction;
-          if (newBlockIdx >= 0 && newBlockIdx < blocks.length) {
-            const temp = blocks[blockIdx];
-            blocks[blockIdx] = blocks[newBlockIdx];
-            blocks[newBlockIdx] = temp;
-          }
-        }
-      } else {
-        const newBlockIdx = blockIdx + direction;
-        if (newBlockIdx >= 0 && newBlockIdx < blocks.length) {
-          const temp = blocks[blockIdx];
-          blocks[blockIdx] = blocks[newBlockIdx];
-          blocks[newBlockIdx] = temp;
-        }
-      }
-
-      const newPositives = [];
-      blocks.forEach(b => {
-        if (b.type === 'single') newPositives.push(b.habit);
-        else b.habits.forEach(h => newPositives.push(h));
-      });
-
-      const negatives = appState.habits.filter(h => h.type === 'negative');
-      appState.habits = [...newPositives, ...negatives];
-      saveState();
-      renderHabits();
-    }
-
-    function togglePairMode(event, habitId) {
-      event.stopPropagation();
-      pairingHabitId = pairingHabitId === habitId ? null : habitId;
-      editingHabitId = null;
-      renderHabits();
-      if (pairingHabitId) {
-        const h = appState.habits.find(x => x.id === habitId);
-        showToast(`Select another habit to link with "${h ? h.title : ''}"`, 'info');
-      }
-    }
-
-    function handleHabitClickInEditMode(habitId) {
-      if (!isEditingHabits) return;
-      const target = appState.habits.find(h => h.id === habitId && h.type === 'positive');
-      if (!target) return;
-
-      if (pairingHabitId) {
-        if (pairingHabitId === habitId) {
-          pairingHabitId = null;
-          renderHabits();
-        } else {
-          pairHabitsTogether(null, pairingHabitId, habitId);
-        }
-      } else {
-        startInlineEditHabit(null, habitId);
-      }
-    }
-
-    function pairHabitsTogether(event, firstHabitId, secondHabitId) {
-      if (event) event.stopPropagation();
-      if (!firstHabitId || !secondHabitId || firstHabitId === secondHabitId) return;
-
-      const first = appState.habits.find(h => h.id === firstHabitId && h.type === 'positive');
-      const second = appState.habits.find(h => h.id === secondHabitId && h.type === 'positive');
-      if (!first || !second) return;
-
-      let targetGroupId = second.groupId || first.groupId;
-      if (!targetGroupId) {
-        targetGroupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-      }
-
-      first.groupId = targetGroupId;
-      first.dailyLimit = 1;
-      second.groupId = targetGroupId;
-      second.dailyLimit = 1;
-      pairingHabitId = null;
-
-      const positives = appState.habits.filter(h => h.type === 'positive');
-      const negatives = appState.habits.filter(h => h.type === 'negative');
-
-      const reorderedPos = [];
-      const processed = new Set();
-      positives.forEach(h => {
-        if (h.groupId) {
-          if (!processed.has(h.groupId)) {
-            processed.add(h.groupId);
-            const groupMems = positives.filter(x => x.groupId === h.groupId);
-            groupMems.forEach(gm => reorderedPos.push(gm));
-          }
-        } else {
-          reorderedPos.push(h);
-        }
-      });
-
-      appState.habits = [...reorderedPos, ...negatives];
-      saveState();
-      renderAll();
-      showToast(`Linked "${first.title}" & "${second.title}"!`, 'success');
-    }
-
-    function unlinkHabitGroup(event, habitId, unlinkAll = false) {
-      if (event) event.stopPropagation();
-      const target = appState.habits.find(h => h.id === habitId);
-      if (!target || !target.groupId) return;
-
-      const gid = target.groupId;
-
-      if (unlinkAll) {
-        appState.habits.forEach(h => {
-          if (h.groupId === gid) {
-            delete h.groupId;
-          }
-        });
-      } else {
-        delete target.groupId;
-        const remaining = appState.habits.filter(h => h.groupId === gid);
-        if (remaining.length < 2) {
-          remaining.forEach(h => {
-            delete h.groupId;
-          });
-        }
-      }
-
-      pairingHabitId = null;
-      saveState();
-      renderAll();
-      showToast(unlinkAll ? 'Unlinked entire habit group.' : `Removed "${target.title}" from linked group.`, 'info');
-    }
-
-    function handleAddReward(event) {
-      event.preventDefault();
-      const titleInput = document.getElementById('rewardTitleInput');
-      const costInput = document.getElementById('rewardCostInput');
-
-      const title = titleInput.value.trim();
-      const cost = parseInt(costInput.value, 10);
-      if (!title || isNaN(cost) || cost <= 0) return;
-
-      const icons = ['🎮', '🏆', '🍕', '🎬', '🎧', '☕', '🛍️', '🌟'];
-      const randomIcon = icons[Math.floor(Math.random() * icons.length)];
-
-      appState.rewards.push({
-        id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
-        title,
-        cost,
-        icon: randomIcon
-      });
-
-      titleInput.value = '';
-      costInput.value = '';
-      toggleForm('rewardForm');
-
-      saveState();
-      renderRewards();
-      showToast(`Created reward "${title}" (${cost} pts)`, 'success');
-    }
-
-    function deleteReward(event, rewardId) {
-      event.stopPropagation();
-      appState.rewards = appState.rewards.filter(r => r.id !== rewardId);
-      saveState();
-      renderRewards();
-    }
-
-    function startInlineEditReward(event, rewardId) {
-      if (event) event.stopPropagation();
-      if (!isEditingHabits) return;
-      editingRewardId = rewardId;
-      renderRewards();
-      const input = document.getElementById(`editRewardTitle_${rewardId}`);
-      if (input) {
-        input.focus();
-        input.select();
-      }
-    }
-
-    function cancelInlineEditReward(event) {
-      if (event) event.stopPropagation();
-      editingRewardId = null;
-      renderRewards();
-    }
-
-    function saveInlineEditReward(event, rewardId) {
-      event.preventDefault();
-      event.stopPropagation();
-      const reward = appState.rewards.find(r => r.id === rewardId);
-      if (!reward) return;
-
-      const titleInput = document.getElementById(`editRewardTitle_${rewardId}`);
-      const costInput = document.getElementById(`editRewardCost_${rewardId}`);
-      const iconInput = document.getElementById(`editRewardIcon_${rewardId}`);
-
-      const newTitle = titleInput ? titleInput.value.trim() : '';
-      const newCost = costInput ? parseInt(costInput.value, 10) : reward.cost;
-      const newIcon = iconInput ? iconInput.value.trim() : reward.icon;
-
-      if (!newTitle || isNaN(newCost) || newCost <= 0) return;
-
-      reward.title = newTitle;
-      reward.cost = newCost;
-      if (newIcon) reward.icon = newIcon;
-      editingRewardId = null;
-
-      saveState();
-      renderRewards();
-      showToast(`Updated reward "${newTitle}"`, 'success');
-    }
-
-    // =========================================================================
-    // 4. RENDERING FUNCTIONS
-    // =========================================================================
-    function renderAll() {
-      checkResetRollover();
-      renderHeaderStats();
-      renderHabits();
-      renderRewards();
-      renderLogs();
-      setTimeout(updateHeaderHeightOffset, 50);
-    }
-
-    function renderHeaderStats() {
-      const balanceEl = document.getElementById('liveBalance');
-      balanceEl.textContent = appState.balance;
-      balanceEl.className = `text-xl sm:text-3xl font-extrabold tracking-tight ${
-        appState.balance < 0 ? 'text-rose-400' : 'text-white'
-      }`;
-
-      let earnedToday = 0;
-      let lostToday = 0;
-      let spentToday = 0;
-
-      appState.logs.forEach(log => {
-        if (isLogCurrentCycle(log.timestamp)) {
-          if (log.category === 'positive') earnedToday += log.delta;
-          else if (log.category === 'negative') lostToday += Math.abs(log.delta);
-          else if (log.category === 'redeem') spentToday += Math.abs(log.delta);
-        }
-      });
-
-      document.getElementById('todayEarned').textContent = `+${earnedToday}`;
-      document.getElementById('todayLost').textContent = `-${lostToday}`;
-      document.getElementById('todaySpent').textContent = `${spentToday}`;
-      document.getElementById('undoLastBtn').disabled = appState.logs.length === 0;
-    }
-
-    function renderHabits() {
-      const posContainer = document.getElementById('positiveHabitList');
-      const negContainer = document.getElementById('negativeHabitList');
-      if (!posContainer || !negContainer) return;
-
-      const allPositives = appState.habits.filter(h => h.type === 'positive');
-      
-      const positives = isEditingHabits
-        ? allPositives
-        : allPositives.filter(h => {
-            if (h.groupId) {
-              const groupMems = allPositives.filter(x => x.groupId === h.groupId);
-              const anyGroupCompleted = groupMems.some(gm => {
-                const limit = (typeof gm.dailyLimit === 'number' && gm.dailyLimit > 0) ? gm.dailyLimit : 1;
-                return getCompletedPositiveCountToday(gm.id) >= limit;
-              });
-              return !anyGroupCompleted;
-            }
-            const limit = (typeof h.dailyLimit === 'number' && h.dailyLimit > 0) ? h.dailyLimit : 1;
-            return getCompletedPositiveCountToday(h.id) < limit;
-          });
-
-      const negatives = appState.habits.filter(h => h.type === 'negative');
-
-      const renderHabitCard = (h, idx, listLength, isPositive, inGroup = false) => {
-        const accentBadge = isPositive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300';
-        const iconBg = isPositive
-          ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400'
-          : 'bg-rose-500/10 group-hover:bg-rose-500/20 text-rose-400';
-        
-        const cardBg = inGroup ? 'bg-transparent' : 'bg-slate-950/70 border border-indigo-500/40 hover:bg-emerald-950/30 hover:border-emerald-500/40 rounded-xl';
-        
-        const maxLimit = (isPositive && typeof h.dailyLimit === 'number' && h.dailyLimit > 0) ? h.dailyLimit : 1;
-        const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
-        const remainingCount = Math.max(0, maxLimit - completedCount);
-
-        const showSubtext = h.subtext && (isEditingHabits || maxLimit === 1);
-        const showProgress = isPositive && !h.groupId && maxLimit > 1;
-
-        if (isEditingHabits && editingHabitId === h.id) {
-          return `
-            <div class="p-2">
-              <form
-                onsubmit="saveInlineEditHabit(event, '${h.id}')"
-                onclick="event.stopPropagation()"
-                class="p-3.5 rounded-xl bg-slate-950 border border-indigo-500/60 space-y-2.5 shadow-lg shadow-indigo-500/10"
-              >
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    id="editHabitTitle_${h.id}"
-                    value="${escapeHtml(h.title)}"
-                    required
-                    class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
-                  <input
-                    type="number"
-                    id="editHabitPoints_${h.id}"
-                    value="${h.points}"
-                    min="1"
-                    max="1000"
-                    required
-                    class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
+<body class="bg-dark-bg text-dark-text min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white pb-24">
+    <!-- App Header -->
+    <header class="sticky top-0 z-40 bg-dark-card/80 backdrop-blur-md border-b border-dark-border px-4 py-3">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-600/30">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
                 </div>
                 <div>
-                  <input
-                    type="text"
-                    id="editHabitSubtext_${h.id}"
-                    value="${escapeHtml(h.subtext || '')}"
-                    placeholder="Optional subtext (appears below title)"
-                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  />
+                    <h1 class="font-bold text-lg leading-tight tracking-tight">PointQuest</h1>
+                    <p class="text-xs text-dark-muted" id="header-status">Gamified Routine & Penalties</p>
                 </div>
-                ${isPositive && !h.groupId ? `
-                  <div class="flex items-center gap-2">
-                    <label class="text-[11px] text-slate-400">Max times per day:</label>
-                    <input
-                      type="number"
-                      id="editHabitLimit_${h.id}"
-                      value="${maxLimit}"
-                      min="1"
-                      max="20"
-                      class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-                ` : ''}
-                <div class="flex items-center justify-between pt-1">
-                  <button
-                    type="button"
-                    onclick="deleteHabit(event, '${h.id}')"
-                    class="text-xs text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
-                  >
-                    Delete
-                  </button>
-                  <div class="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onclick="cancelInlineEditHabit(event)"
-                      class="px-2.5 py-1 rounded-lg text-xs text-slate-400 hover:text-white cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      class="px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-              </form>
             </div>
-          `;
-        }
-
-        if (isEditingHabits) {
-          const isBeingPaired = isPositive && pairingHabitId === h.id;
-          const isPairingCandidate = isPositive && pairingHabitId && pairingHabitId !== h.id;
-          const showLinkButton = pairingHabitId === null || isBeingPaired;
-
-          return `
-            <div
-              onclick="${isPositive ? `handleHabitClickInEditMode('${h.id}')` : `startInlineEditHabit(event, '${h.id}')`}"
-              class="group flex items-center justify-between gap-2 px-4 h-[64px] ${
-                inGroup ? '' : 'rounded-xl bg-slate-950/90 border border-indigo-500/40'
-              } ${
-                isBeingPaired
-                  ? 'border-indigo-400 bg-indigo-950/40 ring-2 ring-indigo-500/30'
-                  : isPairingCandidate
-                  ? 'border-dashed border-indigo-400/70 hover:bg-indigo-950/30 cursor-pointer'
-                  : 'hover:border-indigo-400 cursor-pointer'
-              } transition-all"
-            >
-              <div class="flex items-center gap-3 min-w-0 flex-1">
-                <!-- Reorder Arrows -->
-                <div class="flex flex-col gap-0.5 shrink-0" onclick="event.stopPropagation()">
-                  <button
-                    type="button"
-                    onclick="moveHabitOrder(event, '${h.id}', -1)"
-                    ${idx === 0 ? 'disabled' : ''}
-                    title="Move up"
-                    class="p-1 rounded bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none text-slate-400 hover:text-white transition cursor-pointer"
-                  >
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onclick="moveHabitOrder(event, '${h.id}', 1)"
-                    ${idx === listLength - 1 ? 'disabled' : ''}
-                    title="Move down"
-                    class="p-1 rounded bg-slate-900 hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none text-slate-400 hover:text-white transition cursor-pointer"
-                  >
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
+            
+            <div class="flex items-center space-x-2">
+                <!-- Points Badge -->
+                <div class="flex items-center space-x-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full text-amber-400 font-semibold text-sm">
+                    <i data-lucide="coins" class="w-4 h-4"></i>
+                    <span id="user-points">0</span> pts
                 </div>
-
-                <div class="min-w-0 flex-1">
-                  ${showSubtext ? `
-                    <div class="flex flex-col justify-center">
-                      <div class="flex items-center gap-1.5 flex-wrap">
-                        <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
-                      </div>
-                      <span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>
-                    </div>
-                  ` : `
-                    <span class="text-sm font-medium text-slate-200 truncate block">${escapeHtml(h.title)}</span>
-                  `}
-                </div>
-              </div>
-
-              <div class="flex items-center gap-1.5 shrink-0">
-                ${isPositive && showLinkButton ? (
-                  h.groupId ? `
-                    <button
-                      type="button"
-                      onclick="unlinkHabitGroup(event, '${h.id}', false)"
-                      title="Remove this habit from the linked group"
-                      class="px-2 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition cursor-pointer"
-                    >
-                      Unlink
-                    </button>
-                  ` : `
-                    <button
-                      type="button"
-                      onclick="togglePairMode(event, '${h.id}')"
-                      title="Link with another habit so completing one completes the group"
-                      class="px-2 py-1 rounded-lg ${isBeingPaired ? 'bg-indigo-600 text-white' : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700'} text-[11px] font-semibold transition cursor-pointer"
-                    >
-                      ${isBeingPaired ? 'Select Pair...' : 'Link'}
-                    </button>
-                  `
-                ) : ''}
-
-                <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${accentBadge}">
-                  ${isPositive ? '+' : '-'}${h.points} pts
-                </span>
-              </div>
-            </div>
-          `;
-        }
-
-        return `
-          <div
-            onclick="triggerHabit('${h.id}')"
-            class="group flex items-center justify-between px-4 h-[64px] ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
-          >
-            <div class="flex items-center gap-3 min-w-0 pr-2 flex-1">
-              <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
-                ${isPositive ? '+' : '−'}
-              </div>
-              <div class="min-w-0 flex-1">
-                ${showSubtext || showProgress ? `
-                  <div class="flex flex-col justify-center">
-                    <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
-                    ${showSubtext ? `
-                      <span class="text-[11px] text-slate-400 block truncate mt-0.5">
-                        ${escapeHtml(h.subtext)}
-                      </span>
-                    ` : showProgress ? `
-                      <span class="text-[11px] text-slate-400 block mt-0.5">
-                        Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
-                      </span>
-                    ` : ''}
-                  </div>
-                ` : `
-                  <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
-                `}
-              </div>
-            </div>
-
-            <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${accentBadge} shrink-0">
-              ${isPositive ? '+' : '-'}${h.points} pts
-            </span>
-          </div>
-        `;
-      };
-
-      if (positives.length === 0) {
-        posContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">All positive habits completed for today! 🎉</p>`;
-      } else {
-        const renderedPos = [];
-        const renderedGroups = new Set();
-
-        positives.forEach((h, idx) => {
-          if (h.groupId) {
-            if (!renderedGroups.has(h.groupId)) {
-              renderedGroups.add(h.groupId);
-              const groupItems = positives.filter(x => x.groupId === h.groupId);
-              const cardsHtml = groupItems.map((gm, gIdx) => {
-                const gmIdx = positives.findIndex(x => x.id === gm.id);
-                return renderHabitCard(gm, gmIdx, positives.length, true, true);
-              }).join('');
-
-              renderedPos.push(`
-                <div class="rounded-2xl bg-slate-950/70 border border-indigo-500/40 divide-y divide-indigo-500/25 overflow-hidden">
-                  ${isEditingHabits ? `
-                    <div class="flex items-center justify-between px-4 py-2 bg-indigo-950/40 border-b border-indigo-500/25">
-                      <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1">
-                        <span>🔗 Linked Group (Pick One)</span>
-                      </span>
-                      <button
-                        type="button"
-                        onclick="unlinkHabitGroup(event, '${groupItems[0].id}', true)"
-                        class="text-[10px] text-slate-400 hover:text-rose-300 cursor-pointer"
-                      >
-                        Unlink All
-                      </button>
-                    </div>
-                  ` : ''}
-                  ${cardsHtml}
-                </div>
-              `);
-            }
-          } else {
-            renderedPos.push(renderHabitCard(h, idx, positives.length, true, false));
-          }
-        });
-
-        posContainer.innerHTML = renderedPos.join('');
-      }
-
-      if (negatives.length === 0) {
-        negContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No penalties configured.</p>`;
-      } else {
-        negContainer.innerHTML = negatives
-          .map((h, idx) => renderHabitCard(h, idx, negatives.length, false, false))
-          .join('');
-      }
-    }
-
-    function renderRewards() {
-      const grid = document.getElementById('rewardStoreGrid');
-      if (!grid) return;
-
-      if (appState.rewards.length === 0) {
-        grid.innerHTML = `<p class="col-span-full text-xs text-slate-500 text-center py-8">No rewards yet. Click "+ Add Custom Reward" in Editor mode to add one!</p>`;
-        return;
-      }
-
-      grid.innerHTML = appState.rewards.map(reward => {
-        if (isEditingHabits && editingRewardId === reward.id) {
-          return `
-            <form
-              onsubmit="saveInlineEditReward(event, '${reward.id}')"
-              onclick="event.stopPropagation()"
-              class="flex flex-col justify-between p-4 rounded-2xl bg-slate-950 border border-indigo-500/60 space-y-2.5 shadow-lg shadow-indigo-500/10"
-            >
-              <div class="space-y-2">
-                <div class="flex items-center gap-2">
-                  <input
-                    type="text"
-                    id="editRewardIcon_${reward.id}"
-                    value="${escapeHtml(reward.icon || '🎁')}"
-                    maxlength="4"
-                    class="w-12 text-center bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                  />
-                  <input
-                    type="text"
-                    id="editRewardTitle_${reward.id}"
-                    value="${escapeHtml(reward.title)}"
-                    required
-                    class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div class="flex items-center gap-2">
-                  <label class="text-[11px] text-slate-400">Point cost:</label>
-                  <input
-                    type="number"
-                    id="editRewardCost_${reward.id}"
-                    value="${reward.cost}"
-                    min="1"
-                    max="5000"
-                    required
-                    class="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-              <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                <button
-                  type="button"
-                  onclick="deleteReward(event, '${reward.id}')"
-                  class="text-xs text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
-                >
-                  Delete
+                
+                <!-- Settings Button -->
+                <button onclick="openSettingsModal()" class="p-2 rounded-xl bg-dark-border/50 hover:bg-dark-border text-dark-muted hover:text-white transition" title="Settings & Scheduler">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
                 </button>
-                <div class="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onclick="cancelInlineEditReward(event)"
-                    class="px-2 py-1 rounded-lg text-xs text-slate-400 hover:text-white cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
-                  >
-                    Save
-                  </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        <!-- Dashboard Overview Card -->
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold tracking-tight">Daily Quest Log</h2>
+                    <p class="text-sm text-dark-muted mt-0.5">Complete habits before the reset timer expires to claim rewards.</p>
                 </div>
-              </div>
+                
+                <div class="flex items-center space-x-3 bg-dark-bg/60 border border-dark-border/80 px-4 py-2.5 rounded-xl">
+                    <div class="text-indigo-400">
+                        <i data-lucide="clock" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase tracking-wider text-dark-muted font-medium">Next Refresh (UTC)</div>
+                        <div id="next-reset-countdown" class="text-sm font-mono font-bold text-indigo-300">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-6 space-y-2">
+                <div class="flex justify-between text-xs font-medium">
+                    <span class="text-dark-muted">Daily Completion Progress</span>
+                    <span id="completion-text" class="text-indigo-400 font-semibold">0%</span>
+                </div>
+                <div class="w-full bg-dark-bg h-2.5 rounded-full overflow-hidden border border-dark-border/50">
+                    <div id="completion-bar" class="bg-gradient-to-r from-indigo-500 to-violet-500 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Habits Section -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold flex items-center space-x-2">
+                    <i data-lucide="check-circle-2" class="w-5 h-5 text-indigo-400"></i>
+                    <span>Active Habits</span>
+                </h3>
+                <button onclick="openAddHabitModal()" class="text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition flex items-center space-x-1 shadow-md shadow-indigo-600/20">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>Add Habit</span>
+                </button>
+            </div>
+
+            <div id="habits-list" class="grid grid-cols-1 gap-3">
+                <!-- Habits injected dynamically -->
+            </div>
+        </section>
+
+        <!-- Reward Store Section -->
+        <section class="space-y-4 pt-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold flex items-center space-x-2">
+                    <i data-lucide="gift" class="w-5 h-5 text-amber-400"></i>
+                    <span>Reward Store</span>
+                </h3>
+                <button onclick="openAddRewardModal()" class="text-xs font-medium bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>Add Reward</span>
+                </button>
+            </div>
+
+            <div id="rewards-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Rewards injected dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold flex items-center space-x-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-indigo-400"></i>
+                    <span>Scheduler & Settings</span>
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-dark-muted hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Reset Time (UTC)</label>
+                    <input type="time" id="settings-reset-time" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
+                    <p class="text-[11px] text-dark-muted">Changing this after your first reset will schedule the next refresh at least 24 hours from the last execution time.</p>
+                </div>
+
+                <div class="bg-dark-bg/50 border border-dark-border rounded-xl p-3.5 space-y-2">
+                    <div class="text-xs font-semibold text-dark-muted uppercase tracking-wider">System Info</div>
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="text-dark-muted">Last Reset (UTC):</span>
+                        <span id="info-last-reset" class="text-white">Never</span>
+                    </div>
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="text-dark-muted">Next Reset (UTC):</span>
+                        <span id="info-next-reset" class="text-indigo-300">Calculating...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl bg-dark-border/50 hover:bg-dark-border text-sm font-medium transition">Cancel</button>
+                <button onclick="saveSettings()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Habit Modal -->
+    <div id="habit-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+            <div class="flex items-center justify-between">
+                <h3 id="habit-modal-title" class="text-lg font-bold">Add Habit</h3>
+                <button onclick="closeHabitModal()" class="text-dark-muted hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="habit-form" onsubmit="handleHabitSubmit(event)" class="space-y-4">
+                <input type="hidden" id="habit-id">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Habit Name</label>
+                    <input type="text" id="habit-name" required placeholder="e.g. Morning Workout" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Subtext / Description</label>
+                    <input type="text" id="habit-subtext" placeholder="e.g. Full-assed execution" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Points Reward (+)</label>
+                        <input type="number" id="habit-points" required value="10" min="0" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Penalty (-)</label>
+                        <input type="number" id="habit-penalty" required value="5" min="0" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeHabitModal()" class="px-4 py-2 rounded-xl bg-dark-border/50 hover:bg-dark-border text-sm font-medium transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition">Save Habit</button>
+                </div>
             </form>
-          `;
-        }
+        </div>
+    </div>
 
-        if (isEditingHabits) {
-          return `
-            <div
-              onclick="startInlineEditReward(event, '${reward.id}')"
-              class="relative flex flex-col justify-between p-4 rounded-2xl bg-slate-950/90 border border-indigo-500/40 hover:border-indigo-400 transition-all cursor-pointer shadow-md shadow-indigo-500/5 group"
-            >
-              <div>
-                <div class="flex items-center justify-between mb-3">
-                  <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xl">
-                    ${reward.icon || '🎁'}
-                  </div>
-                </div>
-                <h3 class="text-sm font-bold text-white leading-snug">${escapeHtml(reward.title)}</h3>
-                <p class="text-xs font-semibold text-amber-400 mt-1">${reward.cost} PTS</p>
-              </div>
-            </div>
-          `;
-        }
-
-        const canAfford = appState.balance >= reward.cost;
-        const progressPct = Math.max(0, Math.min(100, Math.round((appState.balance / reward.cost) * 100)));
-
-        return `
-          <div class="relative flex flex-col justify-between p-4 rounded-2xl bg-slate-950/80 border ${
-            canAfford ? 'border-amber-500/40 shadow-lg shadow-amber-500/5' : 'border-slate-800'
-          } transition-all">
-            <div>
-              <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xl mb-3">
-                ${reward.icon || '🎁'}
-              </div>
-              <h3 class="text-sm font-bold text-white pr-2 leading-snug">${escapeHtml(reward.title)}</h3>
-              <p class="text-xs font-semibold text-amber-400 mt-1">${reward.cost} PTS</p>
-            </div>
-
-            <div class="mt-4 space-y-2.5">
-              <div class="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden">
-                <div
-                  class="h-full rounded-full transition-all duration-300 ${canAfford ? 'bg-amber-400' : 'bg-indigo-500/60'}"
-                  style="width: ${progressPct}%"
-                ></div>
-              </div>
-
-              <button
-                onclick="redeemReward('${reward.id}')"
-                class="w-full py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer ${
-                  canAfford
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-md shadow-amber-500/20'
-                    : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800'
-                }"
-              >
-                ${canAfford ? 'Redeem Reward' : `Need ${reward.cost - appState.balance} more pts`}
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderLogs() {
-      const container = document.getElementById('activityLogList');
-      if (appState.logs.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No activity recorded for today yet. Complete a habit above to earn points!</p>`;
-        return;
-      }
-
-      container.innerHTML = appState.logs.slice(0, 40).map(log => {
-        const isPos = log.delta > 0;
-        const isRedeem = log.category === 'redeem';
-        const badgeClass = isPos
-          ? 'bg-emerald-500/15 text-emerald-300'
-          : isRedeem
-          ? 'bg-amber-500/15 text-amber-300'
-          : 'bg-rose-500/15 text-rose-300';
-
-        const dotClass = isPos
-          ? 'bg-emerald-400'
-          : isRedeem
-          ? 'bg-amber-400'
-          : 'bg-rose-400';
-
-        const timeLabel = formatTimestamp(log.timestamp);
-        const isSelected = selectedLogId === log.id;
-
-        return `
-          <div
-            onclick="toggleLogSelect('${log.id}')"
-            class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/60 border ${
-              isSelected ? 'border-indigo-500 ring-1 ring-indigo-500/30 bg-slate-900/80' : 'border-slate-800/80 hover:border-slate-700'
-            } transition cursor-pointer select-none"
-          >
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="w-2 h-2 rounded-full shrink-0 ${dotClass}"></span>
-              <div class="min-w-0">
-                <p class="text-xs font-medium text-slate-200 truncate">${escapeHtml(log.title)}</p>
-                <p class="text-[10px] text-slate-500">${timeLabel}</p>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2.5 shrink-0 ml-2">
-              <span class="px-2 py-0.5 rounded-md text-xs font-bold ${badgeClass}">
-                ${isPos ? '+' : ''}${log.delta} pts
-              </span>
-              ${isSelected ? `
-                <button
-                  type="button"
-                  onclick="event.stopPropagation(); removeSingleLog('${log.id}')"
-                  title="Delete this entry"
-                  class="p-1 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 hover:text-rose-300 transition cursor-pointer"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+    <!-- Add Reward Modal -->
+    <div id="reward-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold">Add Reward</h3>
+                <button onclick="closeRewardModal()" class="text-dark-muted hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
-              ` : ''}
             </div>
-          </div>
-        `;
-      }).join('');
-    }
+            <form id="reward-form" onsubmit="handleRewardSubmit(event)" class="space-y-4">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Reward Name</label>
+                    <input type="text" id="reward-name" required placeholder="e.g. Extra Gaming Hour" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-dark-muted">Cost (Points)</label>
+                    <input type="number" id="reward-cost" required value="50" min="1" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeRewardModal()" class="px-4 py-2 rounded-xl bg-dark-border/50 hover:bg-dark-border text-sm font-medium transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-sm font-semibold text-white shadow-lg shadow-amber-600/30 transition">Save Reward</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    // =========================================================================
-    // 5. ROBUST SCHEDULER & 24H MINIMUM BUFFER LOGIC
-    // =========================================================================
-    function getNextResetTimestamp(config, lastResetTimestamp, now = new Date()) {
-      const timeStr = (config && config.time) || '07:00';
-      const [rHour, rMin] = timeStr.split(':').map(Number);
-      const nowMs = now.getTime();
-      const isFreshApp = !lastResetTimestamp || lastResetTimestamp === 0 || lastResetTimestamp === EPOCH_RESET;
+    <!-- Application Script -->
+    <script>
+        // State Management
+        let appState = JSON.parse(localStorage.getItem('pointquest_state')) || {
+            points: 100,
+            lastReset: 0, // Initial epoch (1970-1-1) for first startup
+            nextReset: null, // Will be initialized
+            resetHour: 7,    // Default 7 AM UTC
+            resetMinute: 0,
+            habits: [
+                { id: '1', name: 'Morning Routine & Workout', subtext: 'Full-assed execution', points: 15, penalty: 10, completed: false },
+                { id: '2', name: 'Deep Work Block', subtext: '2+ hours uninterrupted', points: 20, penalty: 15, completed: false },
+                { id: '3', name: 'Language Practice', subtext: 'Spanish session', points: 10, penalty: 5, completed: true }
+            ],
+            rewards: [
+                { id: 'r1', name: 'Movie Night Snack', cost: 40 },
+                { id: 'r2', name: 'Guilt-Free Gaming (2 hrs)', cost: 75 }
+            ]
+        };
 
-      if (isFreshApp) {
-        // First-time launch or epoch: default to 7:00 AM UTC of the next upcoming day (or today if time hasn't passed)
-        const year = now.getUTCFullYear();
-        const month = now.getUTCMonth();
-        const day = now.getUTCDate();
-        let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-        while (target <= nowMs) {
-          target += 24 * 60 * 60 * 1000;
+        // Helper: Get next upcoming 7:00 AM UTC timestamp (in ms)
+        function getNextUpcoming7AMUTC(nowMs = Date.now()) {
+            const d = new Date(nowMs);
+            const target = new Date(Date.UTC(
+                d.getUTCFullYear(),
+                d.getUTCMonth(),
+                d.getUTCDate(),
+                appState.resetHour,
+                appState.resetMinute,
+                0,
+                0
+            ));
+            if (target.getTime() <= nowMs) {
+                target.setUTCDate(target.getUTCDate() + 1);
+            }
+            return target.getTime();
         }
-        return target;
-      }
 
-      // If user has a valid lastResetTimestamp, next fire must be at least 24 hours after lastResetTimestamp,
-      // aligned to the chosen UTC time of day.
-      const lastDate = new Date(lastResetTimestamp);
-      const year = lastDate.getUTCFullYear();
-      const month = lastDate.getUTCMonth();
-      const day = lastDate.getUTCDate();
+        // Initialize / verify reset timestamps on load
+        function initScheduler() {
+            const now = Date.now();
+            
+            // If first startup (lastReset is 0 or null) or nextReset is missing/invalid
+            if (!appState.lastReset || appState.lastReset === 0 || !appState.nextReset || appState.nextReset <= 0) {
+                appState.lastReset = 0; // Default epoch
+                appState.nextReset = getNextUpcoming7AMUTC(now);
+            }
 
-      let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-
-      // Ensure target is strictly >= lastResetTimestamp + 24 hours
-      while (target < lastResetTimestamp + (24 * 60 * 60 * 1000)) {
-        target += 24 * 60 * 60 * 1000;
-      }
-
-      return target;
-    }
-
-    function updateNextRefreshPreview() {
-      const timeInputVal = document.getElementById('resetTimeInput').value || '07:00';
-      const tempConfig = { ...appState.resetConfig, time: timeInputVal };
-      const nextTs = getNextResetTimestamp(tempConfig, appState.resetConfig.lastResetTimestamp, new Date());
-      const dateObj = new Date(nextTs);
-      const formatted = dateObj.toUTCString();
-      const labelEl = document.getElementById('nextRefreshTimeLabel');
-      if (labelEl) {
-        labelEl.textContent = formatted;
-      }
-    }
-
-    function openResetConfigModal() {
-      const modal = document.getElementById('resetConfigModal');
-      document.getElementById('resetTimeInput').value = appState.resetConfig.time || '07:00';
-      document.getElementById('scheduledTitleInput').value = appState.resetConfig.scheduledTitle !== undefined ? appState.resetConfig.scheduledTitle : 'Midnight Daily Baseline Penalty';
-      document.getElementById('scheduledPointsInput').value = appState.resetConfig.scheduledPoints !== undefined ? appState.resetConfig.scheduledPoints : -50;
-      
-      const tzLabelEl = document.getElementById('detectedTimezoneLabel');
-      if (tzLabelEl) {
-        tzLabelEl.textContent = 'UTC Time';
-      }
-
-      updateNextRefreshPreview();
-
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function closeResetConfigModal() {
-      const modal = document.getElementById('resetConfigModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    function saveResetConfig() {
-      const timeVal = document.getElementById('resetTimeInput').value.trim() || '07:00';
-      const titleVal = document.getElementById('scheduledTitleInput').value.trim();
-      const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
-
-      appState.resetConfig.time = timeVal;
-      appState.resetConfig.scheduledTitle = titleVal;
-      appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
-
-      saveState();
-      closeResetConfigModal();
-      showToast('Reset schedule & scheduled points updated!', 'success');
-      
-      checkResetRollover();
-      renderAll();
-    }
-
-    function testTriggerResetNow() {
-      const timeVal = document.getElementById('resetTimeInput').value.trim() || '07:00';
-      const titleVal = document.getElementById('scheduledTitleInput').value.trim();
-      const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
-
-      appState.resetConfig.time = timeVal;
-      appState.resetConfig.scheduledTitle = titleVal;
-      appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
-
-      const now = new Date();
-      appState.resetConfig.lastResetTimestamp = now.getTime(); 
-      appState.logs = [];
-      applyScheduledAdjustment(now);
-
-      saveState();
-      closeResetConfigModal();
-      renderAll();
-      showToast('⚡ Test Reset triggered successfully!', 'success');
-    }
-
-    // =========================================================================
-    // 6. MOBILE TAB SWITCHER LOGIC
-    // =========================================================================
-    function switchMobileHabitTab(tab) {
-      const posCol = document.getElementById('positiveColumn');
-      const negCol = document.getElementById('negativeColumn');
-      const tabPosBtn = document.getElementById('tabPosBtn');
-      const tabNegBtn = document.getElementById('tabNegBtn');
-      const tabPosBtn2 = document.getElementById('tabPosBtn2');
-      const tabNegBtn2 = document.getElementById('tabNegBtn2');
-
-      if (!posCol || !negCol) return;
-
-      if (tab === 'positive') {
-        posCol.style.display = 'flex';
-        negCol.style.display = 'none';
-        if (tabPosBtn) tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
-        if (tabNegBtn) tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-        if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
-        if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-      } else {
-        negCol.style.display = 'flex';
-        posCol.style.display = 'none';
-        if (tabNegBtn) tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
-        if (tabPosBtn) tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-        if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
-        if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-      }
-
-      requestAnimationFrame(() => {
-        const mainHeader = document.getElementById('mainHeader');
-        const activeHeader = document.getElementById(tab === 'positive' ? 'positiveColumnHeader' : 'negativeColumnHeader');
-        const activeList = document.getElementById(tab === 'positive' ? 'positiveHabitList' : 'negativeHabitList');
-
-        if (activeList) {
-          const mainHeaderHeight = mainHeader ? mainHeader.offsetHeight : 0;
-          const sectionHeaderHeight = activeHeader ? activeHeader.offsetHeight : 0;
-          const marginSpacing = 16;
-          const listTop = activeList.getBoundingClientRect().top + window.scrollY;
-          const targetScrollY = Math.max(0, listTop - mainHeaderHeight - sectionHeaderHeight - marginSpacing);
-
-          window.scrollTo({
-            top: targetScrollY,
-            behavior: 'smooth'
-          });
+            // Check if reset rollover already occurred while offline/away
+            checkResetRollover();
+            saveState();
         }
-      });
-    }
 
-    window.addEventListener('resize', () => {
-      const posCol = document.getElementById('positiveColumn');
-      const negCol = document.getElementById('negativeColumn');
-      if (window.innerWidth >= 768) {
-        if (posCol) posCol.style.display = 'flex';
-        if (negCol) negCol.style.display = 'flex';
-      } else {
-        if (posCol && negCol) {
-          const isPosVisible = posCol.style.display !== 'none';
-          const isNegVisible = negCol.style.display !== 'none';
-          if (!isPosVisible && !isNegVisible) {
-            posCol.style.display = 'flex';
-            negCol.style.display = 'none';
-          }
+        // Check rollover and execute refresh + point adjustments if needed
+        function checkResetRollover() {
+            const now = Date.now();
+            if (now >= appState.nextReset) {
+                executeResetRollover(now);
+            }
         }
-      }
-    });
 
-    if (window.innerWidth < 768) {
-      const posCol = document.getElementById('positiveColumn');
-      const negCol = document.getElementById('negativeColumn');
-      if (posCol) posCol.style.display = 'flex';
-      if (negCol) negCol.style.display = 'none';
-    } else {
-      const posCol = document.getElementById('positiveColumn');
-      const negCol = document.getElementById('negativeColumn');
-      if (posCol) posCol.style.display = 'flex';
-      if (negCol) negCol.style.display = 'flex';
-    }
+        function executeResetRollover(nowMs) {
+            // Point adjustment for uncompleted habits
+            let pointDelta = 0;
+            appState.habits.forEach(habit => {
+                if (!habit.completed) {
+                    pointDelta -= (habit.penalty || 0);
+                }
+            });
 
-    // =========================================================================
-    // 7. UNIFIED CYCLE & COUNT LOGIC
-    // =========================================================================
-    function isLogCurrentCycle(timestampISO) {
-      if (!timestampISO) return false;
-      const logTime = new Date(timestampISO).getTime();
-      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_RESET;
-      return logTime >= lastReset;
-    }
+            appState.points = Math.max(0, appState.points + pointDelta);
 
-    function getCompletedPositiveCountToday(habitId) {
-      let count = 0;
-      appState.logs.forEach(log => {
-        if (log.category === 'positive' && isLogCurrentCycle(log.timestamp)) {
-          if (log.habitId === habitId) {
-            count++;
-          } else {
-            const matchedHabit = appState.habits.find(
-              h => h.id === habitId && h.type === 'positive' && (log.title === h.title || log.title.startsWith(`${h.title} (`))
-            );
-            if (matchedHabit) count++;
-          }
+            // Reset habit completion status for the new day
+            appState.habits.forEach(habit => {
+                habit.completed = false;
+            });
+
+            appState.lastReset = appState.nextReset;
+            
+            // Next reset is exactly 24 hours later from the previous target
+            appState.nextReset = appState.lastReset + (24 * 60 * 60 * 1000);
+            
+            saveState();
+            renderAll();
         }
-      });
-      return count;
-    }
 
-    function applyScheduledAdjustment(now) {
-      const sPoints = appState.resetConfig.scheduledPoints;
-      if (sPoints !== 0) {
-        const sTitle = (appState.resetConfig.scheduledTitle || '').trim() || 'Scheduled Daily Adjustment';
-        appState.balance += sPoints;
-        appState.logs.unshift({
-          id: 'log_sched_' + Date.now(),
-          title: sTitle,
-          delta: sPoints,
-          category: sPoints > 0 ? 'positive' : 'negative',
-          timestamp: now.toISOString()
+        function saveState() {
+            localStorage.setItem('pointquest_state', JSON.stringify(appState));
+        }
+
+        // Render UI
+        function renderAll() {
+            document.getElementById('user-points').innerText = appState.points;
+            
+            // Render Habits
+            const habitsContainer = document.getElementById('habits-list');
+            if (appState.habits.length === 0) {
+                habitsContainer.innerHTML = `<div class="text-center py-8 text-dark-muted text-sm bg-dark-card border border-dark-border rounded-xl">No active habits. Add one to get started!</div>`;
+            } else {
+                habitsContainer.innerHTML = appState.habits.map(h => `
+                    <div class="bg-dark-card border ${h.completed ? 'border-emerald-500/40 bg-emerald-500/[0.02]' : 'border-dark-border'} rounded-xl p-4 flex items-center justify-between transition group hover:border-indigo-500/50">
+                        <div class="flex items-center space-x-3.5 cursor-pointer flex-1" onclick="toggleHabit('${h.id}')">
+                            <div class="w-6 h-6 rounded-lg border ${h.completed ? 'bg-emerald-500 border-emerald-500 text-white flex items-center justify-center' : 'border-dark-border bg-dark-bg group-hover:border-indigo-400'} transition">
+                                ${h.completed ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-sm ${h.completed ? 'line-through text-dark-muted' : 'text-white'}">${escapeHtml(h.name)}</h4>
+                                <p class="text-xs text-dark-muted">${escapeHtml(h.subtext || '')}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="text-right text-xs">
+                                <span class="text-emerald-400 font-semibold">+${h.points}</span>
+                                <span class="text-dark-muted"> / </span>
+                                <span class="text-rose-400 font-semibold">-${h.penalty}</span>
+                            </div>
+                            <div class="flex items-center space-x-1 opacity-60 group-hover:opacity-100 transition">
+                                <button onclick="openEditHabitModal('${h.id}')" class="p-1.5 hover:bg-dark-border rounded-lg text-dark-muted hover:text-white transition" title="Edit Habit">
+                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteHabit('${h.id}')" class="p-1.5 hover:bg-rose-500/20 rounded-lg text-dark-muted hover:text-rose-400 transition" title="Delete Habit">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render Rewards
+            const rewardsContainer = document.getElementById('rewards-list');
+            if (appState.rewards.length === 0) {
+                rewardsContainer.innerHTML = `<div class="col-span-full text-center py-6 text-dark-muted text-sm bg-dark-card border border-dark-border rounded-xl">No rewards configured.</div>`;
+            } else {
+                rewardsContainer.innerHTML = appState.rewards.map(r => `
+                    <div class="bg-dark-card border border-dark-border rounded-xl p-4 flex items-center justify-between group hover:border-amber-500/50 transition">
+                        <div>
+                            <h4 class="font-medium text-sm text-white">${escapeHtml(r.name)}</h4>
+                            <p class="text-xs text-amber-400 font-mono font-semibold mt-0.5">${r.cost} pts</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="claimReward('${r.id}')" ${appState.points < r.cost ? 'disabled opacity-50 cursor-not-allowed' : ''} class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md shadow-amber-600/20 transition">
+                                Claim
+                            </button>
+                            <button onclick="deleteReward('${r.id}')" class="p-1.5 hover:bg-rose-500/20 rounded-lg text-dark-muted hover:text-rose-400 transition" title="Delete Reward">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Progress Bar update
+            const totalHabits = appState.habits.length;
+            const completedHabits = appState.habits.filter(h => h.completed).length;
+            const pct = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
+            document.getElementById('completion-text').innerText = `${pct}%`;
+            document.getElementById('completion-bar').style.width = `${pct}%`;
+
+            // Refresh Lucide icons
+            lucide.createIcons();
+        }
+
+        // Countdown Timer & Periodic Checker
+        setInterval(() => {
+            checkResetRollover();
+            
+            const now = Date.now();
+            const diff = appState.nextReset - now;
+            const countdownEl = document.getElementById('next-reset-countdown');
+            
+            if (diff <= 0) {
+                countdownEl.innerText = "Processing Reset...";
+                checkResetRollover();
+            } else {
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                countdownEl.innerText = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+        }, 1000);
+
+        // Habit Actions
+        function toggleHabit(id) {
+            const h = appState.habits.find(item => item.id === id);
+            if (h) {
+                const wasCompleted = h.completed;
+                h.completed = !h.completed;
+                
+                // Adjust points immediately on toggle
+                if (!wasCompleted) {
+                    appState.points += h.points;
+                } else {
+                    appState.points = Math.max(0, appState.points - h.points);
+                }
+                
+                saveState();
+                renderAll();
+            }
+        }
+
+        // Reward Actions
+        function claimReward(id) {
+            const r = appState.rewards.find(item => item.id === id);
+            if (r && appState.points >= r.cost) {
+                appState.points -= r.cost;
+                saveState();
+                renderAll();
+            }
+        }
+
+        // Settings Modal Management
+        function openSettingsModal() {
+            // Populate current reset time in UTC
+            const d = new Date(appState.nextReset);
+            const hh = String(d.getUTCHours()).padStart(2, '0');
+            const mm = String(d.getUTCMinutes()).padStart(2, '0');
+            document.getElementById('settings-reset-time').value = `${hh}:${mm}`;
+
+            // Populate Info
+            document.getElementById('info-last-reset').innerText = appState.lastReset === 0 ? 'Never (First Startup)' : new Date(appState.lastReset).toUTCString();
+            document.getElementById('info-next-reset').innerText = new Date(appState.nextReset).toUTCString();
+
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('settings-modal').classList.add('flex');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('flex');
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const timeVal = document.getElementById('settings-reset-time').value;
+            if (!timeVal) return;
+            const [hours, minutes] = timeVal.split(':').map(Number);
+            appState.resetHour = hours;
+            appState.resetMinute = minutes;
+
+            const now = Date.now();
+
+            // Check if this is first startup (lastReset === 0)
+            if (!appState.lastReset || appState.lastReset === 0) {
+                // Before any reset has fired, user has full freedom to pick any time within the next 24 hours
+                const target = new Date(Date.UTC(
+                    new Date(now).getUTCFullYear(),
+                    new Date(now).getUTCMonth(),
+                    new Date(now).getUTCDate(),
+                    hours,
+                    minutes,
+                    0,
+                    0
+                ));
+                if (target.getTime() <= now) {
+                    target.setUTCDate(target.getUTCDate() + 1);
+                }
+                appState.nextReset = target.getTime();
+            } else {
+                // Post-fire: Regardless of which time they choose, the next time it fires will be a minimum of 24 hours after the last time it fired.
+                // If the selected time today has already passed or results in < 24h from lastReset, we schedule it for that time on the appropriate future day.
+                let target = new Date(Date.UTC(
+                    new Date(appState.lastReset).getUTCFullYear(),
+                    new Date(appState.lastReset).getUTCMonth(),
+                    new Date(appState.lastReset).getUTCDate(),
+                    hours,
+                    minutes,
+                    0,
+                    0
+                ));
+
+                // Ensure it is at least 24 hours after lastReset
+                while (target.getTime() <= appState.lastReset + (24 * 60 * 60 * 1000) - 1) {
+                    target.setUTCDate(target.getUTCDate() + 1);
+                }
+                appState.nextReset = target.getTime();
+            }
+
+            saveState();
+            closeSettingsModal();
+            renderAll();
+        }
+
+        // Habit Modals
+        function openAddHabitModal() {
+            document.getElementById('habit-modal-title').innerText = 'Add Habit';
+            document.getElementById('habit-id').value = '';
+            document.getElementById('habit-name').value = '';
+            document.getElementById('habit-subtext').value = '';
+            document.getElementById('habit-points').value = '10';
+            document.getElementById('habit-penalty').value = '5';
+            document.getElementById('habit-modal').classList.remove('hidden');
+            document.getElementById('habit-modal').classList.add('flex');
+        }
+
+        function openEditHabitModal(id) {
+            const h = appState.habits.find(item => item.id === id);
+            if (!h) return;
+            document.getElementById('habit-modal-title').innerText = 'Edit Habit';
+            document.getElementById('habit-id').value = h.id;
+            document.getElementById('habit-name').value = h.name;
+            document.getElementById('habit-subtext').value = h.subtext || '';
+            document.getElementById('habit-points').value = h.points;
+            document.getElementById('habit-penalty').value = h.penalty;
+            document.getElementById('habit-modal').classList.remove('hidden');
+            document.getElementById('habit-modal').classList.add('flex');
+        }
+
+        function closeHabitModal() {
+            document.getElementById('habit-modal').classList.remove('flex');
+            document.getElementById('habit-modal').classList.add('hidden');
+        }
+
+        function handleHabitSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('habit-id').value;
+            const name = document.getElementById('habit-name').value;
+            const subtext = document.getElementById('habit-subtext').value;
+            const points = parseInt(document.getElementById('habit-points').value) || 0;
+            const penalty = parseInt(document.getElementById('habit-penalty').value) || 0;
+
+            if (id) {
+                const h = appState.habits.find(item => item.id === id);
+                if (h) {
+                    h.name = name;
+                    h.subtext = subtext;
+                    h.points = points;
+                    h.penalty = penalty;
+                }
+            } else {
+                appState.habits.push({
+                    id: 'h_' + Date.now(),
+                    name,
+                    subtext,
+                    points,
+                    penalty,
+                    completed: false
+                });
+            }
+
+            saveState();
+            closeHabitModal();
+            renderAll();
+        }
+
+        function deleteHabit(id) {
+            appState.habits = appState.habits.filter(h => h.id !== id);
+            saveState();
+            renderAll();
+        }
+
+        // Reward Modals
+        function openAddRewardModal() {
+            document.getElementById('reward-name').value = '';
+            document.getElementById('reward-cost').value = '50';
+            document.getElementById('reward-modal').classList.remove('hidden');
+            document.getElementById('reward-modal').classList.add('flex');
+        }
+
+        function closeRewardModal() {
+            document.getElementById('reward-modal').classList.remove('flex');
+            document.getElementById('reward-modal').classList.add('hidden');
+        }
+
+        function handleRewardSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('reward-name').value;
+            const cost = parseInt(document.getElementById('reward-cost').value) || 1;
+
+            appState.rewards.push({
+                id: 'r_' + Date.now(),
+                name,
+                cost
+            });
+
+            saveState();
+            closeRewardModal();
+            renderAll();
+        }
+
+        function deleteReward(id) {
+            appState.rewards = appState.rewards.filter(r => r.id !== id);
+            saveState();
+            renderAll();
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            initScheduler();
+            renderAll();
         });
-      }
-    }
-
-    function checkResetRollover() {
-      const now = new Date();
-      const lastReset = appState.resetConfig.lastResetTimestamp || EPOCH_RESET;
-
-      if (lastReset === EPOCH_RESET) {
-        // First run with epoch timestamp: set initial baseline to right now so future checks compare correctly
-        appState.resetConfig.lastResetTimestamp = now.getTime();
-        saveState();
-        return;
-      }
-
-      const nextReset = getNextResetTimestamp(appState.resetConfig, lastReset, new Date(lastReset));
-
-      if (now.getTime() >= nextReset) {
-        appState.resetConfig.lastResetTimestamp = now.getTime();
-        appState.logs = [];
-        applyScheduledAdjustment(now);
-
-        saveState();
-        renderAll();
-        showToast('🌅 Daily habits & ledger have refreshed for the new reset cycle!', 'info');
-      }
-    }
-
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        checkResetRollover();
-        renderAll();
-      }
-    });
-
-    setInterval(() => {
-      checkResetRollover();
-    }, 10000);
-
-    window.addEventListener('storage', (event) => {
-      if (event.key === STORAGE_KEY && event.newValue) {
-        appState = loadState();
-        renderAll();
-      }
-    });
-
-    function formatTimestamp(isoString) {
-      if (!isoString) return '';
-      try {
-        const date = new Date(isoString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
-      } catch (e) {
-        return '';
-      }
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function openBackupModal() {
-      const modal = document.getElementById('backupModal');
-      const textarea = document.getElementById('exportTextarea');
-      if (textarea) {
-        textarea.value = JSON.stringify(appState, null, 2);
-      }
-      if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-      }
-    }
-
-    function closeBackupModal() {
-      const modal = document.getElementById('backupModal');
-      if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-      }
-    }
-
-    function copyBackupData() {
-      const textarea = document.getElementById('exportTextarea');
-      if (!textarea) return;
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast('Backup JSON copied to clipboard!', 'success');
-      } catch (err) {
-        showToast('Failed to copy to clipboard', 'danger');
-      }
-    }
-
-    function importBackupData() {
-      const textarea = document.getElementById('importTextarea');
-      if (!textarea) return;
-      const raw = textarea.value.trim();
-      if (!raw) {
-        showToast('Please paste valid backup JSON first.', 'info');
-        return;
-      }
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.habits)) {
-          appState = parsed;
-          saveState();
-          renderAll();
-          closeBackupModal();
-          showToast('Successfully restored backup data!', 'success');
-        } else {
-          showToast('Invalid backup JSON structure.', 'danger');
-        }
-      } catch (err) {
-        showToast('Failed to parse JSON backup.', 'danger');
-      }
-    }
-
-    function handleFactoryReset() {
-      if (confirm('Are you sure you want to reset all habits and progress to defaults?')) {
-        appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-        saveState();
-        checkResetRollover();
-        renderAll();
-        closeBackupModal();
-        showToast('Reset to default habits & settings.', 'info');
-      }
-    }
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      if (!container) return;
-
-      const toast = document.createElement('div');
-      let bgClass = 'bg-slate-900 border-slate-700 text-slate-100';
-      if (type === 'success') bgClass = 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200';
-      else if (type === 'danger') bgClass = 'bg-rose-950/90 border-rose-500/40 text-rose-200';
-      else if (type === 'reward') bgClass = 'bg-amber-950/90 border-amber-500/40 text-amber-200';
-
-      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-xl text-xs font-medium toast-enter backdrop-blur-md ${bgClass}`;
-      toast.textContent = message;
-
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        toast.style.transition = 'all 0.25s ease';
-        setTimeout(() => toast.remove(), 250);
-      }, 3000);
-    }
-
-    function animateBalanceChange(delta) {
-      const container = document.getElementById('floatingDeltaContainer');
-      if (!container) return;
-
-      const badge = document.createElement('div');
-      badge.className = `text-xs font-extrabold px-2 py-0.5 rounded-lg shadow-lg animate-float-score ${
-        delta > 0 ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
-      }`;
-      badge.textContent = delta > 0 ? `+${delta}` : delta;
-
-      container.appendChild(badge);
-      setTimeout(() => badge.remove(), 850);
-    }
-
-    // Initialize UI on load & check daily reset rollover
-    renderAll();
-  </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js');
-      });
-    }
-  </script>
+    </script>
 </body>
 </html>
