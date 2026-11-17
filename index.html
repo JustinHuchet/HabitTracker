@@ -675,6 +675,7 @@
     // 2. CORE POINT & HABIT ACTIONS
     // =========================================================================
     function triggerHabit(habitId, sourceLabel = '') {
+      checkResetRollover(); // Always verify reset cycle before action
       const habit = appState.habits.find(h => h.id === habitId);
       if (!habit) return;
 
@@ -725,6 +726,7 @@
     }
 
     function redeemReward(rewardId) {
+      checkResetRollover();
       const reward = appState.rewards.find(r => r.id === rewardId);
       if (!reward) return;
 
@@ -1236,6 +1238,7 @@
     // 4. RENDERING FUNCTIONS
     // =========================================================================
     function renderAll() {
+      checkResetRollover();
       renderHeaderStats();
       renderHabits();
       renderRewards();
@@ -1759,42 +1762,26 @@
     }
 
     // =========================================================================
-    // 5. RESET TIME & SCHEDULED POINTS CONFIGURATION (UTC MODE)
+    // 5. BULLETPROOF RESET TIME & SCHEDULED POINTS CONFIGURATION (UTC MODE)
     // =========================================================================
-    function getNextResetTimestamp(config, lastResetTimestamp, now = new Date()) {
+    function getNextResetTimestamp(config, now = new Date()) {
       const timeStr = (config && config.time) || '07:00';
       const [rHour, rMin] = timeStr.split(':').map(Number);
       const nowMs = now.getTime();
-
-      if (!lastResetTimestamp || lastResetTimestamp === 0) {
-        const year = now.getUTCFullYear();
-        const month = now.getUTCMonth();
-        const day = now.getUTCDate();
-        let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-        if (nowMs >= target) {
-          target += 24 * 60 * 60 * 1000;
-        }
-        return target;
-      } else {
-        let lastDate = new Date(lastResetTimestamp);
-        let candidateTime = Date.UTC(
-          lastDate.getUTCFullYear(),
-          lastDate.getUTCMonth(),
-          lastDate.getUTCDate(),
-          rHour, rMin || 0, 0
-        );
-
-        while (candidateTime <= lastResetTimestamp || candidateTime < nowMs) {
-          candidateTime += 24 * 60 * 60 * 1000;
-        }
-        return candidateTime;
+      const year = now.getUTCFullYear();
+      const month = now.getUTCMonth();
+      const day = now.getUTCDate();
+      let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
+      if (nowMs >= target) {
+        target += 24 * 60 * 60 * 1000;
       }
+      return target;
     }
 
     function updateNextRefreshPreview() {
       const timeInputVal = document.getElementById('resetTimeInput').value || '07:00';
       const tempConfig = { ...appState.resetConfig, time: timeInputVal };
-      const nextTs = getNextResetTimestamp(tempConfig, appState.resetConfig.lastResetTimestamp, new Date());
+      const nextTs = getNextResetTimestamp(tempConfig, new Date());
       const dateObj = new Date(nextTs);
       const formatted = dateObj.toUTCString();
       const labelEl = document.getElementById('nextRefreshTimeLabel');
@@ -1854,7 +1841,7 @@
       appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
 
       const now = new Date();
-      appState.resetConfig.lastResetTimestamp = now.getTime() - 1000; // force past
+      appState.resetConfig.lastResetTimestamp = now.getTime() - 86400000; // force past
       appState.logs = [];
       applyScheduledAdjustment(now);
 
@@ -1944,29 +1931,27 @@
     }
 
     // =========================================================================
-    // 7. ROBUST DETERMINISTIC CYCLE & COUNT LOGIC (UTC)
+    // 7. BULLETPROOF CYCLE & COUNT LOGIC (UTC)
     // =========================================================================
     function getCurrentCycleStartTime(dateObj = new Date()) {
-      if (!appState.resetConfig.lastResetTimestamp || appState.resetConfig.lastResetTimestamp === 0) {
-        const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
-        const [rHour, rMin] = timeStr.split(':').map(Number);
-        const year = dateObj.getUTCFullYear();
-        const month = dateObj.getUTCMonth();
-        const day = dateObj.getUTCDate();
-        const todayReset = new Date(Date.UTC(year, month, day, rHour, rMin || 0, 0));
-        if (dateObj.getTime() >= todayReset.getTime()) {
-          return todayReset;
-        } else {
-          return new Date(todayReset.getTime() - 24 * 60 * 60 * 1000);
-        }
+      const timeStr = (appState.resetConfig && appState.resetConfig.time) || '07:00';
+      const [rHour, rMin] = timeStr.split(':').map(Number);
+      const year = dateObj.getUTCFullYear();
+      const month = dateObj.getUTCMonth();
+      const day = dateObj.getUTCDate();
+      const todayReset = Date.UTC(year, month, day, rHour, rMin || 0, 0);
+      
+      if (dateObj.getTime() >= todayReset) {
+        return todayReset;
+      } else {
+        return todayReset - 24 * 60 * 60 * 1000;
       }
-      return new Date(appState.resetConfig.lastResetTimestamp);
     }
 
     function isLogCurrentCycle(timestampISO) {
       if (!timestampISO) return false;
       const logTime = new Date(timestampISO).getTime();
-      const cycleStart = getCurrentCycleStartTime(new Date()).getTime();
+      const cycleStart = getCurrentCycleStartTime(new Date());
       return logTime >= cycleStart;
     }
 
@@ -2004,10 +1989,20 @@
 
     function checkResetRollover() {
       const now = new Date();
-      const nextReset = getNextResetTimestamp(appState.resetConfig, appState.resetConfig.lastResetTimestamp, now);
+      const nowMs = now.getTime();
+      const currentCycleStart = getCurrentCycleStartTime(now);
+      const lastReset = appState.resetConfig.lastResetTimestamp || 0;
 
-      if (now.getTime() >= nextReset) {
-        appState.resetConfig.lastResetTimestamp = nextReset;
+      // If lastReset is 0 (brand new app), initialize it to current cycle start without triggering duplicate reward
+      if (lastReset === 0) {
+        appState.resetConfig.lastResetTimestamp = currentCycleStart;
+        saveState();
+        return;
+      }
+
+      // If we have entered a new cycle, trigger reset
+      if (lastReset < currentCycleStart) {
+        appState.resetConfig.lastResetTimestamp = currentCycleStart;
         appState.logs = [];
         applyScheduledAdjustment(now);
 
@@ -2020,9 +2015,14 @@
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
         checkResetRollover();
+        renderAll();
       }
     });
-    setInterval(checkResetRollover, 20000);
+
+    // High frequency check every 10 seconds
+    setInterval(() => {
+      checkResetRollover();
+    }, 10000);
 
     window.addEventListener('storage', (event) => {
       if (event.key === STORAGE_KEY && event.newValue) {
@@ -2156,7 +2156,6 @@
 
     // Initialize UI on load & check daily reset rollover
     renderAll();
-    checkResetRollover();
   </script>
   <script>
     if ('serviceWorker' in navigator) {
