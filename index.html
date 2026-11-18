@@ -11,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script>
+    // Prevent browser from restoring previous scroll position on refresh
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
     tailwind.config = {
       darkMode: 'class',
       theme: {
@@ -31,7 +36,7 @@
   </script>
   <style>
     :root {
-      --header-height: 140px;
+      --header-height: 100px;
     }
 
     body {
@@ -76,114 +81,106 @@
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white pb-20">
 
-  <!-- Top Navigation & Live Balance Sticky Header -->
+  <!-- Compact Top Sticky Header -->
   <header id="mainHeader" class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-xl">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
+      <div class="flex items-center justify-between gap-2">
         
-        <!-- Brand & Live Balance -->
-        <div class="flex items-center justify-between md:justify-start gap-4">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <!-- Brand & Live Balance Pill -->
+        <div class="flex items-center gap-2.5 sm:gap-4">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-400 flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <div>
-              <h1 class="text-base sm:text-lg font-bold tracking-tight text-white leading-none">PointQuest</h1>
-              <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">Earn Discipline. Buy Freedom.</p>
+            <div class="hidden xs:block">
+              <h1 class="text-sm sm:text-base font-bold tracking-tight text-white leading-none">PointQuest</h1>
+              <p class="text-[10px] text-slate-400 mt-0.5">Earn Discipline</p>
             </div>
           </div>
 
-          <!-- Live Point Counter Pill -->
-          <div class="relative flex items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl px-3.5 py-1.5 sm:px-4 sm:py-2 shadow-inner">
-            <div>
-              <span class="block text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-slate-400">Available Balance</span>
-              <div class="flex items-baseline gap-1.5">
-                <span id="liveBalance" class="text-xl sm:text-3xl font-extrabold tracking-tight text-white">0</span>
-                <span class="text-[11px] sm:text-xs font-semibold text-indigo-400">PTS</span>
-              </div>
+          <!-- Live Balance Counter -->
+          <div class="relative flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-1 sm:px-3.5 sm:py-1.5 shadow-inner">
+            <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400 hidden sm:inline">Balance:</span>
+            <div class="flex items-baseline gap-1">
+              <span id="liveBalance" class="text-lg sm:text-2xl font-extrabold tracking-tight text-white">0</span>
+              <span class="text-[10px] font-semibold text-indigo-400">PTS</span>
             </div>
             <div id="floatingDeltaContainer" class="pointer-events-none absolute -top-2 right-2"></div>
           </div>
+
+          <!-- Today's Mini Stats -->
+          <div class="hidden md:flex items-center gap-2 bg-slate-900/50 border border-slate-800/80 rounded-xl px-3 py-1.5 text-xs">
+            <div class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span class="text-slate-400">Today:</span>
+              <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
+            </div>
+            <span class="text-slate-700">|</span>
+            <div class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+              <span class="text-slate-400">Penalties:</span>
+              <span id="todayLost" class="font-bold text-rose-400">-0</span>
+            </div>
+            <span class="text-slate-700">|</span>
+            <div class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <span class="text-slate-400">Spent:</span>
+              <span id="todaySpent" class="font-bold text-amber-400">0</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Daily Stats & Action Controls -->
-        <div class="flex flex-col md:items-end gap-2">
-          <!-- Top Row: Today's Stats & Action Buttons -->
-          <div class="flex items-center justify-between md:justify-end gap-2">
-            <!-- Today's Stats -->
-            <div class="flex items-center gap-2.5 sm:gap-3 bg-slate-900/60 border border-slate-800/80 rounded-xl px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span class="text-slate-400">Today:</span>
-                <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
-              </div>
-              <span class="text-slate-700">|</span>
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                <span class="text-slate-400">Penalties:</span>
-                <span id="todayLost" class="font-bold text-rose-400">-0</span>
-              </div>
-              <span class="text-slate-700 hidden sm:inline">|</span>
-              <div class="hidden sm:flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                <span class="text-slate-400">Spent:</span>
-                <span id="todaySpent" class="font-bold text-amber-400">0</span>
-              </div>
-            </div>
+        <!-- Action Controls & Quick Buttons -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- 1-Time Point Adjustment Quick Button -->
+          <button
+            onclick="openManualAdjustmentModal()"
+            title="Apply 1-Time Point Adjustment"
+            class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-indigo-300 transition-all active:scale-95 cursor-pointer flex items-center gap-1 text-xs font-semibold"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="hidden sm:inline">+/- Adj</span>
+          </button>
 
-            <!-- 1-Time Point Adjustment Quick Button -->
-            <button
-              onclick="openManualAdjustmentModal()"
-              title="Apply 1-Time Point Adjustment (Bonus or Penalty)"
-              class="p-2 sm:p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-indigo-300 transition-all active:scale-95 cursor-pointer shrink-0 flex items-center gap-1 text-xs font-semibold px-3"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span class="hidden sm:inline">+/- Adj</span>
-            </button>
+          <!-- Scheduler Button -->
+          <button
+            onclick="openResetConfigModal()"
+            title="Configure Habit Refresh Time & Scheduled Points"
+            class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer flex items-center gap-1 text-xs font-semibold"
+          >
+            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="hidden lg:inline">Scheduler</span>
+          </button>
 
-            <!-- Backup / Settings Gear Button -->
-            <button
-              onclick="openBackupModal()"
-              title="Backup, Restore, or Reset Data"
-              class="p-2 sm:p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer shrink-0"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-          </div>
+          <!-- Editor Button -->
+          <button
+            id="toggleEditHabitsBtn"
+            onclick="toggleEditHabitsMode()"
+            class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span id="toggleEditHabitsLabel">Editor</span>
+          </button>
 
-          <!-- Bottom Row: Scheduler & Editor Buttons -->
-          <div class="flex items-center justify-end gap-2 w-full">
-            <!-- Scheduler Button -->
-            <button
-              onclick="openResetConfigModal()"
-              title="Configure Habit Refresh Time & Scheduled Points"
-              class="flex-1 sm:flex-initial p-2 sm:p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold px-3"
-            >
-              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Scheduler</span>
-            </button>
-
-            <!-- Editor Button -->
-            <button
-              id="toggleEditHabitsBtn"
-              onclick="toggleEditHabitsMode()"
-              class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer"
-            >
-              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span id="toggleEditHabitsLabel">Editor</span>
-            </button>
-          </div>
+          <!-- Backup / Settings Gear Button -->
+          <button
+            onclick="openBackupModal()"
+            title="Backup, Restore, or Reset Data"
+            class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer shrink-0"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
         </div>
 
       </div>
@@ -191,22 +188,22 @@
   </header>
 
   <!-- Main Dashboard Grid -->
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-6 space-y-8">
+  <main class="max-w-6xl mx-auto px-3 sm:px-6 pt-5 space-y-6">
 
     <!-- Section 1: Actions & Habits (Positive vs Negative) -->
     <section aria-labelledby="habits-heading">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
         
         <!-- Positive Habits Column -->
-        <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col shadow-xl shadow-black/20">
+        <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
           <div>
-            <!-- Sticky Positive Habits Header (Includes Mobile Tab Switcher) -->
-            <div id="positiveColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
+            <!-- Sticky Positive Habits Header (Consistent Design & Mobile Tab Switcher) -->
+            <div id="positiveColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
-                  <span class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-base">+</span>
+                  <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">+</div>
                   <div>
-                    <h3 class="text-sm font-bold text-emerald-300">Positive Habits</h3>
+                    <h2 id="habits-heading" class="text-sm font-bold text-white">Positive Habits</h2>
                     <p class="text-[11px] text-slate-400">Build momentum & stack points</p>
                   </div>
                 </div>
@@ -268,15 +265,15 @@
         </div>
 
         <!-- Negative Habits / Penalties Column -->
-        <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 flex flex-col shadow-xl shadow-black/25">
+        <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
           <div>
-            <!-- Sticky Penalties Header (Includes Mobile Tab Switcher) -->
-            <div id="negativeColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-3">
+            <!-- Sticky Penalties Header (Consistent Design & Mobile Tab Switcher) -->
+            <div id="negativeColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
-                  <span class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-base">−</span>
+                  <div class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-sm shrink-0">−</div>
                   <div>
-                    <h3 class="text-sm font-bold text-rose-300">Penalties</h3>
+                    <h2 class="text-sm font-bold text-white">Penalties</h2>
                     <p class="text-[11px] text-slate-400">Hold yourself accountable</p>
                   </div>
                 </div>
@@ -341,29 +338,29 @@
     </section>
 
     <!-- Section 2: Reward Store -->
-    <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/25">
-      <!-- Sticky Reward Store Header -->
-      <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-5 border-b border-slate-800/80 rounded-t-2xl">
+    <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
+      <!-- Sticky Reward Store Header (Consistent Design) -->
+      <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
               </svg>
             </div>
             <div>
-              <h2 id="rewards-heading" class="text-lg font-bold text-white flex items-center gap-2">
+              <h2 id="rewards-heading" class="text-sm font-bold text-white flex items-center gap-2">
                 <span>Reward Store</span>
-                <span id="rewardsModeBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">Redeem</span>
+                <span id="rewardsModeBadge" class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Redeem</span>
               </h2>
-              <p id="rewardsSubtitle" class="text-xs text-slate-400">Cash in your hard-earned points for guilt-free fun.</p>
+              <p id="rewardsSubtitle" class="text-[11px] text-slate-400">Cash in your hard-earned points for guilt-free fun.</p>
             </div>
           </div>
 
           <button
             id="addRewardBtnEl"
             onclick="toggleForm('rewardForm')"
-            class="hidden self-start sm:self-auto text-xs font-semibold px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer"
+            class="hidden self-start sm:self-auto text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer"
           >
             + Add Custom Reward
           </button>
@@ -371,7 +368,7 @@
       </div>
 
       <!-- Add Custom Reward Form -->
-      <form id="rewardForm" onsubmit="handleAddReward(event)" class="hidden mb-5 p-4 rounded-xl bg-slate-950/80 border border-amber-500/30">
+      <form id="rewardForm" onsubmit="handleAddReward(event)" class="hidden mb-4 p-4 rounded-xl bg-slate-950/80 border border-amber-500/30">
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <input
             type="text"
@@ -401,17 +398,24 @@
       </form>
 
       <!-- Rewards Grid -->
-      <div id="rewardStoreGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      <div id="rewardStoreGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
     </section>
 
     <!-- Section 3: Today's Activities -->
-    <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl shadow-black/25">
-      <!-- Sticky Today's Activities Header -->
-      <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+    <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
+      <!-- Sticky Activity Feed Header (Consistent Design) -->
+      <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 id="log-heading" class="text-lg font-bold text-white">Activity Feed (Past 7 Days)</h2>
-            <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards. Click an entry to select it.</p>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 id="log-heading" class="text-sm font-bold text-white">Activity Feed (Past 7 Days)</h2>
+              <p class="text-[11px] text-slate-400">Recent earned points, penalties, and redeemed rewards.</p>
+            </div>
           </div>
           <div class="flex items-center gap-2">
             <button
@@ -446,7 +450,7 @@
       </div>
 
       <p class="text-xs text-slate-400 leading-relaxed">
-        Instantly add bonus points or apply a one-time penalty adjustment directly to your balance and today's activity log.
+        Instantly add bonus points or apply a one-time penalty adjustment directly to your balance and activity log.
       </p>
 
       <form onsubmit="handleManualAdjustment(event)" class="space-y-3.5">
@@ -989,19 +993,19 @@
       const rewardForm = document.getElementById('rewardForm');
 
       if (isEditingHabits) {
-        if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer';
+        if (btn) btn.className = 'inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer';
         if (label) label.textContent = 'Done';
         if (addPosBtn) addPosBtn.classList.remove('hidden');
         if (addNegBtn) addNegBtn.classList.remove('hidden');
 
         if (rewardsBadge) {
           rewardsBadge.textContent = 'Edit Mode';
-          rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+          rewardsBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
         }
         if (rewardsSubtitle) rewardsSubtitle.textContent = 'Click any reward to edit its details.';
         if (addRewardBtnEl) addRewardBtnEl.classList.remove('hidden');
       } else {
-        if (btn) btn.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer';
+        if (btn) btn.className = 'inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer';
         if (label) label.textContent = 'Editor';
         if (addPosBtn) addPosBtn.classList.add('hidden');
         if (addNegBtn) addNegBtn.classList.add('hidden');
@@ -1010,7 +1014,7 @@
 
         if (rewardsBadge) {
           rewardsBadge.textContent = 'Redeem';
-          rewardsBadge.className = 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300';
+          rewardsBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300';
         }
         if (rewardsSubtitle) rewardsSubtitle.textContent = 'Cash in your hard-earned points for guilt-free fun.';
         if (addRewardBtnEl) addRewardBtnEl.classList.add('hidden');
@@ -1363,14 +1367,19 @@
       renderHabits();
       renderRewards();
       renderLogs();
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       setTimeout(updateHeaderHeightOffset, 50);
     }
+
+    window.addEventListener('load', () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      renderAll();
+    });
 
     function renderHeaderStats() {
       const balanceEl = document.getElementById('liveBalance');
       balanceEl.textContent = appState.balance;
-      balanceEl.className = `text-xl sm:text-3xl font-extrabold tracking-tight ${
+      balanceEl.className = `text-lg sm:text-2xl font-extrabold tracking-tight ${
         appState.balance < 0 ? 'text-rose-400' : 'text-white'
       }`;
 
@@ -1386,10 +1395,14 @@
         }
       });
 
-      document.getElementById('todayEarned').textContent = `+${earnedToday}`;
-      document.getElementById('todayLost').textContent = `-${lostToday}`;
-      document.getElementById('todaySpent').textContent = `${spentToday}`;
-      document.getElementById('undoLastBtn').disabled = appState.logs.length === 0;
+      const earnedEl = document.getElementById('todayEarned');
+      const lostEl = document.getElementById('todayLost');
+      const spentEl = document.getElementById('todaySpent');
+      if (earnedEl) earnedEl.textContent = `+${earnedToday}`;
+      if (lostEl) lostEl.textContent = `-${lostToday}`;
+      if (spentEl) spentEl.textContent = `${spentToday}`;
+      const undoBtn = document.getElementById('undoLastBtn');
+      if (undoBtn) undoBtn.disabled = appState.logs.length === 0;
     }
 
     function renderHabits() {
@@ -1516,7 +1529,7 @@
           return `
             <div
               onclick="${isPositive ? `handleHabitClickInEditMode('${h.id}')` : `startInlineEditHabit(event, '${h.id}')`}"
-              class="group flex items-center justify-between gap-2 px-4 h-[64px] ${
+              class="group flex items-center justify-between gap-2 px-4 h-[60px] ${
                 inGroup ? '' : 'rounded-xl bg-slate-950/90 border border-indigo-500/40'
               } ${
                 isBeingPaired
@@ -1557,12 +1570,12 @@
                   ${showSubtext ? `
                     <div class="flex flex-col justify-center">
                       <div class="flex items-center gap-1.5 flex-wrap">
-                        <span class="text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
+                        <span class="text-xs sm:text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
                       </div>
                       <span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>
                     </div>
                   ` : `
-                    <span class="text-sm font-medium text-slate-200 truncate block">${escapeHtml(h.title)}</span>
+                    <span class="text-xs sm:text-sm font-medium text-slate-200 truncate block">${escapeHtml(h.title)}</span>
                   `}
                 </div>
               </div>
@@ -1601,16 +1614,16 @@
         return `
           <div
             onclick="triggerHabit('${h.id}')"
-            class="group flex items-center justify-between px-4 h-[64px] ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
+            class="group flex items-center justify-between px-4 h-[60px] ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
           >
             <div class="flex items-center gap-3 min-w-0 pr-2 flex-1">
-              <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
                 ${isPositive ? '+' : '−'}
               </div>
               <div class="min-w-0 flex-1">
                 ${showSubtext || showProgress ? `
                   <div class="flex flex-col justify-center">
-                    <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
+                    <span class="text-xs sm:text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
                     ${showSubtext ? `
                       <span class="text-[11px] text-slate-400 block truncate mt-0.5">
                         ${escapeHtml(h.subtext)}
@@ -1622,7 +1635,7 @@
                     ` : ''}
                   </div>
                 ` : `
-                  <span class="text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
+                  <span class="text-xs sm:text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
                 `}
               </div>
             </div>
@@ -1789,14 +1802,14 @@
             canAfford ? 'border-amber-500/40 shadow-lg shadow-amber-500/5' : 'border-slate-800'
           } transition-all">
             <div>
-              <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xl mb-3">
+              <div class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-lg mb-2.5">
                 ${reward.icon || '🎁'}
               </div>
-              <h3 class="text-sm font-bold text-white pr-2 leading-snug">${escapeHtml(reward.title)}</h3>
+              <h3 class="text-xs sm:text-sm font-bold text-white pr-2 leading-snug">${escapeHtml(reward.title)}</h3>
               <p class="text-xs font-semibold text-amber-400 mt-1">${reward.cost} PTS</p>
             </div>
 
-            <div class="mt-4 space-y-2.5">
+            <div class="mt-3.5 space-y-2">
               <div class="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden">
                 <div
                   class="h-full rounded-full transition-all duration-300 ${canAfford ? 'bg-amber-400' : 'bg-indigo-500/60'}"
@@ -1806,7 +1819,7 @@
 
               <button
                 onclick="redeemReward('${reward.id}')"
-                class="w-full py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer ${
+                class="w-full py-1.5 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer ${
                   canAfford
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-md shadow-amber-500/20'
                     : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800'
@@ -1829,7 +1842,6 @@
         return;
       }
 
-      // Group logs by date string (e.g. "Today", "Yesterday", or formatted date)
       const groups = {};
       const todayStr = new Date().toDateString();
       const yesterdayDate = new Date();
@@ -2056,22 +2068,7 @@
       }
 
       requestAnimationFrame(() => {
-        const mainHeader = document.getElementById('mainHeader');
-        const activeHeader = document.getElementById(tab === 'positive' ? 'positiveColumnHeader' : 'negativeColumnHeader');
-        const activeList = document.getElementById(tab === 'positive' ? 'positiveHabitList' : 'negativeHabitList');
-
-        if (activeList) {
-          const mainHeaderHeight = mainHeader ? mainHeader.offsetHeight : 0;
-          const sectionHeaderHeight = activeHeader ? activeHeader.offsetHeight : 0;
-          const marginSpacing = 16;
-          const listTop = activeList.getBoundingClientRect().top + window.scrollY;
-          const targetScrollY = Math.max(0, listTop - mainHeaderHeight - sectionHeaderHeight - marginSpacing);
-
-          window.scrollTo({
-            top: targetScrollY,
-            behavior: 'smooth'
-          });
-        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
 
@@ -2360,9 +2357,6 @@
       container.appendChild(badge);
       setTimeout(() => badge.remove(), 850);
     }
-
-    // Initialize UI on load & check daily reset rollover
-    renderAll();
   </script>
   <script>
     if ('serviceWorker' in navigator) {
