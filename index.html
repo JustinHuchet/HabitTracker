@@ -410,8 +410,8 @@
       <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-5 -mt-5 p-5 sm:-mx-6 sm:-mt-6 sm:p-6 mb-4 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 id="log-heading" class="text-lg font-bold text-white">Today's Activities</h2>
-            <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards for today. Click an entry to select it.</p>
+            <h2 id="log-heading" class="text-lg font-bold text-white">Activity Feed (Past 7 Days)</h2>
+            <p class="text-xs text-slate-400">Recent earned points, penalties, and redeemed rewards. Click an entry to select it.</p>
           </div>
           <div class="flex items-center gap-2">
             <button
@@ -428,7 +428,7 @@
         </div>
       </div>
 
-      <div id="activityLogList" class="space-y-2"></div>
+      <div id="activityLogList" class="space-y-4"></div>
     </section>
 
   </main>
@@ -1345,7 +1345,19 @@
     // =========================================================================
     // 4. RENDERING FUNCTIONS
     // =========================================================================
+    function cleanExpiredLogs() {
+      const nowMs = Date.now();
+      const cutoffMs = nowMs - (7 * 24 * 60 * 60 * 1000); // 7 days ago
+      if (Array.isArray(appState.logs)) {
+        appState.logs = appState.logs.filter(log => {
+          if (!log.timestamp) return false;
+          return new Date(log.timestamp).getTime() >= cutoffMs;
+        });
+      }
+    }
+
     function renderAll() {
+      cleanExpiredLogs();
       checkResetRollover();
       renderHeaderStats();
       renderHabits();
@@ -1810,60 +1822,100 @@
 
     function renderLogs() {
       const container = document.getElementById('activityLogList');
-      if (appState.logs.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No activity recorded for today yet. Complete a habit above to earn points!</p>`;
+      if (!container) return;
+
+      if (!Array.isArray(appState.logs) || appState.logs.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">No activity recorded yet. Complete a habit above to earn points!</p>`;
         return;
       }
 
-      container.innerHTML = appState.logs.slice(0, 40).map(log => {
-        const isPos = log.delta > 0;
-        const isRedeem = log.category === 'redeem';
-        const badgeClass = isPos
-          ? 'bg-emerald-500/15 text-emerald-300'
-          : isRedeem
-          ? 'bg-amber-500/15 text-amber-300'
-          : 'bg-rose-500/15 text-rose-300';
+      // Group logs by date string (e.g. "Today", "Yesterday", or formatted date)
+      const groups = {};
+      const todayStr = new Date().toDateString();
+      const yesterdayDate = new Date();
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = yesterdayDate.toDateString();
 
-        const dotClass = isPos
-          ? 'bg-emerald-400'
-          : isRedeem
-          ? 'bg-amber-400'
-          : 'bg-rose-400';
+      appState.logs.forEach(log => {
+        if (!log.timestamp) return;
+        const d = new Date(log.timestamp);
+        const dStr = d.toDateString();
+        let groupKey = dStr;
+        if (dStr === todayStr) groupKey = 'Today';
+        else if (dStr === yesterdayStr) groupKey = 'Yesterday';
+        else {
+          groupKey = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        }
 
-        const timeLabel = formatTimestamp(log.timestamp);
-        const isSelected = selectedLogId === log.id;
+        if (!groups[groupKey]) groups[groupKey] = [];
+        groups[groupKey].push(log);
+      });
 
-        return `
-          <div
-            onclick="toggleLogSelect('${log.id}')"
-            class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/60 border ${
-              isSelected ? 'border-indigo-500 ring-1 ring-indigo-500/30 bg-slate-900/80' : 'border-slate-800/80 hover:border-slate-700'
-            } transition cursor-pointer select-none"
-          >
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="w-2 h-2 rounded-full shrink-0 ${dotClass}"></span>
-              <div class="min-w-0">
-                <p class="text-xs font-medium text-slate-200 truncate">${escapeHtml(log.title)}</p>
-                <p class="text-[10px] text-slate-500">${timeLabel}</p>
+      const groupKeys = Object.keys(groups);
+      container.innerHTML = groupKeys.map((groupKey, gIdx) => {
+        const logsInGroup = groups[groupKey];
+        const logsHtml = logsInGroup.map(log => {
+          const isPos = log.delta > 0;
+          const isRedeem = log.category === 'redeem';
+          const badgeClass = isPos
+            ? 'bg-emerald-500/15 text-emerald-300'
+            : isRedeem
+            ? 'bg-amber-500/15 text-amber-300'
+            : 'bg-rose-500/15 text-rose-300';
+
+          const dotClass = isPos
+            ? 'bg-emerald-400'
+            : isRedeem
+            ? 'bg-amber-400'
+            : 'bg-rose-400';
+
+          const timeLabel = formatTimestampTimeOnly(log.timestamp);
+          const isSelected = selectedLogId === log.id;
+
+          return `
+            <div
+              onclick="toggleLogSelect('${log.id}')"
+              class="group flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/60 border ${
+                isSelected ? 'border-indigo-500 ring-1 ring-indigo-500/30 bg-slate-900/80' : 'border-slate-800/80 hover:border-slate-700'
+              } transition cursor-pointer select-none"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="w-2 h-2 rounded-full shrink-0 ${dotClass}"></span>
+                <div class="min-w-0">
+                  <p class="text-xs font-medium text-slate-200 truncate">${escapeHtml(log.title)}</p>
+                  <p class="text-[10px] text-slate-500">${timeLabel}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2.5 shrink-0 ml-2">
+                <span class="px-2 py-0.5 rounded-md text-xs font-bold ${badgeClass}">
+                  ${isPos ? '+' : ''}${log.delta} pts
+                </span>
+                ${isSelected ? `
+                  <button
+                    type="button"
+                    onclick="event.stopPropagation(); removeSingleLog('${log.id}')"
+                    title="Delete this entry"
+                    class="p-1 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 hover:text-rose-300 transition cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                ` : ''}
               </div>
             </div>
+          `;
+        }).join('');
 
-            <div class="flex items-center gap-2.5 shrink-0 ml-2">
-              <span class="px-2 py-0.5 rounded-md text-xs font-bold ${badgeClass}">
-                ${isPos ? '+' : ''}${log.delta} pts
-              </span>
-              ${isSelected ? `
-                <button
-                  type="button"
-                  onclick="event.stopPropagation(); removeSingleLog('${log.id}')"
-                  title="Delete this entry"
-                  class="p-1 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 hover:text-rose-300 transition cursor-pointer"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              ` : ''}
+        return `
+          ${gIdx > 0 ? '<div class="border-t border-slate-800/80 my-3"></div>' : ''}
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1 pt-1">
+              ${groupKey}
+            </div>
+            <div class="space-y-2">
+              ${logsHtml}
             </div>
           </div>
         `;
@@ -1966,7 +2018,6 @@
       const now = new Date();
       appState.resetConfig.lastResetTimestamp = now.getTime();
       appState.resetConfig.hasRefreshedOnce = true;
-      appState.logs = [];
       applyScheduledAdjustment(now);
 
       saveState();
@@ -2108,11 +2159,10 @@
         if (now.getTime() >= targetToday) {
           config.lastResetTimestamp = now.getTime();
           config.hasRefreshedOnce = true;
-          appState.logs = [];
           applyScheduledAdjustment(now);
           saveState();
           renderAll();
-          showToast('🌅 Initial daily habits & ledger refreshed!', 'info');
+          showToast('🌅 Initial daily reset triggered!', 'info');
         }
         return;
       }
@@ -2120,12 +2170,11 @@
       const nextReset = getNextResetTimestamp(config, now);
       if (now.getTime() >= nextReset) {
         config.lastResetTimestamp = now.getTime();
-        appState.logs = [];
         applyScheduledAdjustment(now);
 
         saveState();
         renderAll();
-        showToast('🌅 Daily habits & ledger have refreshed for the new reset cycle!', 'info');
+        showToast('🌅 Daily reset triggered for the new cycle!', 'info');
       }
     }
 
@@ -2147,11 +2196,11 @@
       }
     });
 
-    function formatTimestamp(isoString) {
+    function formatTimestampTimeOnly(isoString) {
       if (!isoString) return '';
       try {
         const date = new Date(isoString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       } catch (e) {
         return '';
       }
