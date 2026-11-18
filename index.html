@@ -86,8 +86,8 @@
     <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
       <div class="flex items-center justify-between gap-2">
         
-        <!-- Brand & Live Balance Pill -->
-        <div class="flex items-center gap-2.5 sm:gap-4">
+        <!-- Brand, Live Balance Pill & Today Stats -->
+        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-400 flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
               <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -101,32 +101,32 @@
           </div>
 
           <!-- Live Balance Counter -->
-          <div class="relative flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-1 sm:px-3.5 sm:py-1.5 shadow-inner">
+          <div class="relative flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1 sm:px-3.5 sm:py-1.5 shadow-inner">
             <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400 hidden sm:inline">Balance:</span>
             <div class="flex items-baseline gap-1">
-              <span id="liveBalance" class="text-lg sm:text-2xl font-extrabold tracking-tight text-white">0</span>
+              <span id="liveBalance" class="text-base sm:text-2xl font-extrabold tracking-tight text-white">0</span>
               <span class="text-[10px] font-semibold text-indigo-400">PTS</span>
             </div>
             <div id="floatingDeltaContainer" class="pointer-events-none absolute -top-2 right-2"></div>
           </div>
 
-          <!-- Today's Mini Stats -->
-          <div class="hidden md:flex items-center gap-2 bg-slate-900/50 border border-slate-800/80 rounded-xl px-3 py-1.5 text-xs">
+          <!-- Today's Mini Stats (Visible on mobile & desktop) -->
+          <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-900/50 border border-slate-800/80 rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs">
             <div class="flex items-center gap-1">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span class="text-slate-400">Today:</span>
+              <span class="text-slate-400 hidden xs:inline">Today:</span>
               <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
             </div>
             <span class="text-slate-700">|</span>
             <div class="flex items-center gap-1">
               <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-              <span class="text-slate-400">Penalties:</span>
+              <span class="text-slate-400 hidden xs:inline">Penalties:</span>
               <span id="todayLost" class="font-bold text-rose-400">-0</span>
             </div>
             <span class="text-slate-700">|</span>
             <div class="flex items-center gap-1">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              <span class="text-slate-400">Spent:</span>
+              <span class="text-slate-400 hidden xs:inline">Spent:</span>
               <span id="todaySpent" class="font-bold text-amber-400">0</span>
             </div>
           </div>
@@ -134,18 +134,6 @@
 
         <!-- Action Controls & Quick Buttons -->
         <div class="flex items-center gap-1.5 sm:gap-2">
-          <!-- 1-Time Point Adjustment Quick Button -->
-          <button
-            onclick="openManualAdjustmentModal()"
-            title="Apply 1-Time Point Adjustment"
-            class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-indigo-300 transition-all active:scale-95 cursor-pointer flex items-center gap-1 text-xs font-semibold"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span class="hidden sm:inline">+/- Adj</span>
-          </button>
-
           <!-- Scheduler Button -->
           <button
             onclick="openResetConfigModal()"
@@ -339,7 +327,7 @@
 
     <!-- Section 2: Reward Store -->
     <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
-      <!-- Sticky Reward Store Header (Consistent Design) -->
+      <!-- Sticky Reward Store Header (Consistent Design & Cleaned Title) -->
       <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
@@ -351,7 +339,6 @@
             <div>
               <h2 id="rewards-heading" class="text-sm font-bold text-white flex items-center gap-2">
                 <span>Reward Store</span>
-                <span id="rewardsModeBadge" class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Redeem</span>
               </h2>
               <p id="rewardsSubtitle" class="text-[11px] text-slate-400">Cash in your hard-earned points for guilt-free fun.</p>
             </div>
@@ -401,9 +388,9 @@
       <div id="rewardStoreGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
     </section>
 
-    <!-- Section 3: Today's Activities -->
-    <section aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
-      <!-- Sticky Activity Feed Header (Consistent Design) -->
+    <!-- Section 3: Today's Activities / Activity Feed -->
+    <section id="activitySection" aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
+      <!-- Sticky Activity Feed Header (Includes 1-Time Adjustment Button) -->
       <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
@@ -417,7 +404,19 @@
               <p class="text-[11px] text-slate-400">Recent earned points, penalties, and redeemed rewards.</p>
             </div>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <!-- 1-Time Point Adjustment Quick Button -->
+            <button
+              onclick="openManualAdjustmentModal()"
+              title="Apply 1-Time Point Adjustment"
+              class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 border border-slate-700 transition-all active:scale-95 cursor-pointer flex items-center gap-1 text-xs font-semibold"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>+/- Adj</span>
+            </button>
+
             <button
               id="undoLastBtn"
               onclick="undoLastAction()"
@@ -864,6 +863,12 @@
       renderAll();
       animateBalanceChange(-reward.cost);
       showToast(`Enjoy! Redeemed "${emojiPrefix}${reward.title}" (-${reward.cost} pts)`, 'reward');
+
+      // Scroll down toward the activity section smoothly
+      const activitySection = document.getElementById('activitySection');
+      if (activitySection) {
+        activitySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     function undoLastAction() {
@@ -987,7 +992,6 @@
       const posForm = document.getElementById('positiveForm');
       const negForm = document.getElementById('negativeForm');
 
-      const rewardsBadge = document.getElementById('rewardsModeBadge');
       const rewardsSubtitle = document.getElementById('rewardsSubtitle');
       const addRewardBtnEl = document.getElementById('addRewardBtnEl');
       const rewardForm = document.getElementById('rewardForm');
@@ -998,10 +1002,6 @@
         if (addPosBtn) addPosBtn.classList.remove('hidden');
         if (addNegBtn) addNegBtn.classList.remove('hidden');
 
-        if (rewardsBadge) {
-          rewardsBadge.textContent = 'Edit Mode';
-          rewardsBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
-        }
         if (rewardsSubtitle) rewardsSubtitle.textContent = 'Click any reward to edit its details.';
         if (addRewardBtnEl) addRewardBtnEl.classList.remove('hidden');
       } else {
@@ -1012,10 +1012,6 @@
         if (posForm) posForm.classList.add('hidden');
         if (negForm) negForm.classList.add('hidden');
 
-        if (rewardsBadge) {
-          rewardsBadge.textContent = 'Redeem';
-          rewardsBadge.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300';
-        }
         if (rewardsSubtitle) rewardsSubtitle.textContent = 'Cash in your hard-earned points for guilt-free fun.';
         if (addRewardBtnEl) addRewardBtnEl.classList.add('hidden');
         if (rewardForm) rewardForm.classList.add('hidden');
