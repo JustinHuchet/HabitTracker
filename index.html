@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PointQuest — Habit & Reward Tracker</title>
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" id="pqManifestLink" href="manifest.json" />
   <meta name="theme-color" content="#070a13" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -2782,11 +2783,118 @@
     }
   </script>
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js');
-      });
-    }
+    (function setupPwaInstallability() {
+      function createPqIconDataUrl(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return '';
+
+        const grad = ctx.createLinearGradient(0, 0, size, size);
+        grad.addColorStop(0, '#4f46e5');
+        grad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = grad;
+
+        const r = Math.round(size * 0.22);
+        ctx.beginPath();
+        ctx.moveTo(r, 0);
+        ctx.arcTo(size, 0, size, size, r);
+        ctx.arcTo(size, size, 0, size, r);
+        ctx.arcTo(0, size, 0, 0, r);
+        ctx.arcTo(0, 0, size, 0, r);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `800 ${Math.round(size * 0.44)}px Inter, system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('PQ', size / 2, size * 0.53);
+
+        return canvas.toDataURL('image/png');
+      }
+
+      function ensureFallbackManifest() {
+        const linkEl = document.getElementById('pqManifestLink') || document.querySelector('link[rel="manifest"]');
+        if (!linkEl) return;
+
+        const icon192 = createPqIconDataUrl(192);
+        const icon512 = createPqIconDataUrl(512);
+        const icons = [];
+        if (icon192) {
+          icons.push({ src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' });
+        }
+        if (icon512) {
+          icons.push({ src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' });
+        }
+
+        const manifestObj = {
+          name: 'PointQuest',
+          short_name: 'PointQuest',
+          description: 'Habit & Reward Tracker',
+          start_url: './',
+          scope: './',
+          display: 'standalone',
+          background_color: '#070a13',
+          theme_color: '#070a13',
+          icons
+        };
+
+        fetch(linkEl.href, { cache: 'no-store' })
+          .then(resp => {
+            if (!resp.ok) throw new Error('Manifest not found');
+            return resp.json();
+          })
+          .then(data => {
+            const validIcons = Array.isArray(data.icons) && data.icons.length > 0;
+            if (!validIcons && icons.length > 0) {
+              data.icons = icons;
+              data.start_url = data.start_url || './';
+              data.scope = data.scope || './';
+              data.display = data.display || 'standalone';
+              const blob = new Blob([JSON.stringify(data)], { type: 'application/manifest+json' });
+              linkEl.href = URL.createObjectURL(blob);
+            }
+          })
+          .catch(() => {
+            if (icons.length > 0) {
+              const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+              linkEl.href = URL.createObjectURL(blob);
+            }
+          });
+      }
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          ensureFallbackManifest();
+
+          const swCode = `
+            const CACHE_NAME = 'pointquest-v1';
+            self.addEventListener('install', event => {
+              self.skipWaiting();
+            });
+            self.addEventListener('activate', event => {
+              event.waitUntil(self.clients.claim());
+            });
+            self.addEventListener('fetch', event => {
+              if (event.request.method !== 'GET') return;
+              event.respondWith(
+                fetch(event.request).catch(() => caches.match(event.request))
+              );
+            });
+          `;
+
+          navigator.serviceWorker.register('./sw.js', { scope: './' })
+            .catch(() => {
+              const swBlob = new Blob([swCode], { type: 'application/javascript' });
+              const swUrl = URL.createObjectURL(swBlob);
+              return navigator.serviceWorker.register(swUrl, { scope: './' });
+            })
+            .catch(() => {});
+        });
+      }
+    })();
   </script>
 </body>
 </html>
