@@ -48,18 +48,7 @@
       overflow-anchor: none;
     }
 
-    /* Mask only behind the sticky header band (leaving the gap above it completely #070a13) */
-    .subsection-sticky-header::before {
-      content: '';
-      position: fixed;
-      top: var(--sticky-top);
-      left: 0;
-      right: 0;
-      height: calc(var(--sub-header-h, 76px) + 12px);
-      background-color: #070a13;
-      z-index: -1;
-      pointer-events: none;
-    }
+
 
     /* Clip any child content inside a subsection above the bottom of its sticky header */
     .subsection-clip-zone {
@@ -704,11 +693,10 @@
         );
 
         candidates.forEach(el => {
-          if (hdr.contains(el)) return;
+          if (hdr.contains(el) || el.classList.contains('subsection-sticky-header')) return;
           const rect = el.getBoundingClientRect();
           if (rect.height === 0 && rect.width === 0) return;
 
-          // Only hide once the entire element (bottom edge) has scrolled behind the subheader
           if (rect.bottom <= cutoffY + 0.5) {
             el.style.opacity = '0';
             el.style.pointerEvents = 'none';
@@ -1899,15 +1887,6 @@
                       required
                       class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                     />
-                    <input
-                      type="number"
-                      id="editHabitPoints_${h.id}"
-                      value="${h.points}"
-                      min="1"
-                      max="1000"
-                      required
-                      class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
                   </div>
                   <div>
                     <input
@@ -1918,19 +1897,37 @@
                       class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
-                  ${isPositive && !h.groupId ? `
-                    <div class="flex items-center gap-2">
-                      <label class="text-[11px] text-slate-400">Occurrences / day:</label>
+                  <div class="grid grid-cols-1 ${isPositive && !h.groupId ? 'sm:grid-cols-2' : ''} gap-2.5 pt-0.5">
+                    <div class="flex flex-col gap-1">
+                      <label for="editHabitPoints_${h.id}" class="text-[11px] font-semibold text-emerald-300">
+                        Points per occurrence
+                      </label>
                       <input
                         type="number"
-                        id="editHabitLimit_${h.id}"
-                        value="${maxLimit}"
+                        id="editHabitPoints_${h.id}"
+                        value="${h.points}"
                         min="1"
-                        max="20"
-                        class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        max="1000"
+                        required
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                     </div>
-                  ` : ''}
+                    ${isPositive && !h.groupId ? `
+                      <div class="flex flex-col gap-1">
+                        <label for="editHabitLimit_${h.id}" class="text-[11px] font-semibold text-indigo-300">
+                          Occurrences / day
+                        </label>
+                        <input
+                          type="number"
+                          id="editHabitLimit_${h.id}"
+                          value="${maxLimit}"
+                          min="1"
+                          max="20"
+                          class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                    ` : ''}
+                  </div>
                   <div class="flex items-center justify-between pt-1">
                     <button
                       type="button"
