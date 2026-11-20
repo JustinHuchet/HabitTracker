@@ -198,7 +198,7 @@
   <main class="max-w-6xl mx-auto px-3 sm:px-6 pt-5 space-y-6">
 
     <!-- Section 1: Actions & Habits (Positive vs Negative) -->
-    <section aria-labelledby="habits-heading">
+    <section id="habitsSection" aria-labelledby="habits-heading">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
         <!-- Positive Habits Column -->
@@ -1648,8 +1648,9 @@
         const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
         const remainingCount = Math.max(0, maxLimit - completedCount);
 
-        const showSubtext = h.subtext && (isEditingHabits || maxLimit === 1);
-        const showProgress = isPositive && !h.groupId && maxLimit > 1;
+        const isMultiOccurrence = isPositive && !h.groupId && maxLimit > 1;
+        const showSubtext = Boolean(h.subtext) && !isMultiOccurrence;
+        const showProgress = isMultiOccurrence;
         const emojiChar = h.icon || (isPositive ? '✨' : '⚠️');
 
         if (isEditingHabits && editingHabitId === h.id) {
@@ -2279,33 +2280,43 @@
     // =========================================================================
     // 6. MOBILE TAB SWITCHER LOGIC
     // =========================================================================
+    function scrollToHabitsSectionTop() {
+      const sectionEl = document.getElementById('habitsSection');
+      const headerEl = document.getElementById('mainHeader');
+      if (!sectionEl) return;
+
+      const headerHeight = headerEl ? headerEl.offsetHeight : 100;
+      const targetY = Math.max(0, sectionEl.getBoundingClientRect().top + window.scrollY - headerHeight - 8);
+      window.scrollTo({ left: 0, top: targetY, behavior: 'smooth' });
+    }
+
     function switchMobileHabitTab(tab) {
-      preserveScroll(() => {
-        const posCol = document.getElementById('positiveColumn');
-        const negCol = document.getElementById('negativeColumn');
-        const tabPosBtn = document.getElementById('tabPosBtn');
-        const tabNegBtn = document.getElementById('tabNegBtn');
-        const tabPosBtn2 = document.getElementById('tabPosBtn2');
-        const tabNegBtn2 = document.getElementById('tabNegBtn2');
+      const posCol = document.getElementById('positiveColumn');
+      const negCol = document.getElementById('negativeColumn');
+      const tabPosBtn = document.getElementById('tabPosBtn');
+      const tabNegBtn = document.getElementById('tabNegBtn');
+      const tabPosBtn2 = document.getElementById('tabPosBtn2');
+      const tabNegBtn2 = document.getElementById('tabNegBtn2');
 
-        if (!posCol || !negCol) return;
+      if (!posCol || !negCol) return;
 
-        if (tab === 'positive') {
-          posCol.style.display = 'flex';
-          negCol.style.display = 'none';
-          if (tabPosBtn) tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
-          if (tabNegBtn) tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-          if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
-          if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-        } else {
-          negCol.style.display = 'flex';
-          posCol.style.display = 'none';
-          if (tabNegBtn) tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
-          if (tabPosBtn) tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-          if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
-          if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
-        }
-      });
+      if (tab === 'positive') {
+        posCol.style.display = 'flex';
+        negCol.style.display = 'none';
+        if (tabPosBtn) tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
+        if (tabNegBtn) tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+        if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition';
+        if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+      } else {
+        negCol.style.display = 'flex';
+        posCol.style.display = 'none';
+        if (tabNegBtn) tabNegBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
+        if (tabPosBtn) tabPosBtn.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+        if (tabNegBtn2) tabNegBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 transition';
+        if (tabPosBtn2) tabPosBtn2.className = 'flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition';
+      }
+
+      scrollToHabitsSectionTop();
     }
 
     window.addEventListener('resize', () => {
