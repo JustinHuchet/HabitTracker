@@ -48,14 +48,14 @@
       overflow-anchor: none;
     }
 
-    /* Solid backdrop guard band above each sticky subsection header down to its bottom line */
+    /* Mask only behind the sticky header band (leaving the gap above it completely #070a13) */
     .subsection-sticky-header::before {
       content: '';
       position: fixed;
-      top: 0;
+      top: var(--sticky-top);
       left: 0;
       right: 0;
-      height: calc(var(--sticky-top) + var(--sub-header-h, 88px));
+      height: calc(var(--sub-header-h, 76px) + 12px);
       background-color: #070a13;
       z-index: -1;
       pointer-events: none;
@@ -202,7 +202,7 @@
         <div id="positiveColumn" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
           <div>
             <!-- Sticky Positive Habits Header -->
-            <div id="positiveColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30 space-y-2.5">
+            <div id="positiveColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 pb-3 mb-3 border-b border-slate-800/80 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">+</div>
@@ -280,7 +280,7 @@
         <div id="negativeColumn" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
           <div>
             <!-- Sticky Penalties Header -->
-            <div id="negativeColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30 space-y-2.5">
+            <div id="negativeColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 pb-3 mb-3 border-b border-slate-800/80 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-sm shrink-0">−</div>
@@ -360,7 +360,7 @@
     <!-- Section 2: Reward Store -->
     <section aria-labelledby="rewards-heading" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
       <!-- Sticky Reward Store Header -->
-      <div id="rewardsColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30">
+      <div id="rewardsColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 pb-3 mb-4 border-b border-slate-800/80">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
@@ -423,7 +423,7 @@
     <!-- Section 3: Today's Activities / Activity Feed -->
     <section id="activitySection" aria-labelledby="log-heading" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
       <!-- Sticky Activity Feed Header -->
-      <div id="activityColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30">
+      <div id="activityColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 pb-3 mb-4 border-b border-slate-800/80">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
