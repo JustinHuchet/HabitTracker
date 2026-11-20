@@ -31,8 +31,8 @@
   </script>
   <style>
     :root {
-      --header-height: 60px;
-      --sticky-gap: 20px;
+      --header-height: 56px;
+      --sticky-gap: 16px;
       --sticky-top: calc(var(--header-height) + var(--sticky-gap));
     }
 
@@ -48,22 +48,25 @@
       overflow-anchor: none;
     }
 
-    /* Solid opaque mask above each sticky header so scrolled items never bleed through */
-    .subsection-sticky-header {
-      background-color: #0f172a;
-      box-shadow: 0 12px 18px -8px rgba(7, 10, 19, 0.95);
-    }
-
-    .subsection-sticky-header::before {
-      content: '';
+    /* Constant-size dark mask band between main header and sticky subheaders */
+    #stickyGapMask {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       height: var(--sticky-top);
       background-color: #070a13;
-      z-index: 15;
+      z-index: 25;
       pointer-events: none;
+    }
+
+    /* Solid opaque sticky subheader sitting directly below the dark gap band */
+    .subsection-sticky-header {
+      position: sticky;
+      top: var(--sticky-top);
+      z-index: 26;
+      background-color: #0f172a;
+      box-shadow: 0 10px 16px -6px rgba(7, 10, 19, 0.95);
     }
 
     ::-webkit-scrollbar {
@@ -131,6 +134,9 @@
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white pb-20">
 
+  <!-- Constant-height solid dark band between main header and sticky subheaders -->
+  <div id="stickyGapMask" aria-hidden="true"></div>
+
   <!-- Solid Top Sticky Header -->
   <header id="mainHeader" class="sticky top-0 z-30 border-b border-slate-800 bg-[#070a13]">
     <div class="max-w-6xl mx-auto px-2.5 sm:px-6 py-2 sm:py-2.5">
@@ -187,22 +193,22 @@
   </header>
 
   <!-- Main Dashboard Grid -->
-  <main class="max-w-6xl mx-auto px-3 sm:px-6 pt-5 space-y-6">
+  <main class="max-w-6xl mx-auto px-3 sm:px-6 pt-4 space-y-6">
 
     <!-- Section 1: Actions & Habits (Positive vs Negative) -->
     <section id="habitsSection" aria-labelledby="habits-heading">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
         <!-- Positive Habits Column -->
-        <div id="positiveColumn" class="subsection-clip-zone bg-slate-900 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
+        <div id="positiveColumn" class="bg-slate-900 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
           <div>
-            <div id="positiveColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 pt-2 pb-3 mb-3 border-b border-slate-800/80 space-y-2.5">
+            <div id="positiveColumnHeader" class="subsection-sticky-header rounded-xl px-3 py-2.5 mb-3 border border-slate-800 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">+</div>
                   <div>
-                    <h2 id="habits-heading" class="text-sm font-bold text-white">Positive Habits</h2>
-                    <p class="text-[11px] text-slate-400">Build momentum & stack points</p>
+                    <h2 id="habits-heading" class="text-sm font-bold text-white leading-tight">Positive Habits</h2>
+                    <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Build momentum & stack points</p>
                   </div>
                 </div>
                 <button
@@ -268,15 +274,15 @@
         </div>
 
         <!-- Negative Habits / Penalties Column -->
-        <div id="negativeColumn" class="subsection-clip-zone bg-slate-900 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
+        <div id="negativeColumn" class="bg-slate-900 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
           <div>
-            <div id="negativeColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 pt-2 pb-3 mb-3 border-b border-slate-800/80 space-y-2.5">
+            <div id="negativeColumnHeader" class="subsection-sticky-header rounded-xl px-3 py-2.5 mb-3 border border-slate-800 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-sm shrink-0">−</div>
                   <div>
-                    <h2 class="text-sm font-bold text-white">Penalties</h2>
-                    <p class="text-[11px] text-slate-400">Hold yourself accountable</p>
+                    <h2 class="text-sm font-bold text-white leading-tight">Penalties</h2>
+                    <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Hold yourself accountable</p>
                   </div>
                 </div>
                 <button
@@ -345,8 +351,8 @@
     </section>
 
     <!-- Section 2: Reward Store -->
-    <section aria-labelledby="rewards-heading" class="subsection-clip-zone bg-slate-900 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
-      <div id="rewardsColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 pt-2 pb-3 mb-4 border-b border-slate-800/80">
+    <section aria-labelledby="rewards-heading" class="bg-slate-900 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
+      <div id="rewardsColumnHeader" class="subsection-sticky-header rounded-xl px-3 py-2.5 mb-4 border border-slate-800">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
@@ -355,10 +361,8 @@
               </svg>
             </div>
             <div>
-              <h2 id="rewards-heading" class="text-sm font-bold text-white flex items-center gap-2">
-                <span>Reward Store</span>
-              </h2>
-              <p id="rewardsSubtitle" class="text-[11px] text-slate-400">Cash in your hard-earned points for guilt-free fun.</p>
+              <h2 id="rewards-heading" class="text-sm font-bold text-white leading-tight">Reward Store</h2>
+              <p id="rewardsSubtitle" class="text-[11px] text-slate-400 leading-tight mt-0.5">Cash in your hard-earned points for guilt-free fun.</p>
             </div>
           </div>
 
@@ -405,8 +409,8 @@
     </section>
 
     <!-- Section 3: Today's Activities / Activity Feed -->
-    <section id="activitySection" aria-labelledby="log-heading" class="subsection-clip-zone bg-slate-900 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
-      <div id="activityColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 pt-2 pb-3 mb-4 border-b border-slate-800/80">
+    <section id="activitySection" aria-labelledby="log-heading" class="bg-slate-900 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
+      <div id="activityColumnHeader" class="subsection-sticky-header rounded-xl px-3 py-2.5 mb-4 border border-slate-800">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
@@ -415,8 +419,8 @@
               </svg>
             </div>
             <div>
-              <h2 id="log-heading" class="text-sm font-bold text-white">Activity Feed (Past 7 Days)</h2>
-              <p class="text-[11px] text-slate-400">Recent earned points, penalties, and redeemed rewards.</p>
+              <h2 id="log-heading" class="text-sm font-bold text-white leading-tight">Activity Feed (Past 7 Days)</h2>
+              <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Recent earned points, penalties, and redeemed rewards.</p>
             </div>
           </div>
           <div class="flex items-center gap-2 flex-wrap">
@@ -622,10 +626,10 @@
 
   <script>
     // =========================================================================
-    // 0. DYNAMIC HEADER HEIGHT & INITIAL GAP CALCULATOR
+    // 0. DYNAMIC HEADER HEIGHT & CONSTANT DARK GAP CALCULATOR
     // =========================================================================
     let initialGapCaptured = false;
-    let capturedGapPx = null;
+    let capturedGapPx = 16;
 
     function captureInitialGapIfNeeded() {
       if (initialGapCaptured) return;
@@ -640,7 +644,7 @@
         const headerRect = mainHeader.getBoundingClientRect();
         const subRect = firstSubHeader.getBoundingClientRect();
         if (headerRect.height > 0 && subRect.top >= headerRect.bottom) {
-          capturedGapPx = Math.round(subRect.top - headerRect.bottom);
+          capturedGapPx = Math.max(8, Math.round(subRect.top - headerRect.bottom));
           initialGapCaptured = true;
           document.documentElement.style.setProperty('--sticky-gap', capturedGapPx + 'px');
         }
@@ -2273,8 +2277,8 @@
       const headerEl = document.getElementById('mainHeader');
       if (!sectionEl) return;
 
-      const headerHeight = headerEl ? headerEl.offsetHeight : 60;
-      const gapValue = capturedGapPx !== null ? capturedGapPx : 20;
+      const headerHeight = headerEl ? headerEl.offsetHeight : 56;
+      const gapValue = capturedGapPx !== null ? capturedGapPx : 16;
       const targetY = Math.max(0, sectionEl.getBoundingClientRect().top + window.scrollY - headerHeight - gapValue);
       window.scrollTo({ left: 0, top: targetY, behavior: 'smooth' });
     }
@@ -2606,7 +2610,6 @@
 
       resetConfirmButtonState();
 
-      // Clear ALL localStorage & sessionStorage keys for this origin
       try {
         localStorage.clear();
       } catch (err) {
@@ -2618,7 +2621,6 @@
         console.error('Failed to clear sessionStorage:', err);
       }
 
-      // Clear Cache Storage & unregister service workers so stale assets don't linger
       if ('caches' in window) {
         try {
           const keys = await caches.keys();
