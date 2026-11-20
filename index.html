@@ -567,20 +567,12 @@
           </div>
         </div>
 
-        <div class="p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl space-y-2">
-          <div>
-            <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
-            <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
-            <div>
-              <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Last Reset Date</span>
-              <p id="lastResetDateDebugLabel" class="text-[11px] font-mono text-slate-200 break-all">--</p>
-            </div>
-            <div>
-              <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Initial Open Date</span>
-              <p id="initialOpenDateDebugLabel" class="text-[11px] font-mono text-slate-200 break-all">--</p>
-            </div>
+        <div class="p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl space-y-0.5">
+          <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
+          <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
+          <div class="hidden">
+            <p id="lastResetDateDebugLabel">--</p>
+            <p id="initialOpenDateDebugLabel">--</p>
           </div>
         </div>
 
