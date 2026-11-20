@@ -116,7 +116,7 @@
   <header id="mainHeader" class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-xl">
     <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
       <div class="flex items-center justify-between gap-2">
-        
+
         <!-- Brand, Live Balance Pill & Today Stats -->
         <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
           <div class="flex items-center gap-2">
@@ -141,7 +141,7 @@
             <div id="floatingDeltaContainer" class="pointer-events-none absolute -top-2 right-2"></div>
           </div>
 
-          <!-- Today's Mini Stats (Visible on mobile & desktop with labels) -->
+          <!-- Today's Mini Stats -->
           <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-900/50 border border-slate-800/80 rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs">
             <div class="flex items-center gap-1">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -200,11 +200,11 @@
     <!-- Section 1: Actions & Habits (Positive vs Negative) -->
     <section aria-labelledby="habits-heading">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-        
+
         <!-- Positive Habits Column -->
         <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
           <div>
-            <!-- Sticky Positive Habits Header (Consistent Design & Mobile Tab Switcher) -->
+            <!-- Sticky Positive Habits Header -->
             <div id="positiveColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
@@ -223,7 +223,7 @@
                 </button>
               </div>
 
-              <!-- Mobile Tab Switcher (Visible on small screens) -->
+              <!-- Mobile Tab Switcher -->
               <div class="flex sm:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 w-full">
                 <button id="tabPosBtn" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition">
                   + Positive Habits
@@ -236,22 +236,30 @@
 
             <!-- Add Custom Positive Habit Form -->
             <form id="positiveForm" onsubmit="handleAddHabit(event, 'positive')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-2.5">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div class="flex items-center gap-2">
+                <input
+                  type="text"
+                  id="posIconInput"
+                  value="✨"
+                  maxlength="8"
+                  title="Habit emoji"
+                  class="w-12 text-center bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-base text-white focus:outline-none focus:border-emerald-500 shrink-0"
+                />
                 <input
                   type="text"
                   id="posTitleInput"
-                  placeholder="e.g., 📖 Read 20 pages"
+                  placeholder="Habit title (e.g., Read 20 pages)"
                   required
-                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
                 <input
                   type="number"
                   id="posPointsInput"
-                  placeholder="Points (e.g. 15)"
+                  placeholder="Pts (e.g. 15)"
                   min="1"
                   max="1000"
                   required
-                  class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <input
@@ -274,7 +282,7 @@
         <!-- Negative Habits / Penalties Column -->
         <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
           <div>
-            <!-- Sticky Penalties Header (Consistent Design & Mobile Tab Switcher) -->
+            <!-- Sticky Penalties Header -->
             <div id="negativeColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
@@ -293,7 +301,7 @@
                 </button>
               </div>
 
-              <!-- Mobile Tab Switcher (Visible on small screens) -->
+              <!-- Mobile Tab Switcher -->
               <div class="flex sm:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 w-full">
                 <button id="tabPosBtn2" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
                   + Positive Habits
@@ -306,13 +314,21 @@
 
             <!-- Add Custom Penalty Form -->
             <form id="negativeForm" onsubmit="handleAddHabit(event, 'negative')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-rose-500/30 space-y-2.5">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div class="flex items-center gap-2">
+                <input
+                  type="text"
+                  id="negIconInput"
+                  value="⚠️"
+                  maxlength="8"
+                  title="Penalty emoji"
+                  class="w-12 text-center bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-base text-white focus:outline-none focus:border-rose-500 shrink-0"
+                />
                 <input
                   type="text"
                   id="negTitleInput"
-                  placeholder="e.g., 🌙 Stayed up past midnight"
+                  placeholder="Penalty title (e.g., Stayed up past midnight)"
                   required
-                  class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                  class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
                 />
                 <input
                   type="number"
@@ -321,7 +337,7 @@
                   min="1"
                   max="1000"
                   required
-                  class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                  class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
                 />
               </div>
               <input
@@ -346,7 +362,7 @@
 
     <!-- Section 2: Reward Store -->
     <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
-      <!-- Sticky Reward Store Header (Consistent Design & Cleaned Title) -->
+      <!-- Sticky Reward Store Header -->
       <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
@@ -409,7 +425,7 @@
 
     <!-- Section 3: Today's Activities / Activity Feed -->
     <section id="activitySection" aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
-      <!-- Sticky Activity Feed Header (Includes 1-Time Adjustment Button) -->
+      <!-- Sticky Activity Feed Header -->
       <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
@@ -518,31 +534,42 @@
 
       <!-- Habit Reset & Scheduled Points Section -->
       <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-4">
-        <div class="flex items-center justify-between gap-2">
-          <div>
-            <h4 class="text-sm font-bold text-white">Habit Reset & Scheduled Points</h4>
-            <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
-              Choose the daily UTC time (24-hour format, e.g., 07:00) when habits reset and optional scheduled daily points apply.
-            </p>
-          </div>
-          <button onclick="testTriggerResetNow()" type="button" class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-semibold transition cursor-pointer shrink-0">
-            ⚡ Test Reset Now
-          </button>
+        <div>
+          <h4 class="text-sm font-bold text-white">Habit Reset & Scheduled Points</h4>
+          <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
+            Habits reset automatically at the scheduled refresh time (defaulting to 07:00 UTC after initial startup) and must stay at least 24 hours after the last refresh.
+          </p>
         </div>
 
-        <!-- 1. Reset Time Picker -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <label class="text-xs font-semibold text-slate-300">Habit Reset Time (Daily UTC)</label>
-            <span class="text-[11px] text-indigo-400 font-medium">24-hour format (e.g., 07:00)</span>
+        <!-- Schedule Metadata Summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px]">
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/90">
+            <span class="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Initial Startup</span>
+            <span id="initialStartupDateLabel" class="font-semibold text-slate-200 block mt-0.5 truncate">--</span>
           </div>
-          <div class="flex items-center gap-3 flex-wrap">
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/90">
+            <span class="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Last Refresh</span>
+            <span id="lastRefreshDateLabel" class="font-semibold text-slate-200 block mt-0.5 truncate">--</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/90">
+            <span class="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Last Extract Date</span>
+            <span id="lastExtractDateLabel" class="font-semibold text-slate-200 block mt-0.5 truncate">1970-01-01</span>
+          </div>
+        </div>
+
+        <!-- 1. Next Scheduled Refresh Date/Time Picker -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <label for="nextRefreshDateTimeInput" class="text-xs font-semibold text-slate-300">Next Scheduled Refresh Date & Time (UTC)</label>
+            <span class="text-[11px] text-indigo-400 font-medium">Min +24h from last refresh</span>
+          </div>
+          <div class="flex items-center gap-2.5 flex-wrap">
             <input
-              type="time"
-              id="resetTimeInput"
-              value="07:00"
+              type="datetime-local"
+              step="60"
+              id="nextRefreshDateTimeInput"
               oninput="updateNextRefreshPreview()"
-              class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-sm font-semibold text-white focus:outline-none focus:border-indigo-500"
+              class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-none focus:border-indigo-500"
             />
             <div class="flex items-center gap-1.5 text-xs text-indigo-400 font-medium bg-indigo-500/10 border border-indigo-500/20 px-3 py-2 rounded-xl">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -555,7 +582,7 @@
 
         <!-- Next Refresh Preview Box -->
         <div class="p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl space-y-0.5">
-          <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
+          <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Effective Next Scheduled Refresh (UTC)</span>
           <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
         </div>
 
@@ -563,7 +590,7 @@
         <div class="space-y-2.5 pt-2 border-t border-slate-800/80">
           <div>
             <label class="text-xs font-semibold text-slate-300">Scheduled Daily Point Adjustment (Optional)</label>
-            <p class="text-[11px] text-slate-400 mt-0.5">Automatically add bonus points or deduct points when the reset triggers.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Automatically add bonus points or deduct points when the refresh triggers.</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -655,6 +682,7 @@
     // 1. DEFAULT STATE & PERSISTENT LOCAL STORAGE
     // =========================================================================
     const STORAGE_KEY = 'pointquest_tracker_state_v3';
+    const DAY_MS = 24 * 60 * 60 * 1000;
 
     const DEFAULT_STATE = {
       balance: 0,
@@ -662,40 +690,95 @@
         time: '07:00', // HH:MM in UTC
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
+        lastExtractDate: '1970-01-01',
+        initialStartupDate: null,
+        lastRefreshDate: null,
+        nextScheduledRefreshDate: null,
         lastResetTimestamp: 0,
         hasRefreshedOnce: false
       },
       habits: [
-        { id: 'h1', title: '💧 Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
-        { id: 'h2', title: '🦿 Morning Mobility', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 1 },
-        { id: 'h_eff_morn', title: '⚡ Efficient Morning', points: 5, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: 'Under 45 mins', order: 2 },
-        { id: 'h3', title: '🚦 Commute', points: 10, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: 'Before 8am', order: 3 },
-        { id: 'h_clean', title: '🧹 Clean House', points: 10, type: 'positive', dailyLimit: 1, subtext: 'Before 9pm', order: 4 },
-        { id: 'h4', title: '🚿 Shower', points: 10, type: 'positive', dailyLimit: 1, subtext: 'Before 9pm', order: 5 },
-        { id: 'h_meal', title: '🍽️ Meal Prep', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 6 },
-        { id: 'h11', title: '📚 Balcony Read', points: 10, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 7 },
-        { id: 'h_lang', title: '🗣️ Language Practice', points: 20, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 8 },
-        { id: 'h5', title: '💪 Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Full-assed', order: 9 },
-        { id: 'h6', title: '💪 Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Half-assed', order: 10 },
-        { id: 'h7', title: '🏊 Swim', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 1km', order: 11 },
-        { id: 'h8', title: '🏊 Swim', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 1km', order: 12 },
-        { id: 'h9', title: '🏃 Run', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 10km', order: 13 },
-        { id: 'h10', title: '🏃 Run', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 10km', order: 14 },
-        { id: 'h12', title: '🧘 Yoga', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 15 },
-        { id: 'h13', title: '🥒 Pickleball', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 16 },
-        { id: 'h14', title: '🚴 Demo Forest', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 17 },
-        { id: 'h_mtb', title: '🚵 Mountain Bike', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 18 },
-        { id: 'h_ski', title: '⛷️ Ski', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 19 },
-        { id: 'h15', title: '⏰ Hit Snooze / Woke Up Late', points: 10, type: 'negative', subtext: '', order: 20 },
-        { id: 'h16', title: '🛋️ Skipped Workout', points: 20, type: 'negative', subtext: '', order: 21 },
-        { id: 'h17', title: '📱 Doomscrolled > 1 hr', points: 15, type: 'negative', subtext: '', order: 22 },
-        { id: 'h18', title: '🍔 Junk Food / Impulse Spend', points: 10, type: 'negative', subtext: '', order: 23 }
+        { id: 'h1', icon: '💧', title: 'Water Bottle', points: 5, type: 'positive', dailyLimit: 5, subtext: '', order: 0 },
+        { id: 'h2', icon: '🦿', title: 'Morning Mobility', points: 10, type: 'positive', dailyLimit: 1, subtext: '', order: 1 },
+        { id: 'h_eff_morn', icon: '⚡', title: 'Efficient Morning', points: 5, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: 'Under 45 mins', order: 2 },
+        { id: 'h3', icon: '🚦', title: 'Commute', points: 10, type: 'positive', dailyLimit: 1, groupId: 'grp_commute', subtext: 'Before 8am', order: 3 },
+        { id: 'h_clean', icon: '🧹', title: 'Clean House', points: 10, type: 'positive', dailyLimit: 1, subtext: 'Before 9pm', order: 4 },
+        { id: 'h4', icon: '🚿', title: 'Shower', points: 10, type: 'positive', dailyLimit: 1, subtext: 'Before 9pm', order: 5 },
+        { id: 'h_meal', icon: '🍽️', title: 'Meal Prep', points: 20, type: 'positive', dailyLimit: 1, subtext: '', order: 6 },
+        { id: 'h11', icon: '📚', title: 'Balcony Read', points: 10, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 7 },
+        { id: 'h_lang', icon: '🗣️', title: 'Language Practice', points: 20, type: 'positive', dailyLimit: 1, subtext: '30+ mins', order: 8 },
+        { id: 'h5', icon: '💪', title: 'Lift', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Full-assed', order: 9 },
+        { id: 'h6', icon: '💪', title: 'Lift', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_lifts', subtext: 'Half-assed', order: 10 },
+        { id: 'h7', icon: '🏊', title: 'Swim', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 1km', order: 11 },
+        { id: 'h8', icon: '🏊', title: 'Swim', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 1km', order: 12 },
+        { id: 'h9', icon: '🏃', title: 'Run', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Under 10km', order: 13 },
+        { id: 'h10', icon: '🏃', title: 'Run', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: 'Over 10km', order: 14 },
+        { id: 'h12', icon: '🧘', title: 'Yoga', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 15 },
+        { id: 'h13', icon: '🥒', title: 'Pickleball', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 16 },
+        { id: 'h14', icon: '🚴', title: 'Demo Forest', points: 20, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 17 },
+        { id: 'h_mtb', icon: '🚵', title: 'Mountain Bike', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 18 },
+        { id: 'h_ski', icon: '⛷️', title: 'Ski', points: 30, type: 'positive', dailyLimit: 1, groupId: 'grp_activities', subtext: '', order: 19 },
+        { id: 'h15', icon: '⏰', title: 'Hit Snooze / Woke Up Late', points: 10, type: 'negative', subtext: '', order: 20 },
+        { id: 'h16', icon: '🛋️', title: 'Skipped Workout', points: 20, type: 'negative', subtext: '', order: 21 },
+        { id: 'h17', icon: '📱', title: 'Doomscrolled > 1 hr', points: 15, type: 'negative', subtext: '', order: 22 },
+        { id: 'h18', icon: '🍔', title: 'Junk Food / Impulse Spend', points: 10, type: 'negative', subtext: '', order: 23 }
       ],
       rewards: [
         { id: 'r1', title: '1 Hour Video Games', cost: 25, icon: '🎮' }
       ],
       logs: []
     };
+
+    const EMOJI_PREFIX_REGEX = /^((?:[\u{1F1E6}-\u{1F1FF}]{2}|[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{1F004}\u{1F0CF}])(?:\uFE0F|\u200D(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}]|\uFE0F))*)\s*/u;
+
+    function splitLeadingEmoji(rawTitle, explicitIcon = '') {
+      const cleanedExplicit = (explicitIcon || '').trim();
+      if (cleanedExplicit) {
+        return {
+          icon: cleanedExplicit,
+          title: (rawTitle || '').replace(EMOJI_PREFIX_REGEX, '').trim() || (rawTitle || '').trim()
+        };
+      }
+      const match = (rawTitle || '').match(EMOJI_PREFIX_REGEX);
+      if (match) {
+        const extractedIcon = match[1].trim();
+        const restTitle = (rawTitle || '').slice(match[0].length).trim();
+        return {
+          icon: extractedIcon,
+          title: restTitle || (rawTitle || '').trim()
+        };
+      }
+      return {
+        icon: '',
+        title: (rawTitle || '').trim()
+      };
+    }
+
+    function normalizeHabit(habit) {
+      const split = splitLeadingEmoji(habit.title, habit.icon);
+      return {
+        ...habit,
+        icon: split.icon,
+        title: split.title
+      };
+    }
+
+    function getNextUtc7AmAfter(startupDateObj) {
+      const base = startupDateObj instanceof Date ? startupDateObj : new Date(startupDateObj);
+      const year = base.getUTCFullYear();
+      const month = base.getUTCMonth();
+      const day = base.getUTCDate();
+      let candidateMs = Date.UTC(year, month, day, 7, 0, 0, 0);
+      if (candidateMs <= base.getTime()) {
+        candidateMs += DAY_MS;
+      }
+      return new Date(candidateMs).toISOString();
+    }
+
+    function formatDateYYYYMMDD(dateObj) {
+      const d = dateObj instanceof Date ? dateObj : new Date(dateObj);
+      return d.toISOString().slice(0, 10);
+    }
 
     let appState = loadState();
     let isEditingHabits = false;
@@ -707,30 +790,58 @@
     let resetArmTimer = null;
 
     function loadState() {
+      let parsed = null;
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && typeof parsed === 'object') {
-            return {
-              balance: typeof parsed.balance === 'number' ? parsed.balance : DEFAULT_STATE.balance,
-              resetConfig: parsed.resetConfig
-                ? { ...DEFAULT_STATE.resetConfig, ...parsed.resetConfig }
-                : { ...DEFAULT_STATE.resetConfig },
-              habits: Array.isArray(parsed.habits)
-                ? parsed.habits
-                : JSON.parse(JSON.stringify(DEFAULT_STATE.habits)),
-              rewards: Array.isArray(parsed.rewards)
-                ? parsed.rewards
-                : JSON.parse(JSON.stringify(DEFAULT_STATE.rewards)),
-              logs: Array.isArray(parsed.logs) ? parsed.logs : []
-            };
+          const temp = JSON.parse(raw);
+          if (temp && typeof temp === 'object') {
+            parsed = temp;
           }
         }
       } catch (err) {
         console.error('Failed to load state from localStorage:', err);
       }
-      return JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+      const now = new Date();
+      const nowIso = now.toISOString();
+
+      const mergedConfig = parsed && parsed.resetConfig
+        ? { ...DEFAULT_STATE.resetConfig, ...parsed.resetConfig }
+        : { ...DEFAULT_STATE.resetConfig };
+
+      if (!mergedConfig.lastExtractDate) {
+        mergedConfig.lastExtractDate = '1970-01-01';
+      }
+
+      if (!mergedConfig.initialStartupDate) {
+        mergedConfig.initialStartupDate = nowIso;
+      }
+
+      if (!mergedConfig.nextScheduledRefreshDate) {
+        mergedConfig.nextScheduledRefreshDate = getNextUtc7AmAfter(new Date(mergedConfig.initialStartupDate));
+      }
+
+      if (!mergedConfig.lastResetTimestamp && mergedConfig.lastRefreshDate) {
+        const parsedLast = new Date(mergedConfig.lastRefreshDate).getTime();
+        if (!isNaN(parsedLast)) {
+          mergedConfig.lastResetTimestamp = parsedLast;
+        }
+      }
+
+      const rawHabits = parsed && Array.isArray(parsed.habits)
+        ? parsed.habits
+        : JSON.parse(JSON.stringify(DEFAULT_STATE.habits));
+
+      return {
+        balance: parsed && typeof parsed.balance === 'number' ? parsed.balance : DEFAULT_STATE.balance,
+        resetConfig: mergedConfig,
+        habits: rawHabits.map(normalizeHabit),
+        rewards: parsed && Array.isArray(parsed.rewards)
+          ? parsed.rewards
+          : JSON.parse(JSON.stringify(DEFAULT_STATE.rewards)),
+        logs: parsed && Array.isArray(parsed.logs) ? parsed.logs : []
+      };
     }
 
     function saveState() {
@@ -761,12 +872,13 @@
     // 2. CORE POINT & HABIT ACTIONS
     // =========================================================================
     function triggerHabit(habitId, sourceLabel = '') {
-      checkResetRollover(); 
+      checkResetRollover();
       const habit = appState.habits.find(h => h.id === habitId);
       if (!habit) return;
 
       const isPositive = habit.type === 'positive';
-      
+      const displayTitle = habit.icon ? `${habit.icon} ${habit.title}` : habit.title;
+
       if (isPositive && habit.groupId) {
         const groupMems = appState.habits.filter(x => x.groupId === habit.groupId);
         const anyGroupCompleted = groupMems.some(gm => {
@@ -774,14 +886,14 @@
           return getCompletedPositiveCountToday(gm.id) >= limit;
         });
         if (anyGroupCompleted) {
-          showToast(`This linked group has already been completed for today!`, 'info');
+          showToast('This linked group has already been completed for today!', 'info');
           return;
         }
       } else if (isPositive) {
         const maxLimit = (typeof habit.dailyLimit === 'number' && habit.dailyLimit > 0) ? habit.dailyLimit : 1;
         const completedCount = getCompletedPositiveCountToday(habit.id);
         if (completedCount >= maxLimit) {
-          showToast(`"${habit.title}" has reached its daily limit of ${maxLimit} for today!`, 'info');
+          showToast(`"${displayTitle}" has reached its daily limit of ${maxLimit} for today!`, 'info');
           return;
         }
       }
@@ -792,7 +904,7 @@
       const logEntry = {
         id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         habitId: habit.id,
-        title: sourceLabel ? `${habit.title} (${sourceLabel})` : habit.title,
+        title: sourceLabel ? `${displayTitle} (${sourceLabel})` : displayTitle,
         delta: delta,
         category: isPositive ? 'positive' : 'negative',
         timestamp: new Date().toISOString()
@@ -805,9 +917,9 @@
       animateBalanceChange(delta);
 
       if (isPositive) {
-        showToast(`+${delta} pts — ${habit.title}`, 'success');
+        showToast(`+${delta} pts — ${displayTitle}`, 'success');
       } else {
-        showToast(`${delta} pts — ${habit.title}`, 'danger');
+        showToast(`${delta} pts — ${displayTitle}`, 'danger');
       }
     }
 
@@ -863,7 +975,7 @@
       const cardEl = document.getElementById(`rewardCard_${rewardId}`);
       if (cardEl) {
         cardEl.classList.remove('animate-reward-celebrate');
-        void cardEl.offsetWidth; // Force reflow
+        void cardEl.offsetWidth;
         cardEl.classList.add('animate-reward-celebrate');
       }
 
@@ -979,9 +1091,10 @@
         const el = document.getElementById(formId);
         if (!el) return;
         el.classList.toggle('hidden');
-        const input = el.querySelector('input');
-        if (input && !el.classList.contains('hidden')) {
-          input.focus({ preventScroll: true });
+        const inputs = el.querySelectorAll('input');
+        const targetInput = inputs.length > 1 ? inputs[1] : inputs[0];
+        if (targetInput && !el.classList.contains('hidden')) {
+          targetInput.focus({ preventScroll: true });
         }
         updateHeaderHeightOffset();
       });
@@ -989,18 +1102,26 @@
 
     function handleAddHabit(event, type) {
       event.preventDefault();
-      const titleInput = document.getElementById(type === 'positive' ? 'posTitleInput' : 'negTitleInput');
-      const pointsInput = document.getElementById(type === 'positive' ? 'posPointsInput' : 'negPointsInput');
-      const subtextInput = document.getElementById(type === 'positive' ? 'posSubtextInput' : 'negSubtextInput');
+      const isPos = type === 'positive';
+      const iconInput = document.getElementById(isPos ? 'posIconInput' : 'negIconInput');
+      const titleInput = document.getElementById(isPos ? 'posTitleInput' : 'negTitleInput');
+      const pointsInput = document.getElementById(isPos ? 'posPointsInput' : 'negPointsInput');
+      const subtextInput = document.getElementById(isPos ? 'posSubtextInput' : 'negSubtextInput');
 
-      const title = titleInput.value.trim();
+      const rawIcon = iconInput ? iconInput.value.trim() : '';
+      const rawTitle = titleInput.value.trim();
       const points = parseInt(pointsInput.value, 10);
       const subtext = subtextInput ? subtextInput.value.trim() : '';
-      if (!title || isNaN(points) || points <= 0) return;
+      if (!rawTitle || isNaN(points) || points <= 0) return;
+
+      const split = splitLeadingEmoji(rawTitle, rawIcon);
+      const finalIcon = split.icon || (isPos ? '✨' : '⚠️');
+      const finalTitle = split.title;
 
       const newHabit = {
         id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
-        title,
+        icon: finalIcon,
+        title: finalTitle,
         points,
         type,
         dailyLimit: 1,
@@ -1008,7 +1129,7 @@
         order: 0
       };
 
-      if (type === 'positive') {
+      if (isPos) {
         const firstNegIdx = appState.habits.findIndex(h => h.type === 'negative');
         if (firstNegIdx !== -1) {
           appState.habits.splice(firstNegIdx, 0, newHabit);
@@ -1019,14 +1140,15 @@
         appState.habits.push(newHabit);
       }
 
+      if (iconInput) iconInput.value = isPos ? '✨' : '⚠️';
       titleInput.value = '';
       pointsInput.value = '';
       if (subtextInput) subtextInput.value = '';
-      toggleForm(type === 'positive' ? 'positiveForm' : 'negativeForm');
+      toggleForm(isPos ? 'positiveForm' : 'negativeForm');
 
       saveState();
       preserveScroll(() => renderHabits());
-      showToast(`Added "${title}" (${type === 'positive' ? '+' : '-'}${points} pts)`, 'success');
+      showToast(`Added "${finalIcon} ${finalTitle}" (${isPos ? '+' : '-'}${points} pts)`, 'success');
     }
 
     function deleteHabit(event, habitId) {
@@ -1127,19 +1249,23 @@
       const habit = appState.habits.find(h => h.id === habitId);
       if (!habit) return;
 
+      const iconInput = document.getElementById(`editHabitIcon_${habitId}`);
       const titleInput = document.getElementById(`editHabitTitle_${habitId}`);
       const pointsInput = document.getElementById(`editHabitPoints_${habitId}`);
       const subtextInput = document.getElementById(`editHabitSubtext_${habitId}`);
       const limitInput = document.getElementById(`editHabitLimit_${habitId}`);
-      
-      const newTitle = titleInput ? titleInput.value.trim() : '';
+
+      const rawIcon = iconInput ? iconInput.value.trim() : (habit.icon || '');
+      const rawTitle = titleInput ? titleInput.value.trim() : '';
       const newPoints = pointsInput ? parseInt(pointsInput.value, 10) : habit.points;
       const newSubtext = subtextInput ? subtextInput.value.trim() : '';
       const newLimit = (habit.type === 'positive' && limitInput && !habit.groupId) ? parseInt(limitInput.value, 10) : 1;
 
-      if (!newTitle || isNaN(newPoints) || newPoints <= 0) return;
+      if (!rawTitle || isNaN(newPoints) || newPoints <= 0) return;
 
-      habit.title = newTitle;
+      const split = splitLeadingEmoji(rawTitle, rawIcon);
+      habit.icon = split.icon;
+      habit.title = split.title;
       habit.points = newPoints;
       habit.subtext = newSubtext;
       if (habit.type === 'positive' && !habit.groupId) {
@@ -1149,7 +1275,7 @@
 
       saveState();
       preserveScroll(() => renderHabits());
-      showToast(`Updated "${newTitle}"`, 'success');
+      showToast(`Updated "${habit.title}"`, 'success');
     }
 
     function moveHabitOrder(event, habitId, direction) {
@@ -1436,7 +1562,7 @@
     // =========================================================================
     function cleanExpiredLogs() {
       const nowMs = Date.now();
-      const cutoffMs = nowMs - (7 * 24 * 60 * 60 * 1000); // 7 days ago
+      const cutoffMs = nowMs - (7 * DAY_MS);
       if (Array.isArray(appState.logs)) {
         appState.logs = appState.logs.filter(log => {
           if (!log.timestamp) return false;
@@ -1496,7 +1622,7 @@
       if (!posContainer || !negContainer) return;
 
       const allPositives = appState.habits.filter(h => h.type === 'positive');
-      
+
       const positives = isEditingHabits
         ? allPositives
         : allPositives.filter(h => {
@@ -1516,18 +1642,15 @@
 
       const renderHabitCard = (h, idx, listLength, isPositive, inGroup = false) => {
         const accentBadge = isPositive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300';
-        const iconBg = isPositive
-          ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400'
-          : 'bg-rose-500/10 group-hover:bg-rose-500/20 text-rose-400';
-        
         const cardBg = inGroup ? 'bg-transparent' : 'bg-slate-950/70 border border-indigo-500/40 hover:bg-emerald-950/30 hover:border-emerald-500/40 rounded-xl';
-        
+
         const maxLimit = (isPositive && typeof h.dailyLimit === 'number' && h.dailyLimit > 0) ? h.dailyLimit : 1;
         const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
         const remainingCount = Math.max(0, maxLimit - completedCount);
 
         const showSubtext = h.subtext && (isEditingHabits || maxLimit === 1);
         const showProgress = isPositive && !h.groupId && maxLimit > 1;
+        const emojiChar = h.icon || (isPositive ? '✨' : '⚠️');
 
         if (isEditingHabits && editingHabitId === h.id) {
           return `
@@ -1537,13 +1660,21 @@
                 onclick="event.stopPropagation()"
                 class="p-3.5 rounded-xl bg-slate-950 border border-indigo-500/60 space-y-2.5 shadow-lg shadow-indigo-500/10"
               >
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    id="editHabitIcon_${h.id}"
+                    value="${escapeHtml(emojiChar)}"
+                    maxlength="8"
+                    title="Emoji"
+                    class="w-12 text-center bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 shrink-0"
+                  />
                   <input
                     type="text"
                     id="editHabitTitle_${h.id}"
                     value="${escapeHtml(h.title)}"
                     required
-                    class="sm:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
                   <input
                     type="number"
@@ -1552,7 +1683,7 @@
                     min="1"
                     max="1000"
                     required
-                    class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
@@ -1614,7 +1745,7 @@
           return `
             <div
               onclick="${isPositive ? `handleHabitClickInEditMode('${h.id}')` : `startInlineEditHabit(event, '${h.id}')`}"
-              class="group flex items-center justify-between gap-2 px-4 h-[60px] ${
+              class="group flex items-center justify-between gap-2 px-4 min-h-[64px] py-2 ${
                 inGroup ? '' : 'rounded-xl bg-slate-950/90 border border-indigo-500/40'
               } ${
                 isBeingPaired
@@ -1651,12 +1782,13 @@
                   </button>
                 </div>
 
+                <!-- Emoji to the left of main text & subtext, ~2x font size -->
+                <span class="text-2xl sm:text-[28px] leading-none shrink-0 select-none" aria-hidden="true">${escapeHtml(emojiChar)}</span>
+
                 <div class="min-w-0 flex-1">
                   ${showSubtext ? `
                     <div class="flex flex-col justify-center">
-                      <div class="flex items-center gap-1.5 flex-wrap">
-                        <span class="text-xs sm:text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
-                      </div>
+                      <span class="text-xs sm:text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
                       <span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>
                     </div>
                   ` : `
@@ -1699,12 +1831,12 @@
         return `
           <div
             onclick="triggerHabit('${h.id}')"
-            class="group flex items-center justify-between px-4 h-[60px] ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
+            class="group flex items-center justify-between px-4 min-h-[64px] py-2 ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
           >
             <div class="flex items-center gap-3 min-w-0 pr-2 flex-1">
-              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors font-bold text-sm">
-                ${isPositive ? '+' : '−'}
-              </div>
+              <!-- Emoji to the left of main text & subtext, ~2x font size -->
+              <span class="text-2xl sm:text-[28px] leading-none shrink-0 select-none" aria-hidden="true">${escapeHtml(emojiChar)}</span>
+
               <div class="min-w-0 flex-1">
                 ${showSubtext || showProgress ? `
                   <div class="flex flex-col justify-center">
@@ -1743,7 +1875,7 @@
             if (!renderedGroups.has(h.groupId)) {
               renderedGroups.add(h.groupId);
               const groupItems = positives.filter(x => x.groupId === h.groupId);
-              const cardsHtml = groupItems.map((gm, gIdx) => {
+              const cardsHtml = groupItems.map(gm => {
                 const gmIdx = positives.findIndex(x => x.id === gm.id);
                 return renderHabitCard(gm, gmIdx, positives.length, true, true);
               }).join('');
@@ -1808,7 +1940,7 @@
                     type="text"
                     id="editRewardIcon_${reward.id}"
                     value="${escapeHtml(reward.icon || '🎁')}"
-                    maxlength="4"
+                    maxlength="8"
                     class="w-12 text-center bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                   />
                   <input
@@ -2020,98 +2152,128 @@
     }
 
     // =========================================================================
-    // 5. CORRECTED WORKFLOW SCHEDULER
+    // 5. SCHEDULER LOGIC (STARTUP, 24H MINIMUM, MULTI-DAY CATCH-UP)
     // =========================================================================
-    function getNextResetTimestamp(config, now = new Date()) {
-      const timeStr = (config && config.time) || '07:00';
-      const [rHour, rMin] = timeStr.split(':').map(Number);
-      const nowMs = now.getTime();
+    function toDateTimeLocalUtcValue(isoOrMs) {
+      if (!isoOrMs) return '';
+      const d = new Date(isoOrMs);
+      if (isNaN(d.getTime())) return '';
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+    }
 
-      const year = now.getUTCFullYear();
-      const month = now.getUTCMonth();
-      const day = now.getUTCDate();
+    function parseDateTimeLocalUtcToMs(localVal) {
+      if (!localVal) return NaN;
+      const normalized = localVal.length === 16 ? `${localVal}:00Z` : `${localVal}Z`;
+      const ms = Date.parse(normalized);
+      return isNaN(ms) ? NaN : ms;
+    }
 
-      let target = Date.UTC(year, month, day, rHour, rMin || 0, 0);
-
-      if (!config.hasRefreshedOnce) {
-        return target;
-      }
-
-      while (target <= nowMs) {
-        target += 24 * 60 * 60 * 1000;
-      }
-
-      const lastReset = config.lastResetTimestamp || 0;
-      if (lastReset > 0) {
-        while (target < lastReset + (24 * 60 * 60 * 1000)) {
-          target += 24 * 60 * 60 * 1000;
+    function enforceMinimumNextRefreshMs(candidateMs, lastRefreshMs) {
+      let effectiveMs = candidateMs;
+      if (lastRefreshMs && lastRefreshMs > 0) {
+        const minAllowedMs = lastRefreshMs + DAY_MS;
+        while (effectiveMs < minAllowedMs) {
+          effectiveMs += DAY_MS;
         }
       }
+      return effectiveMs;
+    }
 
-      return target;
+    function getEffectiveNextRefreshMs(config = appState.resetConfig) {
+      let nextMs = config.nextScheduledRefreshDate ? Date.parse(config.nextScheduledRefreshDate) : NaN;
+      if (isNaN(nextMs)) {
+        const startupMs = config.initialStartupDate ? Date.parse(config.initialStartupDate) : Date.now();
+        nextMs = Date.parse(getNextUtc7AmAfter(new Date(startupMs)));
+      }
+      const lastRefreshMs = config.lastRefreshDate
+        ? Date.parse(config.lastRefreshDate)
+        : (config.lastResetTimestamp || 0);
+      return enforceMinimumNextRefreshMs(nextMs, lastRefreshMs);
     }
 
     function updateNextRefreshPreview() {
-      const timeInputVal = document.getElementById('resetTimeInput').value || '07:00';
-      const tempConfig = { ...appState.resetConfig, time: timeInputVal };
-      const nextTs = getNextResetTimestamp(tempConfig, new Date());
-      const dateObj = new Date(nextTs);
-      const formatted = dateObj.toUTCString();
+      const inputEl = document.getElementById('nextRefreshDateTimeInput');
       const labelEl = document.getElementById('nextRefreshTimeLabel');
-      if (labelEl) {
-        labelEl.textContent = formatted;
-      }
+      if (!labelEl) return;
+
+      const parsedInputMs = inputEl ? parseDateTimeLocalUtcToMs(inputEl.value) : NaN;
+      const baseMs = !isNaN(parsedInputMs) ? parsedInputMs : getEffectiveNextRefreshMs(appState.resetConfig);
+      const lastRefreshMs = appState.resetConfig.lastRefreshDate
+        ? Date.parse(appState.resetConfig.lastRefreshDate)
+        : (appState.resetConfig.lastResetTimestamp || 0);
+
+      const effectiveMs = enforceMinimumNextRefreshMs(baseMs, lastRefreshMs);
+      labelEl.textContent = new Date(effectiveMs).toUTCString();
     }
 
     function populateScheduleInputs() {
-      const resetInput = document.getElementById('resetTimeInput');
+      const config = appState.resetConfig;
+      const dtInput = document.getElementById('nextRefreshDateTimeInput');
       const titleInput = document.getElementById('scheduledTitleInput');
       const pointsInput = document.getElementById('scheduledPointsInput');
       const tzLabelEl = document.getElementById('detectedTimezoneLabel');
 
-      if (resetInput) resetInput.value = appState.resetConfig.time || '07:00';
-      if (titleInput) titleInput.value = appState.resetConfig.scheduledTitle !== undefined ? appState.resetConfig.scheduledTitle : 'Midnight Daily Baseline Penalty';
-      if (pointsInput) pointsInput.value = appState.resetConfig.scheduledPoints !== undefined ? appState.resetConfig.scheduledPoints : -50;
+      const startupEl = document.getElementById('initialStartupDateLabel');
+      const lastRefreshEl = document.getElementById('lastRefreshDateLabel');
+      const lastExtractEl = document.getElementById('lastExtractDateLabel');
+
+      const effectiveNextMs = getEffectiveNextRefreshMs(config);
+      if (dtInput) dtInput.value = toDateTimeLocalUtcValue(effectiveNextMs);
+      if (titleInput) titleInput.value = config.scheduledTitle !== undefined ? config.scheduledTitle : 'Midnight Daily Baseline Penalty';
+      if (pointsInput) pointsInput.value = config.scheduledPoints !== undefined ? config.scheduledPoints : -50;
       if (tzLabelEl) tzLabelEl.textContent = 'UTC Time';
+
+      if (startupEl) {
+        startupEl.textContent = config.initialStartupDate
+          ? new Date(config.initialStartupDate).toUTCString()
+          : '--';
+      }
+      if (lastRefreshEl) {
+        lastRefreshEl.textContent = config.lastRefreshDate
+          ? new Date(config.lastRefreshDate).toUTCString()
+          : 'Never';
+      }
+      if (lastExtractEl) {
+        lastExtractEl.textContent = config.lastExtractDate || '1970-01-01';
+      }
 
       updateNextRefreshPreview();
     }
 
     function saveResetConfig() {
-      const timeVal = document.getElementById('resetTimeInput').value.trim() || '07:00';
-      const titleVal = document.getElementById('scheduledTitleInput').value.trim();
-      const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
+      const config = appState.resetConfig;
+      const dtInput = document.getElementById('nextRefreshDateTimeInput');
+      const titleInput = document.getElementById('scheduledTitleInput');
+      const pointsInput = document.getElementById('scheduledPointsInput');
 
-      appState.resetConfig.time = timeVal;
-      appState.resetConfig.scheduledTitle = titleVal;
-      appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
+      const rawInputMs = dtInput ? parseDateTimeLocalUtcToMs(dtInput.value) : NaN;
+      const titleVal = titleInput ? titleInput.value.trim() : '';
+      const pointsVal = pointsInput ? parseInt(pointsInput.value, 10) : 0;
+
+      const lastRefreshMs = config.lastRefreshDate
+        ? Date.parse(config.lastRefreshDate)
+        : (config.lastResetTimestamp || 0);
+
+      const requestedMs = !isNaN(rawInputMs) ? rawInputMs : getEffectiveNextRefreshMs(config);
+      const effectiveNextMs = enforceMinimumNextRefreshMs(requestedMs, lastRefreshMs);
+      const bumpedFor24h = effectiveNextMs !== requestedMs;
+
+      config.nextScheduledRefreshDate = new Date(effectiveNextMs).toISOString();
+      config.scheduledTitle = titleVal;
+      config.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
 
       saveState();
       closeBackupModal();
-      showToast('Reset schedule & scheduled points updated!', 'success');
-      
+
+      if (bumpedFor24h) {
+        showToast('Next refresh bumped to +24h after last refresh.', 'info');
+      } else {
+        showToast('Refresh schedule & scheduled points updated!', 'success');
+      }
+
       checkResetRollover();
       renderAll();
-    }
-
-    function testTriggerResetNow() {
-      const timeVal = document.getElementById('resetTimeInput').value.trim() || '07:00';
-      const titleVal = document.getElementById('scheduledTitleInput').value.trim();
-      const pointsVal = parseInt(document.getElementById('scheduledPointsInput').value, 10);
-
-      appState.resetConfig.time = timeVal;
-      appState.resetConfig.scheduledTitle = titleVal;
-      appState.resetConfig.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
-
-      const now = new Date();
-      appState.resetConfig.lastResetTimestamp = now.getTime();
-      appState.resetConfig.hasRefreshedOnce = true;
-      applyScheduledAdjustment(now);
-
-      saveState();
-      closeBackupModal();
-      renderAll();
-      showToast('⚡ Test Reset triggered successfully!', 'success');
     }
 
     // =========================================================================
@@ -2177,75 +2339,111 @@
     }
 
     // =========================================================================
-    // 7. UNIFIED CYCLE & COUNT LOGIC
+    // 7. UNIFIED CYCLE, COUNT & ROLLOVER EXECUTION
     // =========================================================================
     function isLogCurrentCycle(timestampISO) {
       if (!timestampISO) return false;
       const logTime = new Date(timestampISO).getTime();
-      const lastReset = appState.resetConfig.lastResetTimestamp || 0;
+      const lastReset = appState.resetConfig.lastRefreshDate
+        ? Date.parse(appState.resetConfig.lastRefreshDate)
+        : (appState.resetConfig.lastResetTimestamp || 0);
       return logTime >= lastReset;
     }
 
     function getCompletedPositiveCountToday(habitId) {
       let count = 0;
+      const habitObj = appState.habits.find(h => h.id === habitId);
+      const fullHabitTitle = habitObj ? (habitObj.icon ? `${habitObj.icon} ${habitObj.title}` : habitObj.title) : '';
+
       appState.logs.forEach(log => {
         if (log.category === 'positive' && isLogCurrentCycle(log.timestamp)) {
           if (log.habitId === habitId) {
             count++;
-          } else {
-            const matchedHabit = appState.habits.find(
-              h => h.id === habitId && h.type === 'positive' && (log.title === h.title || log.title.startsWith(`${h.title} (`))
-            );
-            if (matchedHabit) count++;
+          } else if (habitObj && habitObj.type === 'positive' && fullHabitTitle) {
+            if (log.title === fullHabitTitle || log.title.startsWith(`${fullHabitTitle} (`)) {
+              count++;
+            }
           }
         }
       });
       return count;
     }
 
-    function applyScheduledAdjustment(now) {
+    function applyScheduledAdjustment(eventDateObj) {
       const sPoints = appState.resetConfig.scheduledPoints;
       if (sPoints !== 0) {
         const sTitle = (appState.resetConfig.scheduledTitle || '').trim() || 'Scheduled Daily Adjustment';
         appState.balance += sPoints;
         appState.logs.unshift({
-          id: 'log_sched_' + Date.now(),
+          id: 'log_sched_' + eventDateObj.getTime() + '_' + Math.random().toString(36).slice(2, 5),
           title: sTitle,
           delta: sPoints,
           category: sPoints > 0 ? 'positive' : 'negative',
-          timestamp: now.toISOString()
+          timestamp: eventDateObj.toISOString()
         });
       }
     }
 
+    function executeSingleRefreshCycle(cycleTimeMs) {
+      const config = appState.resetConfig;
+      const cycleDate = new Date(cycleTimeMs);
+      const cycleIso = cycleDate.toISOString();
+
+      // 1. Update last refresh & last extract dates
+      config.lastRefreshDate = cycleIso;
+      config.lastResetTimestamp = cycleTimeMs;
+      config.lastExtractDate = formatDateYYYYMMDD(cycleDate);
+      config.hasRefreshedOnce = true;
+
+      // 2. Apply scheduled point adjustment for this cycle
+      applyScheduledAdjustment(cycleDate);
+
+      // 3. Advance next scheduled refresh date to 24 hours later
+      config.nextScheduledRefreshDate = new Date(cycleTimeMs + DAY_MS).toISOString();
+    }
+
     function checkResetRollover() {
       const now = new Date();
+      const nowMs = now.getTime();
       const config = appState.resetConfig;
 
-      if (!config.hasRefreshedOnce) {
-        const timeStr = config.time || '07:00';
-        const [rHour, rMin] = timeStr.split(':').map(Number);
-        const targetToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), rHour, rMin || 0, 0);
-
-        if (now.getTime() >= targetToday) {
-          config.lastResetTimestamp = now.getTime();
-          config.hasRefreshedOnce = true;
-          applyScheduledAdjustment(now);
-          saveState();
-          renderAll();
-          showToast('🌅 Initial daily reset triggered!', 'info');
-        }
-        return;
+      if (!config.lastExtractDate) {
+        config.lastExtractDate = '1970-01-01';
       }
 
-      const nextReset = getNextResetTimestamp(config, now);
-      if (now.getTime() >= nextReset) {
-        config.lastResetTimestamp = now.getTime();
-        applyScheduledAdjustment(now);
+      if (!config.initialStartupDate) {
+        config.initialStartupDate = now.toISOString();
+      }
 
+      if (!config.nextScheduledRefreshDate) {
+        config.nextScheduledRefreshDate = getNextUtc7AmAfter(new Date(config.initialStartupDate));
         saveState();
-        renderAll();
-        showToast('🌅 Daily reset triggered for the new cycle!', 'info');
+      }
+
+      let nextRefreshMs = getEffectiveNextRefreshMs(config);
+      config.nextScheduledRefreshDate = new Date(nextRefreshMs).toISOString();
+
+      let cyclesExecuted = 0;
+      const maxCatchupCycles = 365;
+
+      while (nowMs >= nextRefreshMs && cyclesExecuted < maxCatchupCycles) {
+        executeSingleRefreshCycle(nextRefreshMs);
+        cyclesExecuted++;
+        nextRefreshMs = getEffectiveNextRefreshMs(config);
+        config.nextScheduledRefreshDate = new Date(nextRefreshMs).toISOString();
+      }
+
+      if (cyclesExecuted > 0) {
+        saveState();
+        renderHeaderStats();
+        renderHabits();
+        renderRewards();
+        renderLogs();
+        if (cyclesExecuted === 1) {
+          showToast('🌅 Daily refresh triggered for the new cycle!', 'info');
+        } else {
+          showToast(`🌅 Caught up on ${cyclesExecuted} scheduled daily refreshes!`, 'info');
+        }
       }
     }
 
@@ -2346,7 +2544,22 @@
       try {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object' && Array.isArray(parsed.habits)) {
-          appState = parsed;
+          const nowIso = new Date().toISOString();
+          const rc = {
+            ...DEFAULT_STATE.resetConfig,
+            ...(parsed.resetConfig || {})
+          };
+          if (!rc.lastExtractDate) rc.lastExtractDate = '1970-01-01';
+          if (!rc.initialStartupDate) rc.initialStartupDate = nowIso;
+          if (!rc.nextScheduledRefreshDate) {
+            rc.nextScheduledRefreshDate = getNextUtc7AmAfter(new Date(rc.initialStartupDate));
+          }
+
+          appState = {
+            ...parsed,
+            resetConfig: rc,
+            habits: parsed.habits.map(normalizeHabit)
+          };
           saveState();
           renderAll();
           closeBackupModal();
@@ -2389,7 +2602,12 @@
         toggleEditHabitsMode();
       }
 
+      const freshStartupIso = new Date().toISOString();
       appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      appState.resetConfig.lastExtractDate = '1970-01-01';
+      appState.resetConfig.initialStartupDate = freshStartupIso;
+      appState.resetConfig.nextScheduledRefreshDate = getNextUtc7AmAfter(new Date(freshStartupIso));
+
       saveState();
       checkResetRollover();
       renderAll();
