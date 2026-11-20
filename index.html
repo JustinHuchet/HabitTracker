@@ -554,18 +554,18 @@
           </div>
         </div>
 
-        <!-- 1. Next Scheduled Refresh Date/Time Picker -->
+        <!-- 1. Daily Reset Time Picker (Day is automatic / non-selectable) -->
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2 flex-wrap">
-            <label for="nextRefreshDateTimeInput" class="text-xs font-semibold text-slate-300">Next Scheduled Refresh Date & Time (UTC)</label>
-            <span class="text-[11px] text-indigo-400 font-medium">Min +24h from last refresh</span>
+            <label for="resetTimeInput" class="text-xs font-semibold text-slate-300">Daily Reset Time (UTC)</label>
+            <span class="text-[11px] text-indigo-400 font-medium">Next day auto-updates • Min +24h</span>
           </div>
           <div class="flex items-center gap-2.5 flex-wrap">
             <input
-              type="datetime-local"
-              step="60"
-              id="nextRefreshDateTimeInput"
+              type="time"
+              id="resetTimeInput"
               oninput="updateNextRefreshPreview()"
+              onchange="updateNextRefreshPreview()"
               class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-none focus:border-indigo-500"
             />
             <div class="flex items-center gap-1.5 text-xs text-indigo-400 font-medium bg-indigo-500/10 border border-indigo-500/20 px-3 py-2 rounded-xl">
@@ -579,7 +579,7 @@
 
         <!-- Next Refresh Preview Box -->
         <div class="p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl space-y-0.5">
-          <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Effective Next Scheduled Refresh (UTC)</span>
+          <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
           <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
         </div>
 
@@ -697,7 +697,6 @@
     }
 
     function updateAboveSubsectionHeaderVisibility() {
-      const headers = document.querySelectorAll('.subsection-sticky-header');
       const headerMap = [
         { headerId: 'positiveColumnHeader', zoneId: 'positiveColumn' },
         { headerId: 'negativeColumnHeader', zoneId: 'negativeColumn' },
@@ -723,7 +722,8 @@
           const rect = el.getBoundingClientRect();
           if (rect.height === 0 && rect.width === 0) return;
 
-          if (rect.top < cutoffY - 0.5) {
+          // Only hide once the entire element (bottom edge) has scrolled behind the subheader
+          if (rect.bottom <= cutoffY + 0.5) {
             el.style.opacity = '0';
             el.style.pointerEvents = 'none';
           } else {
@@ -732,8 +732,6 @@
           }
         });
       });
-
-      void headers;
     }
 
     function updateHeaderHeightOffset() {
@@ -858,16 +856,44 @@
       return (!isNaN(parsed) && parsed >= 1) ? parsed : 1;
     }
 
-    function getNextUtc7AmAfter(startupDateObj) {
-      const base = startupDateObj instanceof Date ? startupDateObj : new Date(startupDateObj);
-      const year = base.getUTCFullYear();
-      const month = base.getUTCMonth();
-      const day = base.getUTCDate();
-      let candidateMs = Date.UTC(year, month, day, 7, 0, 0, 0);
-      if (candidateMs <= base.getTime()) {
+    function parseUtcTimeStr(timeStr) {
+      const match = /^(\d{2}):(\d{2})$/.exec((timeStr || '').trim());
+      if (!match) return { hours: 7, minutes: 0 };
+      const hours = Math.min(23, Math.max(0, parseInt(match[1], 10)));
+      const minutes = Math.min(59, Math.max(0, parseInt(match[2], 10)));
+      return { hours, minutes };
+    }
+
+    function computeNextRefreshMsForTime(timeStr, anchorMs, lastRefreshMs) {
+      const { hours, minutes } = parseUtcTimeStr(timeStr);
+      const anchor = new Date(anchorMs);
+      let candidateMs = Date.UTC(
+        anchor.getUTCFullYear(),
+        anchor.getUTCMonth(),
+        anchor.getUTCDate(),
+        hours,
+        minutes,
+        0,
+        0
+      );
+
+      if (candidateMs <= anchorMs) {
         candidateMs += DAY_MS;
       }
-      return new Date(candidateMs).toISOString();
+
+      if (lastRefreshMs && lastRefreshMs > 0) {
+        const minAllowedMs = lastRefreshMs + DAY_MS;
+        while (candidateMs < minAllowedMs) {
+          candidateMs += DAY_MS;
+        }
+      }
+
+      return candidateMs;
+    }
+
+    function getNextUtc7AmAfter(startupDateObj) {
+      const startupMs = startupDateObj instanceof Date ? startupDateObj.getTime() : new Date(startupDateObj).getTime();
+      return new Date(computeNextRefreshMsForTime('07:00', startupMs, 0)).toISOString();
     }
 
     function formatDateYYYYMMDD(dateObj) {
@@ -914,7 +940,13 @@
       }
 
       if (!mergedConfig.nextScheduledRefreshDate) {
-        mergedConfig.nextScheduledRefreshDate = getNextUtc7AmAfter(new Date(mergedConfig.initialStartupDate));
+        const lastMs = mergedConfig.lastRefreshDate
+          ? Date.parse(mergedConfig.lastRefreshDate)
+          : (mergedConfig.lastResetTimestamp || 0);
+        const anchorMs = lastMs > 0 ? lastMs : Date.parse(mergedConfig.initialStartupDate);
+        mergedConfig.nextScheduledRefreshDate = new Date(
+          computeNextRefreshMsForTime(mergedConfig.time || '07:00', anchorMs, lastMs)
+        ).toISOString();
       }
 
       if (!mergedConfig.lastResetTimestamp && mergedConfig.lastRefreshDate) {
@@ -2264,64 +2296,36 @@
     }
 
     // =========================================================================
-    // 5. SCHEDULER LOGIC (STARTUP, 24H MINIMUM, MULTI-DAY CATCH-UP)
+    // 5. SCHEDULER LOGIC (TIME-ONLY INPUT, DYNAMIC NEXT DAY, 24H MINIMUM)
     // =========================================================================
-    function toDateTimeLocalUtcValue(isoOrMs) {
-      if (!isoOrMs) return '';
-      const d = new Date(isoOrMs);
-      if (isNaN(d.getTime())) return '';
-      const pad = n => String(n).padStart(2, '0');
-      return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
-    }
-
-    function parseDateTimeLocalUtcToMs(localVal) {
-      if (!localVal) return NaN;
-      const normalized = localVal.length === 16 ? `${localVal}:00Z` : `${localVal}Z`;
-      const ms = Date.parse(normalized);
-      return isNaN(ms) ? NaN : ms;
-    }
-
-    function enforceMinimumNextRefreshMs(candidateMs, lastRefreshMs) {
-      let effectiveMs = candidateMs;
-      if (lastRefreshMs && lastRefreshMs > 0) {
-        const minAllowedMs = lastRefreshMs + DAY_MS;
-        while (effectiveMs < minAllowedMs) {
-          effectiveMs += DAY_MS;
-        }
-      }
-      return effectiveMs;
-    }
-
-    function getEffectiveNextRefreshMs(config = appState.resetConfig) {
-      let nextMs = config.nextScheduledRefreshDate ? Date.parse(config.nextScheduledRefreshDate) : NaN;
-      if (isNaN(nextMs)) {
-        const startupMs = config.initialStartupDate ? Date.parse(config.initialStartupDate) : Date.now();
-        nextMs = Date.parse(getNextUtc7AmAfter(new Date(startupMs)));
-      }
+    function getDynamicNextRefreshMs(timeStr, config = appState.resetConfig) {
       const lastRefreshMs = config.lastRefreshDate
         ? Date.parse(config.lastRefreshDate)
         : (config.lastResetTimestamp || 0);
-      return enforceMinimumNextRefreshMs(nextMs, lastRefreshMs);
+      const anchorMs = lastRefreshMs > 0
+        ? lastRefreshMs
+        : (config.initialStartupDate ? Date.parse(config.initialStartupDate) : Date.now());
+      return computeNextRefreshMsForTime(timeStr, anchorMs, lastRefreshMs);
+    }
+
+    function getEffectiveNextRefreshMs(config = appState.resetConfig) {
+      const timeStr = config.time || '07:00';
+      return getDynamicNextRefreshMs(timeStr, config);
     }
 
     function updateNextRefreshPreview() {
-      const inputEl = document.getElementById('nextRefreshDateTimeInput');
+      const timeInput = document.getElementById('resetTimeInput');
       const labelEl = document.getElementById('nextRefreshTimeLabel');
       if (!labelEl) return;
 
-      const parsedInputMs = inputEl ? parseDateTimeLocalUtcToMs(inputEl.value) : NaN;
-      const baseMs = !isNaN(parsedInputMs) ? parsedInputMs : getEffectiveNextRefreshMs(appState.resetConfig);
-      const lastRefreshMs = appState.resetConfig.lastRefreshDate
-        ? Date.parse(appState.resetConfig.lastRefreshDate)
-        : (appState.resetConfig.lastResetTimestamp || 0);
-
-      const effectiveMs = enforceMinimumNextRefreshMs(baseMs, lastRefreshMs);
-      labelEl.textContent = new Date(effectiveMs).toUTCString();
+      const selectedTime = (timeInput && timeInput.value) ? timeInput.value : (appState.resetConfig.time || '07:00');
+      const nextMs = getDynamicNextRefreshMs(selectedTime, appState.resetConfig);
+      labelEl.textContent = new Date(nextMs).toUTCString();
     }
 
     function populateScheduleInputs() {
       const config = appState.resetConfig;
-      const dtInput = document.getElementById('nextRefreshDateTimeInput');
+      const timeInput = document.getElementById('resetTimeInput');
       const titleInput = document.getElementById('scheduledTitleInput');
       const pointsInput = document.getElementById('scheduledPointsInput');
       const tzLabelEl = document.getElementById('detectedTimezoneLabel');
@@ -2330,8 +2334,7 @@
       const lastRefreshEl = document.getElementById('lastRefreshDateLabel');
       const lastExtractEl = document.getElementById('lastExtractDateLabel');
 
-      const effectiveNextMs = getEffectiveNextRefreshMs(config);
-      if (dtInput) dtInput.value = toDateTimeLocalUtcValue(effectiveNextMs);
+      if (timeInput) timeInput.value = config.time || '07:00';
       if (titleInput) titleInput.value = config.scheduledTitle !== undefined ? config.scheduledTitle : 'Midnight Daily Baseline Penalty';
       if (pointsInput) pointsInput.value = config.scheduledPoints !== undefined ? config.scheduledPoints : -50;
       if (tzLabelEl) tzLabelEl.textContent = 'UTC Time';
@@ -2355,34 +2358,25 @@
 
     function saveResetConfig() {
       const config = appState.resetConfig;
-      const dtInput = document.getElementById('nextRefreshDateTimeInput');
+      const timeInput = document.getElementById('resetTimeInput');
       const titleInput = document.getElementById('scheduledTitleInput');
       const pointsInput = document.getElementById('scheduledPointsInput');
 
-      const rawInputMs = dtInput ? parseDateTimeLocalUtcToMs(dtInput.value) : NaN;
+      const chosenTime = (timeInput && timeInput.value) ? timeInput.value : (config.time || '07:00');
+      const { hours, minutes } = parseUtcTimeStr(chosenTime);
+      const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
       const titleVal = titleInput ? titleInput.value.trim() : '';
       const pointsVal = pointsInput ? parseInt(pointsInput.value, 10) : 0;
 
-      const lastRefreshMs = config.lastRefreshDate
-        ? Date.parse(config.lastRefreshDate)
-        : (config.lastResetTimestamp || 0);
-
-      const requestedMs = !isNaN(rawInputMs) ? rawInputMs : getEffectiveNextRefreshMs(config);
-      const effectiveNextMs = enforceMinimumNextRefreshMs(requestedMs, lastRefreshMs);
-      const bumpedFor24h = effectiveNextMs !== requestedMs;
-
-      config.nextScheduledRefreshDate = new Date(effectiveNextMs).toISOString();
+      config.time = formattedTime;
       config.scheduledTitle = titleVal;
       config.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
+      config.nextScheduledRefreshDate = new Date(getDynamicNextRefreshMs(formattedTime, config)).toISOString();
 
       saveState();
       closeBackupModal();
-
-      if (bumpedFor24h) {
-        showToast('Next refresh bumped to +24h after last refresh.', 'info');
-      } else {
-        showToast('Refresh schedule & scheduled points updated!', 'success');
-      }
+      showToast(`Daily reset time set to ${formattedTime} UTC!`, 'success');
 
       checkResetRollover();
       renderAll();
@@ -2536,12 +2530,15 @@
       }
 
       if (!config.nextScheduledRefreshDate) {
-        config.nextScheduledRefreshDate = getNextUtc7AmAfter(new Date(config.initialStartupDate));
+        config.nextScheduledRefreshDate = new Date(getEffectiveNextRefreshMs(config)).toISOString();
         saveState();
       }
 
-      let nextRefreshMs = getEffectiveNextRefreshMs(config);
-      config.nextScheduledRefreshDate = new Date(nextRefreshMs).toISOString();
+      let nextRefreshMs = Date.parse(config.nextScheduledRefreshDate);
+      if (isNaN(nextRefreshMs)) {
+        nextRefreshMs = getEffectiveNextRefreshMs(config);
+        config.nextScheduledRefreshDate = new Date(nextRefreshMs).toISOString();
+      }
 
       let cyclesExecuted = 0;
       const maxCatchupCycles = 365;
@@ -2549,8 +2546,11 @@
       while (nowMs >= nextRefreshMs && cyclesExecuted < maxCatchupCycles) {
         executeSingleRefreshCycle(nextRefreshMs);
         cyclesExecuted++;
-        nextRefreshMs = getEffectiveNextRefreshMs(config);
-        config.nextScheduledRefreshDate = new Date(nextRefreshMs).toISOString();
+        nextRefreshMs = Date.parse(config.nextScheduledRefreshDate);
+        if (isNaN(nextRefreshMs)) {
+          nextRefreshMs = getEffectiveNextRefreshMs(config);
+          config.nextScheduledRefreshDate = new Date(nextRefreshMs).toISOString();
+        }
       }
 
       if (cyclesExecuted > 0) {
