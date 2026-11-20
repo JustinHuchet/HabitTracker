@@ -567,9 +567,21 @@
           </div>
         </div>
 
-        <div class="p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl space-y-0.5">
-          <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
-          <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
+        <div class="p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl space-y-2">
+          <div>
+            <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
+            <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+            <div>
+              <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Last Reset Date</span>
+              <p id="lastResetDateDebugLabel" class="text-[11px] font-mono text-slate-200 break-all">--</p>
+            </div>
+            <div>
+              <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Initial Open Date</span>
+              <p id="initialOpenDateDebugLabel" class="text-[11px] font-mono text-slate-200 break-all">--</p>
+            </div>
+          </div>
         </div>
 
         <div class="space-y-2.5 pt-2 border-t border-slate-800/80">
@@ -797,7 +809,19 @@
       return { hours, minutes };
     }
 
-    function computeNextRefreshMsForTime(timeStr, anchorMs) {
+    function getLastResetMs(config = appState.resetConfig) {
+      if (!config) return 0;
+      if (typeof config.lastResetTimestamp === 'number' && !isNaN(config.lastResetTimestamp) && config.lastResetTimestamp > 0) {
+        return config.lastResetTimestamp;
+      }
+      if (config.lastRefreshDate) {
+        const parsed = Date.parse(config.lastRefreshDate);
+        if (!isNaN(parsed)) return parsed;
+      }
+      return 0;
+    }
+
+    function computeNextRefreshMsForTime(timeStr, anchorMs, minAfterLastResetMs = 0) {
       const { hours, minutes } = parseUtcTimeStr(timeStr);
       const safeAnchorMs = typeof anchorMs === 'number' && !isNaN(anchorMs) ? anchorMs : Date.now();
       const anchor = new Date(safeAnchorMs);
@@ -812,7 +836,7 @@
         0
       );
 
-      if (candidateMs <= safeAnchorMs) {
+      while (candidateMs <= safeAnchorMs || (minAfterLastResetMs > 0 && candidateMs < minAfterLastResetMs)) {
         candidateMs += DAY_MS;
       }
 
@@ -2250,24 +2274,58 @@
     // =========================================================================
     // 5. SCHEDULER LOGIC
     // =========================================================================
+    function computeNextResetMs(timeStr, config = appState.resetConfig, nowMs = Date.now()) {
+      const lastResetMs = getLastResetMs(config);
+      const hasResetOccurred = Boolean(config && config.hasRefreshedOnce && lastResetMs > 0);
+      const minAfterLastResetMs = hasResetOccurred ? (lastResetMs + DAY_MS) : 0;
+      const anchorMs = hasResetOccurred ? Math.max(nowMs, minAfterLastResetMs - 1) : nowMs;
+      return computeNextRefreshMsForTime(timeStr, anchorMs, minAfterLastResetMs);
+    }
+
     function getDynamicNextRefreshMs(timeStr, config = appState.resetConfig) {
       const nowMs = Date.now();
       const scheduledMs = config && config.nextScheduledRefreshDate
         ? Date.parse(config.nextScheduledRefreshDate)
         : NaN;
+      const lastResetMs = getLastResetMs(config);
+      const minAfterLastResetMs = (config && config.hasRefreshedOnce && lastResetMs > 0)
+        ? (lastResetMs + DAY_MS)
+        : 0;
+
       if (!isNaN(scheduledMs) && scheduledMs <= nowMs) {
-        return scheduledMs;
+        if (!minAfterLastResetMs || scheduledMs >= minAfterLastResetMs) {
+          return scheduledMs;
+        }
       }
-      const lastRefreshMs = config && config.lastRefreshDate
-        ? Date.parse(config.lastRefreshDate)
-        : (config && config.lastResetTimestamp ? config.lastResetTimestamp : 0);
-      const anchorMs = Math.max(nowMs, lastRefreshMs || 0);
-      return computeNextRefreshMsForTime(timeStr, anchorMs);
+
+      return computeNextResetMs(timeStr, config, nowMs);
+    }
+
+    function formatDebugDate(isoOrMs) {
+      if (!isoOrMs) return '--';
+      const ms = typeof isoOrMs === 'number' ? isoOrMs : Date.parse(isoOrMs);
+      if (isNaN(ms) || ms <= 0) return '--';
+      return new Date(ms).toUTCString();
+    }
+
+    function updateDebugFields(config = appState.resetConfig) {
+      const lastResetEl = document.getElementById('lastResetDateDebugLabel');
+      const initOpenEl = document.getElementById('initialOpenDateDebugLabel');
+      if (lastResetEl) {
+        const lastResetMs = getLastResetMs(config);
+        lastResetEl.textContent = (config && config.hasRefreshedOnce && lastResetMs > 0)
+          ? formatDebugDate(lastResetMs)
+          : 'None yet';
+      }
+      if (initOpenEl) {
+        initOpenEl.textContent = formatDebugDate(config && config.initialStartupDate);
+      }
     }
 
     function updateNextRefreshPreview() {
       const timeInput = document.getElementById('resetTimeInput');
       const labelEl = document.getElementById('nextRefreshTimeLabel');
+      updateDebugFields(appState.resetConfig);
       if (!labelEl) return;
 
       const selectedTime = (timeInput && timeInput.value) ? timeInput.value : (appState.resetConfig.time || '07:00');
@@ -2304,32 +2362,12 @@
       const pointsVal = pointsInput ? parseInt(pointsInput.value, 10) : 0;
 
       const nowMs = Date.now();
-      const { hours: hNow, minutes: mNow } = parseUtcTimeStr(formattedTime);
-      const nowDate = new Date(nowMs);
-      const todayCandidateMs = Date.UTC(
-        nowDate.getUTCFullYear(),
-        nowDate.getUTCMonth(),
-        nowDate.getUTCDate(),
-        hNow,
-        mNow,
-        0,
-        0
-      );
-      const lastRefreshMs = config.lastRefreshDate
-        ? Date.parse(config.lastRefreshDate)
-        : (config.lastResetTimestamp || 0);
-
       config.time = formattedTime;
       config.scheduledTitle = titleVal;
       config.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
-
-      if (todayCandidateMs <= nowMs && (!lastRefreshMs || lastRefreshMs < todayCandidateMs)) {
-        config.nextScheduledRefreshDate = new Date(todayCandidateMs).toISOString();
-      } else {
-        config.nextScheduledRefreshDate = new Date(
-          computeNextRefreshMsForTime(formattedTime, Math.max(nowMs, lastRefreshMs || 0))
-        ).toISOString();
-      }
+      config.nextScheduledRefreshDate = new Date(
+        computeNextResetMs(formattedTime, config, nowMs)
+      ).toISOString();
 
       saveState();
       closeBackupModal();
@@ -2469,7 +2507,7 @@
       applyScheduledAdjustment(cycleDate);
 
       config.nextScheduledRefreshDate = new Date(
-        computeNextRefreshMsForTime(config.time || '07:00', cycleTimeMs)
+        computeNextRefreshMsForTime(config.time || '07:00', cycleTimeMs + DAY_MS - 1, cycleTimeMs + DAY_MS)
       ).toISOString();
     }
 
