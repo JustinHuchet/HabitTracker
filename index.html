@@ -48,9 +48,6 @@
       overflow-anchor: none;
     }
 
-
-
-    /* Clip any child content inside a subsection above the bottom of its sticky header */
     .subsection-clip-zone {
       position: relative;
     }
@@ -87,7 +84,6 @@
       animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* Celebratory Reward Animations */
     @keyframes rewardCardCelebrate {
       0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.75); }
       30% { transform: scale(1.045); box-shadow: 0 0 28px 6px rgba(251, 191, 36, 0.45); border-color: #fbbf24; }
@@ -128,7 +124,6 @@
 
         <!-- Live Balance Pill & Today Stats -->
         <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
-          <!-- Live Balance Counter -->
           <div class="relative flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 shadow-inner shrink-0">
             <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400 hidden md:inline">Balance:</span>
             <div class="flex items-baseline gap-1">
@@ -138,7 +133,6 @@
             <div id="floatingDeltaContainer" class="pointer-events-none absolute -top-2 right-1.5"></div>
           </div>
 
-          <!-- Today's Mini Stats -->
           <div class="flex items-center gap-1.5 sm:gap-2.5 bg-slate-900/50 border border-slate-800/80 rounded-xl px-2.5 py-1.5 sm:px-3 text-[11px] sm:text-xs shrink-0 whitespace-nowrap">
             <span class="text-slate-400 font-medium">Today:</span>
             <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
@@ -151,7 +145,6 @@
 
         <!-- Action Controls & Quick Buttons -->
         <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-          <!-- Editor Button -->
           <button
             id="toggleEditHabitsBtn"
             onclick="toggleEditHabitsMode()"
@@ -163,7 +156,6 @@
             <span id="toggleEditHabitsLabel">Editor</span>
           </button>
 
-          <!-- Settings / Backup Gear Button -->
           <button
             onclick="openBackupModal()"
             title="Settings, Schedule, Backup & Reset"
@@ -190,7 +182,6 @@
         <!-- Positive Habits Column -->
         <div id="positiveColumn" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
           <div>
-            <!-- Sticky Positive Habits Header -->
             <div id="positiveColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 pb-3 mb-3 border-b border-slate-800/80 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
@@ -209,7 +200,6 @@
                 </button>
               </div>
 
-              <!-- Mobile Tab Switcher -->
               <div class="flex sm:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 w-full">
                 <button id="tabPosBtn" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 transition">
                   + Positive Habits
@@ -220,7 +210,6 @@
               </div>
             </div>
 
-            <!-- Add Custom Positive Habit Form -->
             <form id="positiveForm" onsubmit="handleAddHabit(event, 'positive')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-2.5">
               <div class="flex items-center gap-2">
                 <input
@@ -260,7 +249,6 @@
               </div>
             </form>
 
-            <!-- Positive Habit List -->
             <div id="positiveHabitList" class="space-y-2.5"></div>
           </div>
         </div>
@@ -268,7 +256,6 @@
         <!-- Negative Habits / Penalties Column -->
         <div id="negativeColumn" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
           <div>
-            <!-- Sticky Penalties Header -->
             <div id="negativeColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 pb-3 mb-3 border-b border-slate-800/80 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
@@ -287,7 +274,6 @@
                 </button>
               </div>
 
-              <!-- Mobile Tab Switcher -->
               <div class="flex sm:hidden bg-slate-950 p-1 rounded-xl border border-slate-800 w-full">
                 <button id="tabPosBtn2" onclick="switchMobileHabitTab('positive')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">
                   + Positive Habits
@@ -298,7 +284,6 @@
               </div>
             </div>
 
-            <!-- Add Custom Penalty Form -->
             <form id="negativeForm" onsubmit="handleAddHabit(event, 'negative')" class="hidden mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-rose-500/30 space-y-2.5">
               <div class="flex items-center gap-2">
                 <input
@@ -338,7 +323,6 @@
               </div>
             </form>
 
-            <!-- Negative Habit List -->
             <div id="negativeHabitList" class="space-y-2.5"></div>
           </div>
         </div>
@@ -348,7 +332,6 @@
 
     <!-- Section 2: Reward Store -->
     <section aria-labelledby="rewards-heading" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
-      <!-- Sticky Reward Store Header -->
       <div id="rewardsColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 pb-3 mb-4 border-b border-slate-800/80">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
@@ -375,7 +358,6 @@
         </div>
       </div>
 
-      <!-- Add Custom Reward Form -->
       <form id="rewardForm" onsubmit="handleAddReward(event)" class="hidden mb-4 p-4 rounded-xl bg-slate-950/80 border border-amber-500/30">
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <input
@@ -405,13 +387,11 @@
         </div>
       </form>
 
-      <!-- Rewards Grid -->
       <div id="rewardStoreGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
     </section>
 
     <!-- Section 3: Today's Activities / Activity Feed -->
     <section id="activitySection" aria-labelledby="log-heading" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
-      <!-- Sticky Activity Feed Header -->
       <div id="activityColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 pb-3 mb-4 border-b border-slate-800/80">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
@@ -426,7 +406,6 @@
             </div>
           </div>
           <div class="flex items-center gap-2 flex-wrap">
-            <!-- 1-Time Point Adjustment Quick Button -->
             <button
               onclick="openManualAdjustmentModal()"
               title="Apply 1-Time Point Adjustment"
@@ -523,17 +502,14 @@
         <div>
           <h4 class="text-sm font-bold text-white">Habit Reset & Scheduled Points</h4>
           <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
-            Habits reset automatically at the scheduled refresh time (defaulting to 07:00 UTC after initial startup) and must stay at least 24 hours after the last refresh.
+            Habits reset automatically at the scheduled UTC refresh time after a cycle completes.
           </p>
         </div>
 
-
-
-        <!-- 1. Daily Reset Time Picker (Day is automatic / non-selectable) -->
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2 flex-wrap">
             <label for="resetTimeInput" class="text-xs font-semibold text-slate-300">Daily Reset Time (UTC)</label>
-            <span class="text-[11px] text-indigo-400 font-medium">Next day auto-updates • Min +24h</span>
+            <span class="text-[11px] text-indigo-400 font-medium">Next occurrence auto-updates</span>
           </div>
           <div class="flex items-center gap-2.5 flex-wrap">
             <input
@@ -552,17 +528,15 @@
           </div>
         </div>
 
-        <!-- Next Refresh Preview Box -->
         <div class="p-3 bg-slate-900/90 border border-indigo-500/30 rounded-xl space-y-0.5">
           <span class="block text-[10px] uppercase tracking-wider font-bold text-indigo-400">Next Scheduled Refresh (UTC)</span>
           <p id="nextRefreshTimeLabel" class="text-xs font-bold text-white">--</p>
         </div>
 
-        <!-- 2. Scheduled Point Adjustment -->
         <div class="space-y-2.5 pt-2 border-t border-slate-800/80">
           <div>
             <label class="text-xs font-semibold text-slate-300">Scheduled Daily Point Adjustment (Optional)</label>
-            <p class="text-[11px] text-slate-400 mt-0.5">Automatically add bonus points or deduct points when the refresh triggers.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Automatically add bonus points or deduct points when a scheduled refresh triggers.</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -597,7 +571,6 @@
           </p>
         </div>
 
-        <!-- Export -->
         <div class="space-y-2">
           <div class="flex items-center justify-between">
             <label class="text-xs font-semibold text-slate-300">Export Backup JSON</label>
@@ -606,7 +579,6 @@
           <textarea id="exportTextarea" readonly rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-slate-300 focus:outline-none"></textarea>
         </div>
 
-        <!-- Import -->
         <div class="space-y-2">
           <label class="text-xs font-semibold text-slate-300">Restore from Backup JSON</label>
           <textarea id="importTextarea" rows="3" placeholder="Paste previously exported JSON here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"></textarea>
@@ -838,9 +810,12 @@
       return { hours, minutes };
     }
 
-    function computeNextRefreshMsForTime(timeStr, anchorMs, lastRefreshMs) {
+    // Computes the next UTC occurrence of (hours, minutes) strictly after `anchorMs`.
+    function computeNextRefreshMsForTime(timeStr, anchorMs) {
       const { hours, minutes } = parseUtcTimeStr(timeStr);
-      const anchor = new Date(anchorMs);
+      const safeAnchorMs = typeof anchorMs === 'number' && !isNaN(anchorMs) ? anchorMs : Date.now();
+      const anchor = new Date(safeAnchorMs);
+
       let candidateMs = Date.UTC(
         anchor.getUTCFullYear(),
         anchor.getUTCMonth(),
@@ -851,15 +826,8 @@
         0
       );
 
-      if (candidateMs <= anchorMs) {
+      if (candidateMs <= safeAnchorMs) {
         candidateMs += DAY_MS;
-      }
-
-      if (lastRefreshMs && lastRefreshMs > 0) {
-        const minAllowedMs = lastRefreshMs + DAY_MS;
-        while (candidateMs < minAllowedMs) {
-          candidateMs += DAY_MS;
-        }
       }
 
       return candidateMs;
@@ -867,7 +835,7 @@
 
     function getNextUtc7AmAfter(startupDateObj) {
       const startupMs = startupDateObj instanceof Date ? startupDateObj.getTime() : new Date(startupDateObj).getTime();
-      return new Date(computeNextRefreshMsForTime('07:00', startupMs, 0)).toISOString();
+      return new Date(computeNextRefreshMsForTime('07:00', startupMs)).toISOString();
     }
 
     function formatDateYYYYMMDD(dateObj) {
@@ -899,6 +867,7 @@
       }
 
       const now = new Date();
+      const nowMs = now.getTime();
       const nowIso = now.toISOString();
 
       const mergedConfig = parsed && parsed.resetConfig
@@ -906,28 +875,28 @@
         : { ...DEFAULT_STATE.resetConfig };
 
       if (!mergedConfig.lastExtractDate) {
-        mergedConfig.lastExtractDate = '1970-01-01';
+        mergedConfig.lastExtractDate = formatDateYYYYMMDD(now);
       }
 
       if (!mergedConfig.initialStartupDate) {
         mergedConfig.initialStartupDate = nowIso;
       }
 
-      if (!mergedConfig.nextScheduledRefreshDate) {
-        const lastMs = mergedConfig.lastRefreshDate
-          ? Date.parse(mergedConfig.lastRefreshDate)
-          : (mergedConfig.lastResetTimestamp || 0);
-        const anchorMs = lastMs > 0 ? lastMs : now.getTime();
-        mergedConfig.nextScheduledRefreshDate = new Date(
-          computeNextRefreshMsForTime(mergedConfig.time || '07:00', anchorMs, lastMs)
-        ).toISOString();
-      }
-
-      if (!mergedConfig.lastResetTimestamp && mergedConfig.lastRefreshDate) {
-        const parsedLast = new Date(mergedConfig.lastRefreshDate).getTime();
+      if (!mergedConfig.lastRefreshDate && !mergedConfig.lastResetTimestamp) {
+        mergedConfig.lastRefreshDate = nowIso;
+        mergedConfig.lastResetTimestamp = nowMs;
+        mergedConfig.hasRefreshedOnce = false;
+      } else if (!mergedConfig.lastResetTimestamp && mergedConfig.lastRefreshDate) {
+        const parsedLast = Date.parse(mergedConfig.lastRefreshDate);
         if (!isNaN(parsedLast)) {
           mergedConfig.lastResetTimestamp = parsedLast;
         }
+      }
+
+      if (!mergedConfig.nextScheduledRefreshDate || isNaN(Date.parse(mergedConfig.nextScheduledRefreshDate))) {
+        mergedConfig.nextScheduledRefreshDate = new Date(
+          computeNextRefreshMsForTime(mergedConfig.time || '07:00', nowMs)
+        ).toISOString();
       }
 
       const rawHabits = parsed && Array.isArray(parsed.habits)
@@ -1789,7 +1758,6 @@
                 } transition-all"
               >
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                  <!-- Reorder Arrows -->
                   <div class="flex flex-col gap-0.5 shrink-0" onclick="event.stopPropagation()">
                     <button
                       type="button"
@@ -1815,7 +1783,6 @@
                     </button>
                   </div>
 
-                  <!-- Emoji to the left of main text & subtext, ~2x font size -->
                   <span class="text-2xl sm:text-[28px] leading-none shrink-0 select-none" aria-hidden="true">${escapeHtml(emojiChar)}</span>
 
                   <div class="min-w-0 flex-1">
@@ -1964,7 +1931,6 @@
             class="group flex items-center justify-between px-4 min-h-[64px] py-2 ${cardBg} transition-all active:scale-[0.985] cursor-pointer select-none"
           >
             <div class="flex items-center gap-3 min-w-0 pr-2 flex-1">
-              <!-- Emoji to the left of main text & subtext, ~2x font size -->
               <span class="text-2xl sm:text-[28px] leading-none shrink-0 select-none" aria-hidden="true">${escapeHtml(emojiChar)}</span>
 
               <div class="min-w-0 flex-1">
@@ -2282,21 +2248,19 @@
     }
 
     // =========================================================================
-    // 5. SCHEDULER LOGIC (TIME-ONLY INPUT, DYNAMIC NEXT DAY, 24H MINIMUM)
+    // 5. SCHEDULER LOGIC (NO DOUBLE-DAY PUSH, NO IMMEDIATE FIRE ON RESET)
     // =========================================================================
     function getDynamicNextRefreshMs(timeStr, config = appState.resetConfig) {
+      const nowMs = Date.now();
       const lastRefreshMs = config.lastRefreshDate
         ? Date.parse(config.lastRefreshDate)
         : (config.lastResetTimestamp || 0);
-      const anchorMs = lastRefreshMs > 0
-        ? lastRefreshMs
-        : Date.now();
-      return computeNextRefreshMsForTime(timeStr, anchorMs, lastRefreshMs);
+      const anchorMs = Math.max(nowMs, lastRefreshMs || 0);
+      return computeNextRefreshMsForTime(timeStr, anchorMs);
     }
 
     function getEffectiveNextRefreshMs(config = appState.resetConfig) {
-      const timeStr = config.time || '07:00';
-      return getDynamicNextRefreshMs(timeStr, config);
+      return getDynamicNextRefreshMs(config.time || '07:00', config);
     }
 
     function updateNextRefreshPreview() {
@@ -2316,28 +2280,10 @@
       const pointsInput = document.getElementById('scheduledPointsInput');
       const tzLabelEl = document.getElementById('detectedTimezoneLabel');
 
-      const startupEl = document.getElementById('initialStartupDateLabel');
-      const lastRefreshEl = document.getElementById('lastRefreshDateLabel');
-      const lastExtractEl = document.getElementById('lastExtractDateLabel');
-
       if (timeInput) timeInput.value = config.time || '07:00';
       if (titleInput) titleInput.value = config.scheduledTitle !== undefined ? config.scheduledTitle : 'Midnight Daily Baseline Penalty';
       if (pointsInput) pointsInput.value = config.scheduledPoints !== undefined ? config.scheduledPoints : -50;
       if (tzLabelEl) tzLabelEl.textContent = 'UTC Time';
-
-      if (startupEl) {
-        startupEl.textContent = config.initialStartupDate
-          ? new Date(config.initialStartupDate).toUTCString()
-          : '--';
-      }
-      if (lastRefreshEl) {
-        lastRefreshEl.textContent = config.lastRefreshDate
-          ? new Date(config.lastRefreshDate).toUTCString()
-          : 'Never';
-      }
-      if (lastExtractEl) {
-        lastExtractEl.textContent = config.lastExtractDate || '1970-01-01';
-      }
 
       updateNextRefreshPreview();
     }
@@ -2358,13 +2304,13 @@
       config.time = formattedTime;
       config.scheduledTitle = titleVal;
       config.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
-      config.nextScheduledRefreshDate = new Date(getDynamicNextRefreshMs(formattedTime, config)).toISOString();
+      config.nextScheduledRefreshDate = new Date(
+        computeNextRefreshMsForTime(formattedTime, Date.now())
+      ).toISOString();
 
       saveState();
       closeBackupModal();
       showToast(`Daily reset time set to ${formattedTime} UTC!`, 'success');
-
-      checkResetRollover();
       renderAll();
     }
 
@@ -2499,7 +2445,9 @@
 
       applyScheduledAdjustment(cycleDate);
 
-      config.nextScheduledRefreshDate = new Date(cycleTimeMs + DAY_MS).toISOString();
+      config.nextScheduledRefreshDate = new Date(
+        computeNextRefreshMsForTime(config.time || '07:00', cycleTimeMs)
+      ).toISOString();
     }
 
     function checkResetRollover() {
@@ -2507,46 +2455,41 @@
       const nowMs = now.getTime();
       const config = appState.resetConfig;
 
-      if (!config.lastExtractDate) {
-        config.lastExtractDate = '1970-01-01';
-      }
-
       if (!config.initialStartupDate) {
         config.initialStartupDate = now.toISOString();
       }
 
-      if (!config.nextScheduledRefreshDate) {
-        config.nextScheduledRefreshDate = new Date(getEffectiveNextRefreshMs(config)).toISOString();
+      if (!config.nextScheduledRefreshDate || isNaN(Date.parse(config.nextScheduledRefreshDate))) {
+        config.nextScheduledRefreshDate = new Date(
+          computeNextRefreshMsForTime(config.time || '07:00', nowMs)
+        ).toISOString();
         saveState();
+        return;
       }
 
       let nextRefreshMs = Date.parse(config.nextScheduledRefreshDate);
-      if (isNaN(nextRefreshMs)) {
-        nextRefreshMs = getEffectiveNextRefreshMs(config);
-        config.nextScheduledRefreshDate = new Date(nextRefreshMs).toISOString();
+
+      // Never apply scheduled point adjustments before a cycle has been actively running
+      if (!config.hasRefreshedOnce) {
+        if (nowMs >= nextRefreshMs) {
+          config.nextScheduledRefreshDate = new Date(
+            computeNextRefreshMsForTime(config.time || '07:00', nowMs)
+          ).toISOString();
+          config.hasRefreshedOnce = true;
+          saveState();
+        }
+        return;
       }
 
       let cyclesExecuted = 0;
-      const maxCatchupCycles = 365;
-
-      // Never fire scheduled adjustments on initial startup before a cycle has ever started
-      if (!config.hasRefreshedOnce && !config.lastRefreshDate && nowMs < nextRefreshMs) {
-        return;
-      }
-      if (!config.hasRefreshedOnce && !config.lastRefreshDate && nowMs >= nextRefreshMs) {
-        // Advance initial nextScheduledRefreshDate to future without applying startup adjustment
-        const futureMs = computeNextRefreshMsForTime(config.time || '07:00', nowMs, 0);
-        config.nextScheduledRefreshDate = new Date(futureMs).toISOString();
-        saveState();
-        return;
-      }
+      const maxCatchupCycles = 30;
 
       while (nowMs >= nextRefreshMs && cyclesExecuted < maxCatchupCycles) {
         executeSingleRefreshCycle(nextRefreshMs);
         cyclesExecuted++;
         nextRefreshMs = Date.parse(config.nextScheduledRefreshDate);
         if (isNaN(nextRefreshMs)) {
-          nextRefreshMs = getEffectiveNextRefreshMs(config);
+          nextRefreshMs = computeNextRefreshMsForTime(config.time || '07:00', nowMs);
           config.nextScheduledRefreshDate = new Date(nextRefreshMs).toISOString();
         }
       }
@@ -2557,11 +2500,12 @@
         renderHabits();
         renderRewards();
         renderLogs();
-        if (cyclesExecuted === 1) {
-          showToast('🌅 Daily refresh triggered for the new cycle!', 'info');
-        } else {
-          showToast(`🌅 Caught up on ${cyclesExecuted} scheduled daily refreshes!`, 'info');
-        }
+        showToast(
+          cyclesExecuted === 1
+            ? '🌅 Daily refresh triggered for the new cycle!'
+            : `🌅 Caught up on ${cyclesExecuted} scheduled daily refreshes!`,
+          'info'
+        );
       }
     }
 
@@ -2664,15 +2608,18 @@
       try {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object' && Array.isArray(parsed.habits)) {
-          const nowIso = new Date().toISOString();
+          const now = new Date();
+          const nowIso = now.toISOString();
           const rc = {
             ...DEFAULT_STATE.resetConfig,
             ...(parsed.resetConfig || {})
           };
-          if (!rc.lastExtractDate) rc.lastExtractDate = '1970-01-01';
+          if (!rc.lastExtractDate) rc.lastExtractDate = formatDateYYYYMMDD(now);
           if (!rc.initialStartupDate) rc.initialStartupDate = nowIso;
-          if (!rc.nextScheduledRefreshDate) {
-            rc.nextScheduledRefreshDate = getNextUtc7AmAfter(new Date(rc.initialStartupDate));
+          if (!rc.nextScheduledRefreshDate || isNaN(Date.parse(rc.nextScheduledRefreshDate))) {
+            rc.nextScheduledRefreshDate = new Date(
+              computeNextRefreshMsForTime(rc.time || '07:00', now.getTime())
+            ).toISOString();
           }
 
           appState = {
@@ -2722,14 +2669,23 @@
         toggleEditHabitsMode();
       }
 
-      const freshStartupIso = new Date().toISOString();
+      const freshNow = new Date();
+      const freshNowMs = freshNow.getTime();
+      const freshNowIso = freshNow.toISOString();
+
       appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-      appState.resetConfig.lastExtractDate = '1970-01-01';
-      appState.resetConfig.initialStartupDate = freshStartupIso;
-      appState.resetConfig.nextScheduledRefreshDate = getNextUtc7AmAfter(new Date(freshStartupIso));
+      appState.balance = 0;
+      appState.logs = [];
+      appState.resetConfig.lastExtractDate = formatDateYYYYMMDD(freshNow);
+      appState.resetConfig.initialStartupDate = freshNowIso;
+      appState.resetConfig.lastRefreshDate = freshNowIso;
+      appState.resetConfig.lastResetTimestamp = freshNowMs;
+      appState.resetConfig.hasRefreshedOnce = false;
+      appState.resetConfig.nextScheduledRefreshDate = new Date(
+        computeNextRefreshMsForTime(appState.resetConfig.time || '07:00', freshNowMs)
+      ).toISOString();
 
       saveState();
-      checkResetRollover();
       renderAll();
       closeBackupModal();
       showToast('All data cleared & reset to defaults.', 'info');
