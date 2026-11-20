@@ -64,7 +64,7 @@
     .subsection-sticky-header {
       position: sticky;
       top: var(--sticky-top);
-      z-index: 20;
+      z-index: 35;
       background-color: #1a2438;
       margin-left: -1rem;
       margin-right: -1rem;
@@ -74,23 +74,11 @@
       border-top-right-radius: 1rem;
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
-      border-top: 1px solid rgba(100, 116, 139, 0.65);
+      border-top: 1px solid rgba(100, 116, 139, 0.75);
       border-left: 1px solid rgba(71, 85, 105, 0.75);
       border-right: 1px solid rgba(71, 85, 105, 0.75);
       border-bottom: 1px solid rgba(30, 41, 59, 0.95);
       box-shadow: 0 10px 18px -6px rgba(7, 10, 19, 0.95);
-    }
-
-    .subsection-sticky-header::before {
-      content: '';
-      position: absolute;
-      top: calc(-1 * var(--sticky-gap) - 2px);
-      left: -4px;
-      right: -4px;
-      height: calc(var(--sticky-gap) + 20px);
-      background-color: #070a13;
-      pointer-events: none;
-      z-index: -1;
     }
 
     @media (min-width: 640px) {
@@ -171,7 +159,7 @@
   <div id="stickyGapMask" aria-hidden="true"></div>
 
   <!-- Solid Top Sticky Header -->
-  <header id="mainHeader" class="sticky top-0 z-30 border-b border-slate-800 bg-[#070a13]">
+  <header id="mainHeader" class="sticky top-0 z-40 border-b border-slate-800 bg-[#070a13]">
     <div class="max-w-6xl mx-auto px-2.5 sm:px-6 py-2 sm:py-2.5">
       <div class="flex items-center justify-between gap-1.5 sm:gap-3 min-w-0">
 
@@ -1714,10 +1702,19 @@
 
       const negatives = appState.habits.filter(h => h.type === 'negative');
 
-      const renderHabitCard = (h, idx, listLength, isPositive, inGroup = false) => {
+      const renderHabitCard = (h, idx, listLength, isPositive, inGroup = false, groupPos = 'none') => {
         const accentBadge = isPositive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300';
+        const groupCornerClass = inGroup
+          ? (groupPos === 'only'
+              ? 'rounded-2xl'
+              : groupPos === 'first'
+              ? 'rounded-t-2xl'
+              : groupPos === 'last'
+              ? 'rounded-b-2xl'
+              : '')
+          : 'rounded-xl';
         const cardBg = inGroup
-          ? 'hover:bg-emerald-950/30 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50'
+          ? `${groupCornerClass} hover:bg-emerald-950/35 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50`
           : 'bg-slate-950 border border-indigo-500/40 hover:bg-emerald-950/30 hover:border-emerald-500/40 rounded-xl';
 
         const maxLimit = getEffectiveDailyLimit(h);
@@ -1965,9 +1962,18 @@
             if (!renderedGroups.has(h.groupId)) {
               renderedGroups.add(h.groupId);
               const groupItems = positives.filter(x => x.groupId === h.groupId);
-              const cardsHtml = groupItems.map(gm => {
+              const cardsHtml = groupItems.map((gm, gIdx) => {
                 const gmIdx = positives.findIndex(x => x.id === gm.id);
-                return renderHabitCard(gm, gmIdx, positives.length, true, true);
+                const groupPos = isEditingHabits
+                  ? 'middle'
+                  : groupItems.length === 1
+                  ? 'only'
+                  : gIdx === 0
+                  ? 'first'
+                  : gIdx === groupItems.length - 1
+                  ? 'last'
+                  : 'middle';
+                return renderHabitCard(gm, gmIdx, positives.length, true, true, groupPos);
               }).join('');
 
               renderedPos.push(`
