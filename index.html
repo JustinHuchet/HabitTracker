@@ -2252,9 +2252,15 @@
     // =========================================================================
     function getDynamicNextRefreshMs(timeStr, config = appState.resetConfig) {
       const nowMs = Date.now();
-      const lastRefreshMs = config.lastRefreshDate
+      const scheduledMs = config && config.nextScheduledRefreshDate
+        ? Date.parse(config.nextScheduledRefreshDate)
+        : NaN;
+      if (!isNaN(scheduledMs) && scheduledMs <= nowMs) {
+        return scheduledMs;
+      }
+      const lastRefreshMs = config && config.lastRefreshDate
         ? Date.parse(config.lastRefreshDate)
-        : (config.lastResetTimestamp || 0);
+        : (config && config.lastResetTimestamp ? config.lastResetTimestamp : 0);
       const anchorMs = Math.max(nowMs, lastRefreshMs || 0);
       return computeNextRefreshMsForTime(timeStr, anchorMs);
     }
@@ -2297,12 +2303,33 @@
       const titleVal = titleInput ? titleInput.value.trim() : '';
       const pointsVal = pointsInput ? parseInt(pointsInput.value, 10) : 0;
 
+      const nowMs = Date.now();
+      const { hours: hNow, minutes: mNow } = parseUtcTimeStr(formattedTime);
+      const nowDate = new Date(nowMs);
+      const todayCandidateMs = Date.UTC(
+        nowDate.getUTCFullYear(),
+        nowDate.getUTCMonth(),
+        nowDate.getUTCDate(),
+        hNow,
+        mNow,
+        0,
+        0
+      );
+      const lastRefreshMs = config.lastRefreshDate
+        ? Date.parse(config.lastRefreshDate)
+        : (config.lastResetTimestamp || 0);
+
       config.time = formattedTime;
       config.scheduledTitle = titleVal;
       config.scheduledPoints = isNaN(pointsVal) ? 0 : pointsVal;
-      config.nextScheduledRefreshDate = new Date(
-        computeNextRefreshMsForTime(formattedTime, Date.now())
-      ).toISOString();
+
+      if (todayCandidateMs <= nowMs && (!lastRefreshMs || lastRefreshMs < todayCandidateMs)) {
+        config.nextScheduledRefreshDate = new Date(todayCandidateMs).toISOString();
+      } else {
+        config.nextScheduledRefreshDate = new Date(
+          computeNextRefreshMsForTime(formattedTime, Math.max(nowMs, lastRefreshMs || 0))
+        ).toISOString();
+      }
 
       saveState();
       closeBackupModal();
@@ -2464,17 +2491,6 @@
       }
 
       let nextRefreshMs = Date.parse(config.nextScheduledRefreshDate);
-
-      if (!config.hasRefreshedOnce) {
-        if (nowMs >= nextRefreshMs) {
-          config.nextScheduledRefreshDate = new Date(
-            computeNextRefreshMsForTime(config.time || '07:00', nowMs)
-          ).toISOString();
-          config.hasRefreshedOnce = true;
-          saveState();
-        }
-        return;
-      }
 
       let cyclesExecuted = 0;
       const maxCatchupCycles = 30;
@@ -2698,7 +2714,7 @@
       appState.resetConfig.initialStartupDate = freshNowIso;
       appState.resetConfig.lastRefreshDate = freshNowIso;
       appState.resetConfig.lastResetTimestamp = freshNowMs;
-      appState.resetConfig.hasRefreshedOnce = false;
+      appState.resetConfig.hasRefreshedOnce = true;
       appState.resetConfig.nextScheduledRefreshDate = new Date(
         computeNextRefreshMsForTime(appState.resetConfig.time || '07:00', freshNowMs)
       ).toISOString();
