@@ -31,7 +31,9 @@
   </script>
   <style>
     :root {
-      --header-height: 100px;
+      --header-height: 56px;
+      --sticky-gap: 10px;
+      --sticky-top: calc(var(--header-height) + var(--sticky-gap));
     }
 
     html {
@@ -112,66 +114,54 @@
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white pb-20">
 
-  <!-- Compact Top Sticky Header -->
+  <!-- Compact Single-Line Top Sticky Header -->
   <header id="mainHeader" class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-xl">
-    <div class="max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
-      <div class="flex items-center justify-between gap-2">
+    <div class="max-w-6xl mx-auto px-2.5 sm:px-6 py-2 sm:py-2.5">
+      <div class="flex items-center justify-between gap-1.5 sm:gap-3 min-w-0">
 
-        <!-- Brand, Live Balance Pill & Today Stats -->
-        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-400 flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
-              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div class="hidden xs:block">
-              <h1 class="text-sm sm:text-base font-bold tracking-tight text-white leading-none">PointQuest</h1>
-              <p class="text-[10px] text-slate-400 mt-0.5">Earn Discipline</p>
-            </div>
-          </div>
-
+        <!-- Live Balance Pill & Today Stats -->
+        <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <!-- Live Balance Counter -->
-          <div class="relative flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-2.5 py-1 sm:px-3.5 sm:py-1.5 shadow-inner">
-            <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400 hidden sm:inline">Balance:</span>
-            <div class="flex items-baseline gap-1">
-              <span id="liveBalance" class="text-base sm:text-2xl font-extrabold tracking-tight text-white">0</span>
-              <span class="text-[10px] font-semibold text-indigo-400">PTS</span>
+          <div class="relative flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 rounded-xl px-2 py-1 sm:px-3.5 sm:py-1.5 shadow-inner shrink-0">
+            <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400 hidden md:inline">Balance:</span>
+            <div class="flex items-baseline gap-0.5 sm:gap-1">
+              <span id="liveBalance" class="text-sm sm:text-xl font-extrabold tracking-tight text-white leading-none">0</span>
+              <span class="text-[9px] sm:text-[10px] font-semibold text-indigo-400">PTS</span>
             </div>
-            <div id="floatingDeltaContainer" class="pointer-events-none absolute -top-2 right-2"></div>
+            <div id="floatingDeltaContainer" class="pointer-events-none absolute -top-2 right-1.5"></div>
           </div>
 
           <!-- Today's Mini Stats -->
-          <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-900/50 border border-slate-800/80 rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs">
-            <div class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span class="text-slate-400">Today:</span>
+          <div class="flex items-center gap-1 sm:gap-2 bg-slate-900/50 border border-slate-800/80 rounded-xl px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs shrink-0 whitespace-nowrap">
+            <div class="flex items-center gap-0.5 sm:gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+              <span class="text-slate-400 hidden sm:inline">Today:</span>
               <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
             </div>
             <span class="text-slate-700">|</span>
-            <div class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-              <span class="text-slate-400">Penalties:</span>
+            <div class="flex items-center gap-0.5 sm:gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"></span>
+              <span class="text-slate-400 hidden sm:inline">Penalties:</span>
               <span id="todayLost" class="font-bold text-rose-400">-0</span>
             </div>
             <span class="text-slate-700">|</span>
-            <div class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              <span class="text-slate-400">Spent:</span>
+            <div class="flex items-center gap-0.5 sm:gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+              <span class="text-slate-400 hidden sm:inline">Spent:</span>
               <span id="todaySpent" class="font-bold text-amber-400">0</span>
             </div>
           </div>
         </div>
 
         <!-- Action Controls & Quick Buttons -->
-        <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
           <!-- Editor Button -->
           <button
             id="toggleEditHabitsBtn"
             onclick="toggleEditHabitsMode()"
-            class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer"
+            class="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer whitespace-nowrap"
           >
-            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg class="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
             <span id="toggleEditHabitsLabel">Editor</span>
@@ -181,7 +171,7 @@
           <button
             onclick="openBackupModal()"
             title="Settings, Schedule, Backup & Reset"
-            class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer shrink-0"
+            class="p-1.5 sm:p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all active:scale-95 cursor-pointer shrink-0"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -205,7 +195,7 @@
         <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
           <div>
             <!-- Sticky Positive Habits Header -->
-            <div id="positiveColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-2.5">
+            <div id="positiveColumnHeader" class="sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">+</div>
@@ -283,7 +273,7 @@
         <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
           <div>
             <!-- Sticky Penalties Header -->
-            <div id="negativeColumnHeader" class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl space-y-2.5">
+            <div id="negativeColumnHeader" class="sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-sm shrink-0">−</div>
@@ -363,7 +353,7 @@
     <!-- Section 2: Reward Store -->
     <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
       <!-- Sticky Reward Store Header -->
-      <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+      <div class="sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
@@ -426,7 +416,7 @@
     <!-- Section 3: Today's Activities / Activity Feed -->
     <section id="activitySection" aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
       <!-- Sticky Activity Feed Header -->
-      <div class="sticky top-[var(--header-height)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border-b border-slate-800/80 rounded-t-2xl">
+      <div class="sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
@@ -1195,7 +1185,7 @@
         const rewardForm = document.getElementById('rewardForm');
 
         if (isEditingHabits) {
-          if (btn) btn.className = 'inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer';
+          if (btn) btn.className = 'inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 shadow-lg shadow-indigo-500/20 transition cursor-pointer whitespace-nowrap';
           if (label) label.textContent = 'Done';
           if (addPosBtn) addPosBtn.classList.remove('hidden');
           if (addNegBtn) addNegBtn.classList.remove('hidden');
@@ -1203,7 +1193,7 @@
           if (rewardsSubtitle) rewardsSubtitle.textContent = 'Click any reward to edit its details.';
           if (addRewardBtnEl) addRewardBtnEl.classList.remove('hidden');
         } else {
-          if (btn) btn.className = 'inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer';
+          if (btn) btn.className = 'inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/90 transition cursor-pointer whitespace-nowrap';
           if (label) label.textContent = 'Editor';
           if (addPosBtn) addPosBtn.classList.add('hidden');
           if (addNegBtn) addNegBtn.classList.add('hidden');
@@ -1590,7 +1580,7 @@
     function renderHeaderStats() {
       const balanceEl = document.getElementById('liveBalance');
       balanceEl.textContent = appState.balance;
-      balanceEl.className = `text-lg sm:text-2xl font-extrabold tracking-tight ${
+      balanceEl.className = `text-sm sm:text-xl font-extrabold tracking-tight leading-none ${
         appState.balance < 0 ? 'text-rose-400' : 'text-white'
       }`;
 
@@ -2292,8 +2282,8 @@
       const headerEl = document.getElementById('mainHeader');
       if (!sectionEl) return;
 
-      const headerHeight = headerEl ? headerEl.offsetHeight : 100;
-      const targetY = Math.max(0, sectionEl.getBoundingClientRect().top + window.scrollY - headerHeight - 8);
+      const headerHeight = headerEl ? headerEl.offsetHeight : 56;
+      const targetY = Math.max(0, sectionEl.getBoundingClientRect().top + window.scrollY - headerHeight - 10);
       window.scrollTo({ left: 0, top: targetY, behavior: 'smooth' });
     }
 
