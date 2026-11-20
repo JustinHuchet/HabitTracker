@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PointQuest — Habit & Reward Tracker</title>
   <link rel="manifest" id="pqManifestLink" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png" />
   <meta name="theme-color" content="#070a13" />
   <meta name="mobile-web-app-capable" content="yes" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -2819,37 +2822,20 @@
         const linkEl = document.getElementById('pqManifestLink') || document.querySelector('link[rel="manifest"]');
         if (!linkEl) return;
 
-        const icon192 = createPqIconDataUrl(192);
-        const icon512 = createPqIconDataUrl(512);
-        const icons = [];
-        if (icon192) {
-          icons.push({ src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' });
-        }
-        if (icon512) {
-          icons.push({ src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' });
-        }
-
-        const manifestObj = {
-          name: 'PointQuest',
-          short_name: 'PointQuest',
-          description: 'Habit & Reward Tracker',
-          start_url: './',
-          scope: './',
-          display: 'standalone',
-          background_color: '#070a13',
-          theme_color: '#070a13',
-          icons
-        };
-
         fetch(linkEl.href, { cache: 'no-store' })
           .then(resp => {
             if (!resp.ok) throw new Error('Manifest not found');
             return resp.json();
           })
           .then(data => {
-            if (icons.length > 0) {
-              const existing = Array.isArray(data.icons) ? data.icons : [];
-              data.icons = [...icons, ...existing];
+            const hasValidIcons = Array.isArray(data.icons) && data.icons.length > 0;
+            if (!hasValidIcons) {
+              const icon192 = createPqIconDataUrl(192);
+              const icon512 = createPqIconDataUrl(512);
+              const fallbackIcons = [];
+              if (icon192) fallbackIcons.push({ src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' });
+              if (icon512) fallbackIcons.push({ src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' });
+              data.icons = fallbackIcons;
               data.start_url = data.start_url || './';
               data.scope = data.scope || './';
               data.display = data.display || 'standalone';
@@ -2858,6 +2844,23 @@
             }
           })
           .catch(() => {
+            const icon192 = createPqIconDataUrl(192);
+            const icon512 = createPqIconDataUrl(512);
+            const icons = [];
+            if (icon192) icons.push({ src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' });
+            if (icon512) icons.push({ src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' });
+            const manifestObj = {
+              id: './',
+              name: 'PointQuest — Habit & Reward Tracker',
+              short_name: 'PointQuest',
+              description: 'Habit & Reward Tracker',
+              start_url: './',
+              scope: './',
+              display: 'standalone',
+              background_color: '#070a13',
+              theme_color: '#070a13',
+              icons
+            };
             if (icons.length > 0) {
               const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
               linkEl.href = URL.createObjectURL(blob);
