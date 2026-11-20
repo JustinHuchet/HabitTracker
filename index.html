@@ -32,7 +32,7 @@
   <style>
     :root {
       --header-height: 60px;
-      --sticky-gap: 10px;
+      --sticky-gap: 20px;
       --sticky-top: calc(var(--header-height) + var(--sticky-gap));
     }
 
@@ -46,6 +46,24 @@
       color: #f8fafc;
       -webkit-tap-highlight-color: transparent;
       overflow-anchor: none;
+    }
+
+    /* Solid backdrop guard band above each sticky subsection header down to its bottom line */
+    .subsection-sticky-header::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(var(--sticky-top) + var(--sub-header-h, 88px));
+      background-color: #070a13;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Clip any child content inside a subsection above the bottom of its sticky header */
+    .subsection-clip-zone {
+      position: relative;
     }
 
     ::-webkit-scrollbar {
@@ -132,24 +150,13 @@
           </div>
 
           <!-- Today's Mini Stats -->
-          <div class="flex items-center gap-1.5 sm:gap-2.5 bg-slate-900/50 border border-slate-800/80 rounded-xl px-2 py-1.5 sm:px-3 text-[10px] sm:text-xs shrink-0 whitespace-nowrap">
-            <div class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
-              <span class="text-slate-400">Today:</span>
-              <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
-            </div>
-            <span class="text-slate-700">|</span>
-            <div class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"></span>
-              <span class="text-slate-400">Penalties:</span>
-              <span id="todayLost" class="font-bold text-rose-400">-0</span>
-            </div>
-            <span class="text-slate-700">|</span>
-            <div class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
-              <span class="text-slate-400">Spent:</span>
-              <span id="todaySpent" class="font-bold text-amber-400">0</span>
-            </div>
+          <div class="flex items-center gap-1.5 sm:gap-2.5 bg-slate-900/50 border border-slate-800/80 rounded-xl px-2.5 py-1.5 sm:px-3 text-[11px] sm:text-xs shrink-0 whitespace-nowrap">
+            <span class="text-slate-400 font-medium">Today:</span>
+            <span id="todayEarned" class="font-bold text-emerald-400">+0</span>
+            <span class="text-slate-700">/</span>
+            <span id="todayLost" class="font-bold text-rose-400">-0</span>
+            <span class="text-slate-700">/</span>
+            <span id="todaySpent" class="font-bold text-amber-400">0</span>
           </div>
         </div>
 
@@ -192,10 +199,10 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
         <!-- Positive Habits Column -->
-        <div id="positiveColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
+        <div id="positiveColumn" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/20">
           <div>
             <!-- Sticky Positive Habits Header -->
-            <div id="positiveColumnHeader" class="sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30 space-y-2.5">
+            <div id="positiveColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">+</div>
@@ -270,10 +277,10 @@
         </div>
 
         <!-- Negative Habits / Penalties Column -->
-        <div id="negativeColumn" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
+        <div id="negativeColumn" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col shadow-xl shadow-black/25">
           <div>
             <!-- Sticky Penalties Header -->
-            <div id="negativeColumnHeader" class="sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30 space-y-2.5">
+            <div id="negativeColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30 space-y-2.5">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold text-sm shrink-0">−</div>
@@ -351,9 +358,9 @@
     </section>
 
     <!-- Section 2: Reward Store -->
-    <section aria-labelledby="rewards-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
+    <section aria-labelledby="rewards-heading" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
       <!-- Sticky Reward Store Header -->
-      <div class="sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30">
+      <div id="rewardsColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
@@ -414,9 +421,9 @@
     </section>
 
     <!-- Section 3: Today's Activities / Activity Feed -->
-    <section id="activitySection" aria-labelledby="log-heading" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
+    <section id="activitySection" aria-labelledby="log-heading" class="subsection-clip-zone bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/25">
       <!-- Sticky Activity Feed Header -->
-      <div class="sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30">
+      <div id="activityColumnHeader" class="subsection-sticky-header sticky top-[var(--sticky-top)] z-20 bg-slate-900/95 backdrop-blur-xl -mx-4 -mt-4 p-4 sm:-mx-5 sm:-mt-5 sm:p-5 mb-4 border border-slate-800/90 rounded-2xl shadow-lg shadow-black/30">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
@@ -654,19 +661,109 @@
 
   <script>
     // =========================================================================
-    // 0. DYNAMIC HEADER HEIGHT CALCULATOR (STICKY OFFSET)
+    // 0. DYNAMIC HEADER HEIGHT & INITIAL GAP CALCULATOR + TOP CLIPPING
     // =========================================================================
+    let initialGapCaptured = false;
+    let capturedGapPx = null;
+
+    function captureInitialGapIfNeeded() {
+      if (initialGapCaptured) return;
+      const mainHeader = document.getElementById('mainHeader');
+      const firstSubHeader =
+        document.getElementById('positiveColumnHeader') ||
+        document.getElementById('negativeColumnHeader') ||
+        document.getElementById('rewardsColumnHeader') ||
+        document.getElementById('activityColumnHeader');
+
+      if (mainHeader && firstSubHeader) {
+        const headerRect = mainHeader.getBoundingClientRect();
+        const subRect = firstSubHeader.getBoundingClientRect();
+        if (headerRect.height > 0 && subRect.top >= headerRect.bottom) {
+          capturedGapPx = Math.round(subRect.top - headerRect.bottom);
+          initialGapCaptured = true;
+          document.documentElement.style.setProperty('--sticky-gap', capturedGapPx + 'px');
+        }
+      }
+    }
+
+    function updateSubsectionHeaderMetrics() {
+      const headers = document.querySelectorAll('.subsection-sticky-header');
+      headers.forEach(hdr => {
+        const h = hdr.offsetHeight;
+        if (h > 0) {
+          hdr.style.setProperty('--sub-header-h', h + 'px');
+        }
+      });
+    }
+
+    function updateAboveSubsectionHeaderVisibility() {
+      const headers = document.querySelectorAll('.subsection-sticky-header');
+      const headerMap = [
+        { headerId: 'positiveColumnHeader', zoneId: 'positiveColumn' },
+        { headerId: 'negativeColumnHeader', zoneId: 'negativeColumn' },
+        { headerId: 'rewardsColumnHeader', zoneId: null },
+        { headerId: 'activityColumnHeader', zoneId: 'activitySection' }
+      ];
+
+      headerMap.forEach(({ headerId, zoneId }) => {
+        const hdr = document.getElementById(headerId);
+        if (!hdr) return;
+        const hdrRect = hdr.getBoundingClientRect();
+        const cutoffY = hdrRect.bottom;
+
+        const zone = zoneId ? document.getElementById(zoneId) : hdr.closest('.subsection-clip-zone');
+        if (!zone) return;
+
+        const candidates = zone.querySelectorAll(
+          '#positiveHabitList > div, #negativeHabitList > div, #rewardStoreGrid > div, #rewardStoreGrid > form, #activityLogList > div, #positiveForm, #negativeForm, #rewardForm'
+        );
+
+        candidates.forEach(el => {
+          if (hdr.contains(el)) return;
+          const rect = el.getBoundingClientRect();
+          if (rect.height === 0 && rect.width === 0) return;
+
+          if (rect.top < cutoffY - 0.5) {
+            el.style.opacity = '0';
+            el.style.pointerEvents = 'none';
+          } else {
+            el.style.opacity = '';
+            el.style.pointerEvents = '';
+          }
+        });
+      });
+
+      void headers;
+    }
+
     function updateHeaderHeightOffset() {
       const mainHeader = document.getElementById('mainHeader');
       if (mainHeader) {
         const height = mainHeader.offsetHeight;
         document.documentElement.style.setProperty('--header-height', height + 'px');
       }
+      captureInitialGapIfNeeded();
+      updateSubsectionHeaderMetrics();
+      updateAboveSubsectionHeaderVisibility();
     }
 
-    window.addEventListener('DOMContentLoaded', updateHeaderHeightOffset);
-    window.addEventListener('load', updateHeaderHeightOffset);
-    window.addEventListener('resize', updateHeaderHeightOffset);
+    window.addEventListener('DOMContentLoaded', () => {
+      updateHeaderHeightOffset();
+      requestAnimationFrame(() => {
+        captureInitialGapIfNeeded();
+        updateHeaderHeightOffset();
+      });
+    });
+    window.addEventListener('load', () => {
+      captureInitialGapIfNeeded();
+      updateHeaderHeightOffset();
+    });
+    window.addEventListener('resize', () => {
+      updateHeaderHeightOffset();
+    });
+    window.addEventListener('scroll', () => {
+      updateAboveSubsectionHeaderVisibility();
+    }, { passive: true });
 
     // =========================================================================
     // 1. DEFAULT STATE & PERSISTENT LOCAL STORAGE
@@ -677,7 +774,7 @@
     const DEFAULT_STATE = {
       balance: 0,
       resetConfig: {
-        time: '07:00', // HH:MM in UTC
+        time: '07:00',
         scheduledTitle: 'Midnight Daily Baseline Penalty',
         scheduledPoints: -50,
         lastExtractDate: '1970-01-01',
@@ -856,7 +953,6 @@
       }
     }
 
-    // Helper to keep the exact viewport scroll position across any DOM re-render
     function preserveScroll(fn) {
       const savedX = window.scrollX;
       const savedY = window.scrollY;
@@ -864,6 +960,7 @@
       window.scrollTo({ left: savedX, top: savedY, behavior: 'instant' });
       requestAnimationFrame(() => {
         window.scrollTo({ left: savedX, top: savedY, behavior: 'instant' });
+        updateAboveSubsectionHeaderVisibility();
       });
     }
 
@@ -1245,8 +1342,9 @@
     function saveInlineEditHabit(event, habitId) {
       event.preventDefault();
       event.stopPropagation();
-      const habit = appState.habits.find(h => h.id === habitId);
-      if (!habit) return;
+      const habitIndex = appState.habits.findIndex(h => h.id === habitId);
+      if (habitIndex === -1) return;
+      const habit = appState.habits[habitIndex];
 
       const iconInput = document.getElementById(`editHabitIcon_${habitId}`);
       const titleInput = document.getElementById(`editHabitTitle_${habitId}`);
@@ -1262,23 +1360,26 @@
       if (!rawTitle || isNaN(newPoints) || newPoints <= 0) return;
 
       const split = splitLeadingEmoji(rawTitle, rawIcon);
-      habit.icon = split.icon;
-      habit.title = split.title;
-      habit.points = newPoints;
-      habit.subtext = newSubtext;
-
+      let nextLimit = 1;
       if (habit.type === 'positive' && !habit.groupId && limitInput) {
         const parsedLimit = parseInt(limitInput.value, 10);
-        habit.dailyLimit = (!isNaN(parsedLimit) && parsedLimit >= 1) ? parsedLimit : 1;
-      } else if (habit.type !== 'positive' || habit.groupId) {
-        habit.dailyLimit = 1;
+        nextLimit = (!isNaN(parsedLimit) && parsedLimit >= 1) ? parsedLimit : 1;
       }
+
+      appState.habits[habitIndex] = {
+        ...habit,
+        icon: split.icon,
+        title: split.title,
+        points: newPoints,
+        subtext: newSubtext,
+        dailyLimit: nextLimit
+      };
 
       editingHabitId = null;
 
       saveState();
       preserveScroll(() => renderHabits());
-      showToast(`Updated "${habit.title}"`, 'success');
+      showToast(`Updated "${split.title}" (Daily limit: ${nextLimit})`, 'success');
     }
 
     function moveHabitOrder(event, habitId, direction) {
@@ -1652,8 +1753,8 @@
         const remainingCount = Math.max(0, maxLimit - completedCount);
 
         const isMultiOccurrence = isPositive && !h.groupId && maxLimit > 1;
-        const showSubtext = Boolean(h.subtext) && !isMultiOccurrence;
         const showProgress = isMultiOccurrence;
+        const showSubtext = Boolean(h.subtext) && !showProgress;
         const emojiChar = h.icon || (isPositive ? '✨' : '⚠️');
 
         if (isEditingHabits) {
@@ -1712,12 +1813,12 @@
                     ${showSubtext || showProgress ? `
                       <div class="flex flex-col justify-center">
                         <span class="text-xs sm:text-sm font-medium text-slate-200 truncate">${escapeHtml(h.title)}</span>
-                        ${showSubtext ? `
-                          <span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>
-                        ` : `
+                        ${showProgress ? `
                           <span class="text-[11px] text-slate-400 block mt-0.5">
                             Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
                           </span>
+                        ` : `
+                          <span class="text-[11px] text-slate-400 block truncate mt-0.5">${escapeHtml(h.subtext)}</span>
                         `}
                       </div>
                     ` : `
@@ -1798,7 +1899,7 @@
                   </div>
                   ${isPositive && !h.groupId ? `
                     <div class="flex items-center gap-2">
-                      <label class="text-[11px] text-slate-400">Max times per day:</label>
+                      <label class="text-[11px] text-slate-400">Remaining per day:</label>
                       <input
                         type="number"
                         id="editHabitLimit_${h.id}"
@@ -1852,13 +1953,13 @@
                 ${showSubtext || showProgress ? `
                   <div class="flex flex-col justify-center">
                     <span class="text-xs sm:text-sm font-medium text-slate-200 group-hover:text-white truncate block">${escapeHtml(h.title)}</span>
-                    ${showSubtext ? `
-                      <span class="text-[11px] text-slate-400 block truncate mt-0.5">
-                        ${escapeHtml(h.subtext)}
-                      </span>
-                    ` : `
+                    ${showProgress ? `
                       <span class="text-[11px] text-slate-400 block mt-0.5">
                         Remaining today: <span class="text-indigo-400 font-semibold">${remainingCount} / ${maxLimit}</span>
+                      </span>
+                    ` : `
+                      <span class="text-[11px] text-slate-400 block truncate mt-0.5">
+                        ${escapeHtml(h.subtext)}
                       </span>
                     `}
                   </div>
@@ -2296,7 +2397,8 @@
       if (!sectionEl) return;
 
       const headerHeight = headerEl ? headerEl.offsetHeight : 60;
-      const targetY = Math.max(0, sectionEl.getBoundingClientRect().top + window.scrollY - headerHeight - 10);
+      const gapValue = capturedGapPx !== null ? capturedGapPx : 20;
+      const targetY = Math.max(0, sectionEl.getBoundingClientRect().top + window.scrollY - headerHeight - gapValue);
       window.scrollTo({ left: 0, top: targetY, behavior: 'smooth' });
     }
 
@@ -2410,16 +2512,13 @@
       const cycleDate = new Date(cycleTimeMs);
       const cycleIso = cycleDate.toISOString();
 
-      // 1. Update last refresh & last extract dates
       config.lastRefreshDate = cycleIso;
       config.lastResetTimestamp = cycleTimeMs;
       config.lastExtractDate = formatDateYYYYMMDD(cycleDate);
       config.hasRefreshedOnce = true;
 
-      // 2. Apply scheduled point adjustment for this cycle
       applyScheduledAdjustment(cycleDate);
 
-      // 3. Advance next scheduled refresh date to 24 hours later
       config.nextScheduledRefreshDate = new Date(cycleTimeMs + DAY_MS).toISOString();
     }
 
