@@ -60,12 +60,12 @@
       pointer-events: none;
     }
 
-    /* Sticky subheader: rounded top corners, squared bottom corners, clean gap cap */
+    /* Sticky subheader: distinct color, rounded top corners, squared bottom corners */
     .subsection-sticky-header {
       position: sticky;
       top: var(--sticky-top);
       z-index: 20;
-      background-color: #0f172a;
+      background-color: #1a2438;
       margin-left: -1rem;
       margin-right: -1rem;
       margin-top: -1rem;
@@ -74,9 +74,9 @@
       border-top-right-radius: 1rem;
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
-      border-top: 1px solid rgba(71, 85, 105, 0.75);
-      border-left: 1px solid rgba(51, 65, 85, 0.85);
-      border-right: 1px solid rgba(51, 65, 85, 0.85);
+      border-top: 1px solid rgba(100, 116, 139, 0.65);
+      border-left: 1px solid rgba(71, 85, 105, 0.75);
+      border-right: 1px solid rgba(71, 85, 105, 0.75);
       border-bottom: 1px solid rgba(30, 41, 59, 0.95);
       box-shadow: 0 10px 18px -6px rgba(7, 10, 19, 0.95);
     }
@@ -84,10 +84,10 @@
     .subsection-sticky-header::before {
       content: '';
       position: absolute;
-      top: calc(-1 * var(--sticky-gap) - 1px);
-      left: -2px;
-      right: -2px;
-      height: calc(var(--sticky-gap) + 1px);
+      top: calc(-1 * var(--sticky-gap) - 2px);
+      left: -4px;
+      right: -4px;
+      height: calc(var(--sticky-gap) + 20px);
       background-color: #070a13;
       pointer-events: none;
       z-index: -1;
@@ -1716,7 +1716,9 @@
 
       const renderHabitCard = (h, idx, listLength, isPositive, inGroup = false) => {
         const accentBadge = isPositive ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300';
-        const cardBg = inGroup ? 'bg-transparent' : 'bg-slate-950 border border-indigo-500/40 hover:bg-emerald-950/30 hover:border-emerald-500/40 rounded-xl';
+        const cardBg = inGroup
+          ? 'hover:bg-emerald-950/30 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50'
+          : 'bg-slate-950 border border-indigo-500/40 hover:bg-emerald-950/30 hover:border-emerald-500/40 rounded-xl';
 
         const maxLimit = getEffectiveDailyLimit(h);
         const completedCount = isPositive ? getCompletedPositiveCountToday(h.id) : 0;
@@ -1738,7 +1740,7 @@
               <div
                 onclick="${isPositive ? `handleHabitClickInEditMode('${h.id}')` : `startInlineEditHabit(event, '${h.id}')`}"
                 class="group flex items-center justify-between gap-2 px-4 min-h-[64px] py-2 ${
-                  inGroup ? '' : 'rounded-xl bg-slate-950 border border-indigo-500/40'
+                  inGroup ? 'rounded-lg hover:bg-emerald-950/20' : 'rounded-xl bg-slate-950 border border-indigo-500/40'
                 } ${
                   isBeingEditingThis
                     ? 'border-indigo-400 bg-indigo-950/25'
@@ -1746,7 +1748,7 @@
                     ? 'border-indigo-400 bg-indigo-950/40 ring-2 ring-indigo-500/30'
                     : isPairingCandidate
                     ? 'border-dashed border-indigo-400/70 hover:bg-indigo-950/30 cursor-pointer'
-                    : 'hover:border-indigo-400 cursor-pointer'
+                    : 'hover:border-indigo-400 hover:ring-1 hover:ring-indigo-500/40 cursor-pointer'
                 } transition-all"
               >
                 <div class="flex items-center gap-3 min-w-0 flex-1">
