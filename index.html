@@ -929,7 +929,7 @@
         const lastMs = mergedConfig.lastRefreshDate
           ? Date.parse(mergedConfig.lastRefreshDate)
           : (mergedConfig.lastResetTimestamp || 0);
-        const anchorMs = lastMs > 0 ? lastMs : Date.parse(mergedConfig.initialStartupDate);
+        const anchorMs = lastMs > 0 ? lastMs : now.getTime();
         mergedConfig.nextScheduledRefreshDate = new Date(
           computeNextRefreshMsForTime(mergedConfig.time || '07:00', anchorMs, lastMs)
         ).toISOString();
@@ -2293,7 +2293,7 @@
         : (config.lastResetTimestamp || 0);
       const anchorMs = lastRefreshMs > 0
         ? lastRefreshMs
-        : (config.initialStartupDate ? Date.parse(config.initialStartupDate) : Date.now());
+        : Date.now();
       return computeNextRefreshMsForTime(timeStr, anchorMs, lastRefreshMs);
     }
 
