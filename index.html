@@ -2847,9 +2847,9 @@
             return resp.json();
           })
           .then(data => {
-            const validIcons = Array.isArray(data.icons) && data.icons.length > 0;
-            if (!validIcons && icons.length > 0) {
-              data.icons = icons;
+            if (icons.length > 0) {
+              const existing = Array.isArray(data.icons) ? data.icons : [];
+              data.icons = [...icons, ...existing];
               data.start_url = data.start_url || './';
               data.scope = data.scope || './';
               data.display = data.display || 'standalone';
