@@ -2733,21 +2733,7 @@
         toggleEditHabitsMode();
       }
 
-      const freshNow = new Date();
-      const freshNowMs = freshNow.getTime();
-      const freshNowIso = freshNow.toISOString();
-
-      appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-      appState.balance = 0;
-      appState.logs = [];
-      appState.resetConfig.lastExtractDate = formatDateYYYYMMDD(freshNow);
-      appState.resetConfig.initialStartupDate = freshNowIso;
-      appState.resetConfig.lastRefreshDate = freshNowIso;
-      appState.resetConfig.lastResetTimestamp = freshNowMs;
-      appState.resetConfig.hasRefreshedOnce = true;
-      appState.resetConfig.nextScheduledRefreshDate = new Date(
-        computeNextRefreshMsForTime(appState.resetConfig.time || '07:00', freshNowMs)
-      ).toISOString();
+      appState = loadState();
 
       saveState();
       renderAll();
